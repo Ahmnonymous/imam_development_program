@@ -1,0 +1,212 @@
+---
+alwaysApply: true
+---
+# ============================================================
+# 🔹 GLOBAL CURSOR RULESET — UNIVERSAL FULL-STACK ENGINEERING GUIDE
+# ============================================================
+runtime:
+  priority_mode: performance
+  disable_full_context_analysis: true
+
+meta:
+  name: "Generic Enterprise Development Ruleset"
+  version: 1.1
+  description: |
+    A fully generic, adaptive, full-stack development rule system for Cursor AI.
+    Works across all project types without enforcing domain-specific structures.
+    Includes predictable architecture, naming, auditing, and UI consistency.
+    RBAC intentionally removed. No documentation files (.md) should be created
+    unless explicitly requested by the developer.
+  load_mode: selective
+  prefetch: false
+
+performance:
+  cache_scans: true
+  cache_reasoning: true
+  cache_schema_map: true
+  incremental_analysis: true
+  max_context_depth: 2
+  skip_validation_if_unchanged: true
+
+reasoning:
+  depth_limit: 3
+  skip_noncritical_checks: true
+  auto_trust_known_patterns: true
+
+ai_behavior:
+  verbosity: low
+  infer_context_from_path: true
+  skip_restatement: true
+
+# ============================================================
+# 🔹 GLOBAL RESTRICTIONS
+# ============================================================
+global_restrictions:
+  - Do NOT generate documentation files (.md) unless the user explicitly asks.
+  - Do NOT generate README, API docs, architecture docs, or any markdown docs unless asked.
+  - Avoid creating new folders for documentation unless user requests.
+
+# ============================================================
+# 🔹 CORE DEVELOPMENT PRINCIPLES (GENERIC)
+# ============================================================
+general_guidelines:
+  - Keep design and structural integrity consistent across the project.
+  - Do not break existing functionality.
+  - Only ask for input when schema or logic is genuinely unclear.
+  - Reuse existing components whenever possible.
+  - Follow structured reasoning: understand → validate → generate.
+  - Maintain responsive UI and dark/light compatibility.
+
+# ============================================================
+# 🔹 SMART FOLDER MAP (GENERIC)
+# ============================================================
+smart_folder_map:
+  enabled: true
+  detect_once: true
+  detection_strategy:
+    - Scan project for common folder patterns:
+        components: ["components", "ui", "common"]
+        pages: ["pages", "views", "screens"]
+        services: ["services", "api", "network"]
+        store: ["store", "state", "redux", "context"]
+        helpers: ["helpers", "utils", "lib"]
+        backend: ["backend", "server", "api"]
+  cache_results: true
+  ask_on_conflict: false
+  memory_persist: true
+
+# ============================================================
+# 🔹 GENERIC FRONTEND RULES
+# ============================================================
+frontend_rules:
+  - Place new pages in the detected pages folder.
+  - Reusable UI → components folder.
+  - Use React Hook Form for forms (if React project).
+  - Use project’s standard API client (axios/fetch/etc.).
+  - Reuse validation & helper utilities already in the project.
+  - Auto-detect user identity (for audit metadata).
+  - Verify dark/light mode and responsive behavior.
+  - Confirm before generating new conditional-logic fields.
+
+# ============================================================
+# 🔹 GENERIC BACKEND RULES
+# ============================================================
+backend_rules:
+  - Follow detected backend folder structure: routes, controllers, models, middleware.
+  - Wrap DB calls in try/catch.
+  - Use parameterized queries or ORM-safe syntax.
+  - Auto-inject audit fields:
+      created_by, updated_by, created_at, updated_at.
+  - Ensure consistent JSON responses.
+  - Avoid returning blobs/bytea unless explicitly requested.
+
+# ============================================================
+# 🔹 USER STORAGE AUTO-DETECTION (GENERIC)
+# ============================================================
+auto_detection_rules:
+  - Detect user details from:
+      - localStorage
+      - Redux store
+      - Context providers
+      - JWT decoded info (if applicable)
+  - Prefer username/name for audit logging
+  - Ask if multiple conflicting sources exist
+
+# ============================================================
+# 🔹 AUTO AUDIT FIELD INJECTION (GENERIC)
+# ============================================================
+cursor_injection_rules:
+  alwaysApply: true
+  inject_before_save:
+    - |
+      // ===================================================
+      // 🔹 UNIVERSAL AUTO-AUDIT FIELD HANDLER (GENERIC)
+      // ===================================================
+      let currentUser;
+      try {
+        currentUser =
+          JSON.parse(localStorage.getItem("authUser")) ||
+          JSON.parse(localStorage.getItem("currentUser")) ||
+          JSON.parse(localStorage.getItem("user")) ||
+          {};
+      } catch (e) {
+        currentUser = {};
+      }
+
+      const username = currentUser?.username || currentUser?.name || "system";
+
+      if (editItem) {
+        formData.updated_by = username;
+        formData.updated_at = new Date().toISOString();
+      } else {
+        formData.created_by = username;
+        formData.created_at = new Date().toISOString();
+      }
+
+# ============================================================
+# 🔹 SMART NAMING CONVENTIONS (GENERIC)
+# ============================================================
+smart_naming_conventions:
+  enabled: true
+  auto_confirm: true
+  rules:
+    frontend:
+      - Reports → `<EntityName>Report`
+      - Detail pages → `<EntityName>Detail`
+      - Tables → `<EntityName>Table`
+      - Services → `<EntityName>Service`
+      - State/Context → `<entityName>Slice` or `<EntityName>Context`
+    backend:
+      - Controller → `<entityName>Controller`
+      - Model → `<entityName>Model`
+      - Routes → `<entityName>Routes`
+      - Middleware → `<entityName>Middleware`
+
+# ============================================================
+# 🔹 VALIDATION & TESTING
+# ============================================================
+validation:
+  full_project_scan: false
+  validate_only_changed_files: true
+  skip_static_analysis_on_small_changes: true
+
+testing_rules:
+  - Frontend → Testing Library / Cypress
+  - Backend → Jest / Supertest
+  - Run lint & tests before commit if applicable
+
+# ============================================================
+# 🔹 DESIGN CONSISTENCY (GENERIC)
+# ============================================================
+ui_guidelines:
+  - Use consistent modal/page structures.
+  - Maintain alignment, spacing, and typography.
+  - Ask which existing component to replicate before generating new UI.
+  - Validate both dark and light themes.
+
+# ============================================================
+# 🔹 AI CLARIFICATION TEMPLATES (GENERIC)
+# ============================================================
+ai_clarification_templates:
+  tone: "Professional, direct"
+  ask_before_actions:
+    - Ask when module purpose, folder location, or logic intention is unclear.
+  confirmation_examples:
+    - “Should this follow the same UI layout as your existing Detail component?”
+  refusal_guidelines:
+    - “Avoiding changes that may break existing logic — confirm if override needed.”
+
+# ============================================================
+# 🔹 COMMUNICATION STYLE (GENERIC)
+# ============================================================
+communication_guidelines:
+  - Clarify when uncertain.
+  - Prioritize accuracy, stability, and architecture integrity.
+  - Maintain a senior-developer tone.
+  - Provide structured reasoning, not generic explanations.
+
+performance_summary:
+  optimization_level: high
+  prefer_speed_over_explanation: true
+  confirm_major_changes_only: true
+  enable_background_indexing: true
