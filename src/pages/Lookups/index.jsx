@@ -69,6 +69,25 @@ const Lookups = () => {
       categories: [
       ],
     },
+    {
+      title: "Imam Management",
+      color: "info",
+      icon: "bxs-user-rectangle",
+      categories: [
+        { name: "Title", table: "Title_Lookup", icon: "bxs-user-badge" },
+        { name: "Madhab", table: "Madhab", icon: "bxs-book-open" },
+        { name: "Status", table: "Status", icon: "bxs-check-circle" },
+        { name: "Yes/No", table: "Yes_No", icon: "bxs-toggle-left" },
+        { name: "Resource Type", table: "Resource_Type", icon: "bxs-folder" },
+        { name: "Medical Visit Type", table: "Medical_Visit_Type", icon: "bxs-clinic" },
+        { name: "Medical Service Provider", table: "Medical_Service_Provider", icon: "bxs-clinic" },
+        { name: "Community Engagement Type", table: "Community_Engagement_Type", icon: "bxs-group" },
+        { name: "Language", table: "Language", icon: "bxs-message-dots" },
+        { name: "Currency", table: "Currency", icon: "bxs-wallet" },
+        { name: "Country", table: "Country", icon: "bxs-flag-alt" },
+        { name: "Province", table: "Province", icon: "bxs-map-alt" },
+      ],
+    },
   ];
 
   // Meta title
@@ -146,11 +165,20 @@ const Lookups = () => {
       <Container fluid>
         <Breadcrumbs title="Administration" breadcrumbItem="Lookup Setup" />
 
-         {/* Full-width Row for the largest group: Applicant Details (2 columns) */}
+         {/* Full-width Row for the largest groups: Applicant Details and Imam Management (2 columns) */}
          {lookupGroups[0].categories.length > 0 && (
            <Row className="mb-3">
              <Col lg={12}>
                {renderGroupCard(lookupGroups[0], 0, true)}
+             </Col>
+           </Row>
+         )}
+
+         {/* Imam Management - Full width with 2 columns */}
+         {lookupGroups[7].categories.length > 0 && (
+           <Row className="mb-3">
+             <Col lg={12}>
+               {renderGroupCard(lookupGroups[7], 7, true)}
              </Col>
            </Row>
          )}

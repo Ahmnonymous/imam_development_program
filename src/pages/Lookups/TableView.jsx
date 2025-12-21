@@ -44,10 +44,50 @@ const TableView = () => {
   const { isOrgExecutive, isGlobalAdmin } = useRole(); // Read-only check
 
   const isHadithTable = table === "Hadith";
+  const isCurrencyTable = table === "Currency";
+  const isCountryTable = table === "Country";
+  const isProvinceTable = table === "Province";
+  const isSuburbTable = table === "Suburb";
   const isReadOnly = isOrgExecutive || (isHadithTable && !isGlobalAdmin);
 
   const { data, loading, error } = useSelector((state) => state.Lookup);
   const tableData = data[table] || [];
+
+  // Fetch related lookup data for Province and Suburb
+  const [countries, setCountries] = useState([]);
+  const [provinces, setProvinces] = useState([]);
+
+  // Fetch Countries when viewing Province or Suburb
+  useEffect(() => {
+    if (isProvinceTable || isSuburbTable) {
+      if (!data.Country || data.Country.length === 0) {
+        dispatch(fetchLookup("Country"));
+      } else {
+        setCountries(data.Country);
+      }
+    }
+  }, [isProvinceTable, isSuburbTable, dispatch, data.Country]);
+
+  // Fetch Provinces when viewing Suburb
+  useEffect(() => {
+    if (isSuburbTable) {
+      if (!data.Province || data.Province.length === 0) {
+        dispatch(fetchLookup("Province"));
+      } else {
+        setProvinces(data.Province);
+      }
+    }
+  }, [isSuburbTable, dispatch, data.Province]);
+
+  // Update local state when Redux data changes
+  useEffect(() => {
+    if (data.Country && (isProvinceTable || isSuburbTable)) {
+      setCountries(data.Country);
+    }
+    if (data.Province && isSuburbTable) {
+      setProvinces(data.Province);
+    }
+  }, [data.Country, data.Province, isProvinceTable, isSuburbTable]);
 
   const [showDialog, setShowDialog] = useState(false);
   const [editItem, setEditItem] = useState(null);
@@ -67,11 +107,19 @@ const TableView = () => {
   } = useDeleteConfirmation();
 
   const defaultFormValues = useMemo(
-    () =>
-      isHadithTable
-        ? { hadith_arabic: "", hadith_english: "" }
-        : { name: "" },
-    [isHadithTable]
+    () => {
+      if (isHadithTable) {
+        return { hadith_arabic: "", hadith_english: "" };
+      } else if (isCurrencyTable || isCountryTable) {
+        return { name: "", code: "" };
+      } else if (isProvinceTable) {
+        return { name: "", country_id: "" };
+      } else if (isSuburbTable) {
+        return { name: "", province_id: "" };
+      }
+      return { name: "" };
+    },
+    [isHadithTable, isCurrencyTable, isCountryTable, isProvinceTable, isSuburbTable]
   );
 
   const {
@@ -97,6 +145,21 @@ useEffect(() => {
         hadith_arabic: editItem?.hadith_arabic || "",
         hadith_english: editItem?.hadith_english || "",
       });
+    } else if (isCurrencyTable || isCountryTable) {
+      reset({
+        name: editItem?.name || "",
+        code: editItem?.code || "",
+      });
+    } else if (isProvinceTable) {
+      reset({
+        name: editItem?.name || "",
+        country_id: editItem?.country_id || "",
+      });
+    } else if (isSuburbTable) {
+      reset({
+        name: editItem?.name || "",
+        province_id: editItem?.province_id || "",
+      });
     } else {
       reset({ name: editItem?.name || "" });
     }
@@ -104,7 +167,7 @@ useEffect(() => {
       if (primaryInputRef.current) primaryInputRef.current.focus();
     }, 100);
   }
-}, [showDialog, editItem, reset, isHadithTable]);
+}, [showDialog, editItem, reset, isHadithTable, isCurrencyTable, isCountryTable, isProvinceTable, isSuburbTable]);
 
   // --- Dialog alert helpers ---
   const showAlert = (message, color = "success") => {
@@ -189,14 +252,32 @@ useEffect(() => {
 
     try {
       // Add audit fields based on workspace rules
-      const payload = isHadithTable
-        ? {
-            hadith_arabic: formData.hadith_arabic?.trim(),
-            hadith_english: formData.hadith_english?.trim(),
-          }
-        : {
-            name: formData.name?.trim(),
-          };
+      let payload;
+      if (isHadithTable) {
+        payload = {
+          hadith_arabic: formData.hadith_arabic?.trim(),
+          hadith_english: formData.hadith_english?.trim(),
+        };
+      } else if (isCurrencyTable || isCountryTable) {
+        payload = {
+          name: formData.name?.trim(),
+          code: formData.code?.trim() || null,
+        };
+      } else if (isProvinceTable) {
+        payload = {
+          name: formData.name?.trim(),
+          country_id: formData.country_id ? parseInt(formData.country_id) : null,
+        };
+      } else if (isSuburbTable) {
+        payload = {
+          name: formData.name?.trim(),
+          province_id: formData.province_id ? parseInt(formData.province_id) : null,
+        };
+      } else {
+        payload = {
+          name: formData.name?.trim(),
+        };
+      }
 
       const auditUser = getAuditName();
       const timestamp = new Date().toISOString();
@@ -349,6 +430,83 @@ useEffect(() => {
       ];
     }
 
+    if (isProvinceTable) {
+      return [
+        {
+          header: "Name",
+          accessorKey: "name",
+          enableSorting: true,
+          enableColumnFilter: false,
+          cell: (cell) => (
+            <span
+              className={!isReadOnly ? "lookup-primary-cell interactive" : "lookup-primary-cell"}
+              onClick={() => !isReadOnly && handleEdit(cell.row.original)}
+            >
+              {cell.getValue()}
+            </span>
+          ),
+        },
+        {
+          header: "Country",
+          accessorKey: "country_id",
+          enableSorting: true,
+          enableColumnFilter: false,
+          cell: (cell) => {
+            const countryId = cell.getValue();
+            const country = countries.find(c => c.id === countryId || c.ID === countryId);
+            return <span>{country ? (country.name || country.Name) : "-"}</span>;
+          },
+        },
+        ...commonAuditColumns,
+      ];
+    }
+
+    if (isSuburbTable) {
+      return [
+        {
+          header: "Name",
+          accessorKey: "name",
+          enableSorting: true,
+          enableColumnFilter: false,
+          cell: (cell) => (
+            <span
+              className={!isReadOnly ? "lookup-primary-cell interactive" : "lookup-primary-cell"}
+              onClick={() => !isReadOnly && handleEdit(cell.row.original)}
+            >
+              {cell.getValue()}
+            </span>
+          ),
+        },
+        {
+          header: "Province",
+          accessorKey: "province_id",
+          enableSorting: true,
+          enableColumnFilter: false,
+          cell: (cell) => {
+            const provinceId = cell.getValue();
+            const province = provinces.find(p => p.id === provinceId || p.ID === provinceId);
+            return <span>{province ? (province.name || province.Name) : "-"}</span>;
+          },
+        },
+        {
+          header: "Country",
+          enableSorting: false,
+          enableColumnFilter: false,
+          cell: (cell) => {
+            const provinceId = cell.row.original.province_id || cell.row.original.Province_ID;
+            const province = provinces.find(p => (p.id === provinceId || p.ID === provinceId));
+            if (province) {
+              const countryId = province.country_id || province.Country_ID || province.country_ID;
+              const country = countries.find(c => (c.id === countryId || c.ID === countryId));
+              return <span>{country ? (country.name || country.Name) : "-"}</span>;
+            }
+            return <span>-</span>;
+          },
+        },
+        ...commonAuditColumns,
+      ];
+    }
+
     return [
       {
         header: "Name",
@@ -366,7 +524,7 @@ useEffect(() => {
       },
       ...commonAuditColumns,
     ];
-  }, [tableData, isHadithTable, isReadOnly]);
+  }, [tableData, isHadithTable, isCurrencyTable, isCountryTable, isProvinceTable, isSuburbTable, isReadOnly, countries, provinces]);
 
   const formatTableName = (tableName) => tableName.replace(/_/g, " ");
   document.title = `${formatTableName(table)} | Lookup Setup`;
@@ -568,6 +726,240 @@ useEffect(() => {
                     />
                     {errors.hadith_english && (
                       <FormFeedback>{errors.hadith_english.message}</FormFeedback>
+                    )}
+                  </FormGroup>
+                </>
+              ) : isCurrencyTable || isCountryTable ? (
+                <>
+                  <FormGroup>
+                    <Label for="name">
+                      Name <span className="text-danger">*</span>
+                    </Label>
+                    <Controller
+                      name="name"
+                      control={control}
+                      rules={{
+                        required: "Name is required",
+                        minLength: {
+                          value: 2,
+                          message: "Name must be at least 2 characters",
+                        },
+                        maxLength: {
+                          value: 255,
+                          message: "Name must not exceed 255 characters",
+                        },
+                      }}
+                      render={({ field }) => {
+                        const { ref, ...fieldProps } = field;
+                        return (
+                          <Input
+                            id="name"
+                            placeholder="Enter name"
+                            invalid={!!errors.name}
+                            disabled={isReadOnly}
+                            innerRef={(element) => {
+                              primaryInputRef.current = element;
+                              ref(element);
+                            }}
+                            {...fieldProps}
+                          />
+                        );
+                      }}
+                    />
+                    {errors.name && (
+                      <FormFeedback>{errors.name.message}</FormFeedback>
+                    )}
+                  </FormGroup>
+
+                  <FormGroup>
+                    <Label for="code">
+                      Code {isCurrencyTable ? "(e.g., USD, ZAR)" : "(e.g., ZA, US)"}
+                    </Label>
+                    <Controller
+                      name="code"
+                      control={control}
+                      rules={{
+                        maxLength: {
+                          value: 10,
+                          message: "Code must not exceed 10 characters",
+                        },
+                        pattern: {
+                          value: /^[A-Z0-9]*$/,
+                          message: "Code must contain only uppercase letters and numbers",
+                        },
+                      }}
+                      render={({ field }) => (
+                        <Input
+                          id="code"
+                          placeholder={isCurrencyTable ? "Enter currency code (e.g., USD)" : "Enter country code (e.g., ZA)"}
+                          invalid={!!errors.code}
+                          disabled={isReadOnly}
+                          style={{ textTransform: "uppercase" }}
+                          {...field}
+                        />
+                      )}
+                    />
+                    {errors.code && (
+                      <FormFeedback>{errors.code.message}</FormFeedback>
+                    )}
+                  </FormGroup>
+                </>
+              ) : isProvinceTable ? (
+                <>
+                  <FormGroup>
+                    <Label for="name">
+                      Province Name <span className="text-danger">*</span>
+                    </Label>
+                    <Controller
+                      name="name"
+                      control={control}
+                      rules={{
+                        required: "Province name is required",
+                        minLength: {
+                          value: 2,
+                          message: "Province name must be at least 2 characters",
+                        },
+                        maxLength: {
+                          value: 255,
+                          message: "Province name must not exceed 255 characters",
+                        },
+                      }}
+                      render={({ field }) => {
+                        const { ref, ...fieldProps } = field;
+                        return (
+                          <Input
+                            id="name"
+                            placeholder="Enter province name"
+                            invalid={!!errors.name}
+                            disabled={isReadOnly}
+                            innerRef={(element) => {
+                              primaryInputRef.current = element;
+                              ref(element);
+                            }}
+                            {...fieldProps}
+                          />
+                        );
+                      }}
+                    />
+                    {errors.name && (
+                      <FormFeedback>{errors.name.message}</FormFeedback>
+                    )}
+                  </FormGroup>
+
+                  <FormGroup>
+                    <Label for="country_id">
+                      Country <span className="text-danger">*</span>
+                    </Label>
+                    <Controller
+                      name="country_id"
+                      control={control}
+                      rules={{
+                        required: "Country is required",
+                      }}
+                      render={({ field }) => (
+                        <Input
+                          id="country_id"
+                          type="select"
+                          invalid={!!errors.country_id}
+                          disabled={isReadOnly || countries.length === 0}
+                          {...field}
+                        >
+                          <option value="">Select Country</option>
+                          {countries.map((country) => (
+                            <option key={country.id || country.ID} value={country.id || country.ID}>
+                              {country.name || country.Name} {country.code || country.Code ? `(${country.code || country.Code})` : ""}
+                            </option>
+                          ))}
+                        </Input>
+                      )}
+                    />
+                    {errors.country_id && (
+                      <FormFeedback>{errors.country_id.message}</FormFeedback>
+                    )}
+                    {countries.length === 0 && (
+                      <small className="text-muted">Please add countries first before creating provinces.</small>
+                    )}
+                  </FormGroup>
+                </>
+              ) : isSuburbTable ? (
+                <>
+                  <FormGroup>
+                    <Label for="name">
+                      Suburb Name <span className="text-danger">*</span>
+                    </Label>
+                    <Controller
+                      name="name"
+                      control={control}
+                      rules={{
+                        required: "Suburb name is required",
+                        minLength: {
+                          value: 2,
+                          message: "Suburb name must be at least 2 characters",
+                        },
+                        maxLength: {
+                          value: 255,
+                          message: "Suburb name must not exceed 255 characters",
+                        },
+                      }}
+                      render={({ field }) => {
+                        const { ref, ...fieldProps } = field;
+                        return (
+                          <Input
+                            id="name"
+                            placeholder="Enter suburb name"
+                            invalid={!!errors.name}
+                            disabled={isReadOnly}
+                            innerRef={(element) => {
+                              primaryInputRef.current = element;
+                              ref(element);
+                            }}
+                            {...fieldProps}
+                          />
+                        );
+                      }}
+                    />
+                    {errors.name && (
+                      <FormFeedback>{errors.name.message}</FormFeedback>
+                    )}
+                  </FormGroup>
+
+                  <FormGroup>
+                    <Label for="province_id">
+                      Province <span className="text-danger">*</span>
+                    </Label>
+                    <Controller
+                      name="province_id"
+                      control={control}
+                      rules={{
+                        required: "Province is required",
+                      }}
+                      render={({ field }) => (
+                        <Input
+                          id="province_id"
+                          type="select"
+                          invalid={!!errors.province_id}
+                          disabled={isReadOnly || provinces.length === 0}
+                          {...field}
+                        >
+                          <option value="">Select Province</option>
+                          {provinces.map((province) => {
+                            const countryId = province.country_id || province.Country_ID || province.country_ID;
+                            const country = countries.find(c => (c.id === countryId || c.ID === countryId));
+                            const countryName = country ? (country.name || country.Name) : "";
+                            return (
+                              <option key={province.id || province.ID} value={province.id || province.ID}>
+                                {province.name || province.Name} {countryName ? `(${countryName})` : ""}
+                              </option>
+                            );
+                          })}
+                        </Input>
+                      )}
+                    />
+                    {errors.province_id && (
+                      <FormFeedback>{errors.province_id.message}</FormFeedback>
+                    )}
+                    {provinces.length === 0 && (
+                      <small className="text-muted">Please add provinces first before creating suburbs.</small>
                     )}
                   </FormGroup>
                 </>

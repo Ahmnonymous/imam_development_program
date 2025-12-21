@@ -35,6 +35,19 @@ const lookupTables = {
   Training_Courses: { orderByName: true },
   Means_of_communication: { orderByName: true },
   Departments: { orderByName: true },
+  // Imam Management System Lookup Tables
+  Title_Lookup: { orderByName: true },
+  Madhab: { orderByName: true },
+  Status: { orderByName: true },
+  Yes_No: { orderByName: true },
+  Resource_Type: { orderByName: true },
+  Medical_Visit_Type: { orderByName: true },
+  Medical_Service_Provider: { orderByName: true },
+  Community_Engagement_Type: { orderByName: true },
+  Language: { orderByName: true },
+  Currency: { orderByName: true },
+  Country: { orderByName: true },
+  Province: { orderByName: true },
 };
 
 const getLookupConfig = (table = "") => lookupTables[table] || null;

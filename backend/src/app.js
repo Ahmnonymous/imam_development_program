@@ -66,6 +66,17 @@ const reportsRoutes = require("./routes/reportsRoutes");
 // 🔹 Dashboard
 const dashboardRoutes = require("./routes/dashboardRoutes");
 
+// 🔹 Imam Management
+const imamProfilesRoutes = require("./routes/imamProfilesRoutes");
+const jumuahKhutbahTopicSubmissionRoutes = require("./routes/jumuahKhutbahTopicSubmissionRoutes");
+const jumuahAudioKhutbahRoutes = require("./routes/jumuahAudioKhutbahRoutes");
+const pearlsOfWisdomRoutes = require("./routes/pearlsOfWisdomRoutes");
+const medicalReimbursementRoutes = require("./routes/medicalReimbursementRoutes");
+const communityEngagementRoutes = require("./routes/communityEngagementRoutes");
+const nikahBonusRoutes = require("./routes/nikahBonusRoutes");
+const newMuslimBonusRoutes = require("./routes/newMuslimBonusRoutes");
+const newBabyBonusRoutes = require("./routes/newBabyBonusRoutes");
+
 // ===========================
 // 📦 ROUTE REGISTRATION
 // ===========================
@@ -127,6 +138,17 @@ app.use("/api/reports", reportsRoutes);
 
 // 🔹 Dashboard
 app.use("/api/dashboard", dashboardRoutes);
+
+// 🔹 Imam Management
+app.use("/api/imamProfiles", imamProfilesRoutes);
+app.use("/api/jumuahKhutbahTopicSubmission", jumuahKhutbahTopicSubmissionRoutes);
+app.use("/api/jumuahAudioKhutbah", jumuahAudioKhutbahRoutes);
+app.use("/api/pearlsOfWisdom", pearlsOfWisdomRoutes);
+app.use("/api/medicalReimbursement", medicalReimbursementRoutes);
+app.use("/api/communityEngagement", communityEngagementRoutes);
+app.use("/api/nikahBonus", nikahBonusRoutes);
+app.use("/api/newMuslimBonus", newMuslimBonusRoutes);
+app.use("/api/newBabyBonus", newBabyBonusRoutes);
 
 // ✅ Export app for testing
 module.exports = app;

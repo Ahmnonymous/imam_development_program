@@ -255,7 +255,7 @@
         "snake_case": "title_lookup",
         "fields": [
           {"field_name": "Name", "data_type": "text", "db_column": "name"},
-          "note": "Example values: Mufti,Sheikh,Moulana,Imam,Ustadh,Muallimah,Da'ee"
+          {"note": "Example values: Mufti,Sheikh,Moulana,Imam,Ustadh,Muallimah,Da'ee"}
         ],
         "relationship_type": "Lookup",
         "needs_who_columns": true
