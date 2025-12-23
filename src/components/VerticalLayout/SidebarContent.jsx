@@ -168,66 +168,82 @@ const SidebarContent = (props) => {
               </Link>
             </li>
 
-            {/* ✅ Centers - App Admin & HQ (HQ read-only) */}
-            {canAccessNav("centers") && (
+            {/* TEMPORARILY HIDDEN - Centers */}
+            {/* {canAccessNav("centers") && (
               <li>
                 <Link to="/centers">
                   <i className="bx bx-building"></i>
                   <span>{props.t("Center Management")}</span>
                 </Link>
               </li>
-            )}
+            )} */}
 
-            {/* ✅ Meetings - restricted per RBAC */}
-            {canAccessNav("meetings") && (
+            {/* TEMPORARILY HIDDEN - Meetings */}
+            {/* {canAccessNav("meetings") && (
               <li>
                 <Link to="/meetings">
                   <i className="bx bx-calendar"></i>
                   <span>{props.t("Meetings Management")}</span>
                 </Link>
               </li>
-            )}
+            )} */}
 
-            {/* ✅ Suppliers - App Admin only */}
-            {canAccessNav("suppliers") && (
+            {/* TEMPORARILY HIDDEN - Suppliers */}
+            {/* {canAccessNav("suppliers") && (
               <li>
                 <Link to="/suppliers">
                   <i className="bx bx-store"></i>
                   <span>{props.t("Supplier Management")}</span>
                 </Link>
               </li>
-            )}
+            )} */}
 
-            {/* ✅ Inventory - App Admin only */}
-            {canAccessNav("inventory") && (
+            {/* TEMPORARILY HIDDEN - Inventory */}
+            {/* {canAccessNav("inventory") && (
               <li>
                 <Link to="/inventory">
                   <i className="bx bx-box"></i>
                   <span>{props.t("Inventory Management")}</span>
                 </Link>
               </li>
-            )}
+            )} */}
 
-            {/* ✅ Create Applicant - All except Org Executives (read-only) */}
-            {canEditModule("applicants") && (
+            {/* TEMPORARILY HIDDEN - Create Applicant */}
+            {/* {canEditModule("applicants") && (
               <li>
                 <Link to="/applicants/create">
                   <i className="bx bx-user-plus"></i>
                   <span>{props.t("Create Applicant")}</span>
                 </Link>
               </li>
-            )}
+            )} */}
 
-            {/* ✅ Applicant Details - All roles (1,2,3,4,5) */}
-            <li>
+            {/* TEMPORARILY HIDDEN - Applicant Details */}
+            {/* <li>
               <Link to="/applicants">
                 <i className="bx bx-user-check"></i>
                 <span>{props.t("Applicant Details")}</span>
               </Link>
+            </li> */}
+
+            {/* ✅ Create Imam Profile - All except Org Executives (read-only) */}
+            <li>
+              <Link to="/imam-profiles/create">
+                <i className="bx bx-user-plus"></i>
+                <span>{props.t("Create Imam Profile")}</span>
+              </Link>
             </li>
 
-            {/* ✅ Reports - App Admin, HQ, Org Admin (Org Executive and Caseworkers excluded) */}
-            {canAccessNav("reports") && (
+            {/* ✅ Imam Profile Details - All roles (1,2,3,4,5) */}
+            <li>
+              <Link to="/imam-profiles">
+                <i className="bx bx-user-circle"></i>
+                <span>{props.t("Imam Profiles")}</span>
+              </Link>
+            </li>
+
+            {/* TEMPORARILY HIDDEN - Reports */}
+            {/* {canAccessNav("reports") && (
               <li>
                 <Link to="/#" className="has-arrow ">
                   <i className="bx bx-file-find"></i>
@@ -284,44 +300,39 @@ const SidebarContent = (props) => {
                 </li>
               </ul>
               </li>
-            )}
+            )} */}
 
-            {/* ✅ Lookup Setup - App Admin, HQ, Org Admin (Org Executive and Caseworkers excluded) */}
-            {canAccessNav("lookups") && (
-              <li>
-                <Link to="/lookups">
-                  <i className="bx bx-list-ul"></i>
-                  <span>{props.t("Lookup Setup")}</span>
-                </Link>
-              </li>
-            )}
+            {/* ✅ Lookup Setup - Always visible */}
+            <li>
+              <Link to="/lookups">
+                <i className="bx bx-list-ul"></i>
+                <span>{props.t("Lookup Setup")}</span>
+              </Link>
+            </li>
 
-            {canAccessNav("filemanager") && (
-              <li>
-                <Link to="/FileManager">
-                  <i className="bx bx-folder"></i>
-                  <span>{props.t("File Manager")}</span>
-                </Link>
-              </li>
-            )}
+            {/* ✅ File Manager - Always visible */}
+            <li>
+              <Link to="/FileManager">
+                <i className="bx bx-folder"></i>
+                <span>{props.t("File Manager")}</span>
+              </Link>
+            </li>
 
-            {canAccessNav("chat") && (
-              <li>
-                <Link to="/chat">
-                  <i className="bx bx-chat"></i>
-                  <span>{props.t("Chat")}</span>
-                </Link>
-              </li>
-            )}
+            {/* ✅ Chat - Always visible */}
+            <li>
+              <Link to="/chat">
+                <i className="bx bx-chat"></i>
+                <span>{props.t("Chat")}</span>
+              </Link>
+            </li>
 
-            {canAccessNav("policy") && (
-              <li>
-                <Link to="/policy-library">
-                  <i className="bx bx-file-blank"></i>
-                  <span>{props.t("Policy & Procedure")}</span>
-                </Link>
-              </li>
-            )}
+            {/* ✅ Policy & Procedure - Always visible */}
+            <li>
+              <Link to="/policy-library">
+                <i className="bx bx-file-blank"></i>
+                <span>{props.t("Policy & Procedure")}</span>
+              </Link>
+            </li>
           </ul>
         </div>
       </SimpleBar>

@@ -4,10 +4,8 @@ const fs = require('fs').promises;
 const medicalReimbursementController = {
   getAll: async (req, res) => { 
     try {
-      const centerId = req.center_id || req.user?.center_id;
-      const isSuperAdmin = req.isAppAdmin || false;
       const imamProfileId = req.query.imam_profile_id || null;
-      const data = await medicalReimbursementModel.getAll(centerId, isSuperAdmin, imamProfileId); 
+      const data = await medicalReimbursementModel.getAll(imamProfileId); 
       res.json(data); 
     } catch(err){ 
       res.status(500).json({error: err.message}); 
@@ -16,9 +14,7 @@ const medicalReimbursementController = {
   
   getById: async (req, res) => { 
     try {
-      const centerId = req.center_id || req.user?.center_id;
-      const isSuperAdmin = req.isAppAdmin || false;
-      const data = await medicalReimbursementModel.getById(req.params.id, centerId, isSuperAdmin); 
+      const data = await medicalReimbursementModel.getById(req.params.id); 
       if(!data) return res.status(404).json({error: 'Not found'}); 
       res.json(data); 
     } catch(err){ 
@@ -33,8 +29,6 @@ const medicalReimbursementController = {
       const username = req.user?.username || 'system';
       fields.created_by = username;
       fields.updated_by = username;
-      
-      fields.center_id = req.center_id || req.user?.center_id;
       
       if (req.files && req.files.Receipt && req.files.Receipt.length > 0) {
         const file = req.files.Receipt[0];
@@ -95,9 +89,7 @@ const medicalReimbursementController = {
         await fs.unlink(file.path);
       }
       
-      const centerId = req.center_id || req.user?.center_id;
-      const isSuperAdmin = req.isAppAdmin || false;
-      const data = await medicalReimbursementModel.update(req.params.id, fields, centerId, isSuperAdmin); 
+      const data = await medicalReimbursementModel.update(req.params.id, fields); 
       if (!data) {
         return res.status(404).json({error: 'Not found'}); 
       }
@@ -109,9 +101,7 @@ const medicalReimbursementController = {
   
   delete: async (req, res) => { 
     try {
-      const centerId = req.center_id || req.user?.center_id;
-      const isSuperAdmin = req.isAppAdmin || false;
-      const deleted = await medicalReimbursementModel.delete(req.params.id, centerId, isSuperAdmin); 
+      const deleted = await medicalReimbursementModel.delete(req.params.id); 
       if (!deleted) {
         return res.status(404).json({error: 'Not found'}); 
       }
@@ -123,9 +113,7 @@ const medicalReimbursementController = {
 
   downloadReceipt: async (req, res) => {
     try {
-      const centerId = req.center_id || req.user?.center_id;
-      const isSuperAdmin = req.isAppAdmin || false;
-      const record = await medicalReimbursementModel.getById(req.params.id, centerId, isSuperAdmin);
+      const record = await medicalReimbursementModel.getById(req.params.id);
       if (!record) return res.status(404).send("Record not found");
       if (!record.Receipt) return res.status(404).send("No receipt found");
   
@@ -154,9 +142,7 @@ const medicalReimbursementController = {
 
   downloadSupportingDocs: async (req, res) => {
     try {
-      const centerId = req.center_id || req.user?.center_id;
-      const isSuperAdmin = req.isAppAdmin || false;
-      const record = await medicalReimbursementModel.getById(req.params.id, centerId, isSuperAdmin);
+      const record = await medicalReimbursementModel.getById(req.params.id);
       if (!record) return res.status(404).send("Record not found");
       if (!record.Supporting_Docs) return res.status(404).send("No supporting documents found");
   

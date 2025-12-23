@@ -8,15 +8,10 @@ const {
 const tableName = "Imam_Profiles";
 
 const imamProfilesModel = {
-  getAll: async (centerId = null, isSuperAdmin = false) => {
+  getAll: async () => {
     try {
-      const scoped = scopeQuery(`SELECT * FROM ${tableName}`, {
-        centerId,
-        isSuperAdmin,
-        column: "center_id",
-      });
-
-      const res = await pool.query(scoped.text, scoped.values);
+      const query = `SELECT * FROM ${tableName} ORDER BY id DESC`;
+      const res = await pool.query(query);
       return res.rows;
     } catch (err) {
       throw new Error(
@@ -25,17 +20,10 @@ const imamProfilesModel = {
     }
   },
 
-  getById: async (id, centerId = null, isSuperAdmin = false) => {
+  getById: async (id) => {
     try {
-      const scoped = scopeQuery(
-        {
-          text: `SELECT * FROM ${tableName} WHERE id = $1`,
-          values: [id],
-        },
-        { centerId, isSuperAdmin, column: "center_id" },
-      );
-
-      const res = await pool.query(scoped.text, scoped.values);
+      const query = `SELECT * FROM ${tableName} WHERE id = $1`;
+      const res = await pool.query(query, [id]);
       if (!res.rows[0]) return null;
       return res.rows[0];
     } catch (err) {
@@ -58,22 +46,15 @@ const imamProfilesModel = {
     }
   },
 
-  update: async (id, fields, centerId = null, isSuperAdmin = false) => {
+  update: async (id, fields) => {
     try {
       const { setClause, values } = buildUpdateFragments(fields, {
         quote: false,
       });
-      const scoped = scopeQuery(
-        {
-          text: `UPDATE ${tableName} SET ${setClause} WHERE id = $${
-            values.length + 1
-          } RETURNING *`,
-          values: [...values, id],
-        },
-        { centerId, isSuperAdmin, column: "center_id" },
-      );
-
-      const res = await pool.query(scoped.text, scoped.values);
+      const query = `UPDATE ${tableName} SET ${setClause} WHERE id = $${
+        values.length + 1
+      } RETURNING *`;
+      const res = await pool.query(query, [...values, id]);
       if (res.rowCount === 0) return null;
       return res.rows[0];
     } catch (err) {
@@ -83,17 +64,10 @@ const imamProfilesModel = {
     }
   },
 
-  delete: async (id, centerId = null, isSuperAdmin = false) => {
+  delete: async (id) => {
     try {
-      const scoped = scopeQuery(
-        {
-          text: `DELETE FROM ${tableName} WHERE id = $1 RETURNING *`,
-          values: [id],
-        },
-        { centerId, isSuperAdmin, column: "center_id" },
-      );
-
-      const res = await pool.query(scoped.text, scoped.values);
+      const query = `DELETE FROM ${tableName} WHERE id = $1 RETURNING *`;
+      const res = await pool.query(query, [id]);
       if (res.rowCount === 0) return null;
       return res.rows[0];
     } catch (err) {

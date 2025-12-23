@@ -56,6 +56,8 @@ import ForgetPwd from "../pages/Authentication/ForgetPassword";
 import Employees from "../pages/Employees/Employees";
 import ApplicantManagement from "../pages/Applicants/ApplicantManagement";
 import CreateApplicant from "../pages/Applicants/CreateApplicant";
+import ImamProfilesManagement from "../pages/ImamProfiles/ImamProfilesManagement";
+import CreateImamProfile from "../pages/ImamProfiles/CreateImamProfile";
 import SupplierManagement from "../pages/Suppliers/SupplierManagement";
 
 // Inventory
@@ -378,6 +380,11 @@ const authProtectedRoutes = [
   { path: "/applicants", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><ApplicantManagement /></ProtectedRoute> },
   // ✅ Create Applicant - All except Org Executive (role 4) can create applicants
   { path: "/applicants/create", component: <ProtectedRoute allowedRoles={[1, 2, 3, 5]}><CreateApplicant /></ProtectedRoute> },
+
+  // ✅ Imam Profiles - All staff roles (1,2,3,4,5) can view
+  { path: "/imam-profiles", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><ImamProfilesManagement /></ProtectedRoute> },
+  // ✅ Create Imam Profile - All except Org Executive (role 4) can create imam profiles
+  { path: "/imam-profiles/create", component: <ProtectedRoute allowedRoles={[1, 2, 3, 5]}><CreateImamProfile /></ProtectedRoute> },
 
   // ✅ Suppliers - App Admin only
   { path: "/suppliers", component: <ProtectedRoute allowedRoles={[1]}><SupplierManagement /></ProtectedRoute> },

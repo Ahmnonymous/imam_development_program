@@ -8,22 +8,19 @@ const {
 const tableName = "New_Baby_Bonus";
 
 const newBabyBonusModel = {
-  getAll: async (centerId = null, isSuperAdmin = false, imamProfileId = null) => {
+  getAll: async (imamProfileId = null) => {
     try {
       let query = `SELECT * FROM ${tableName}`;
       const params = [];
       
       if (imamProfileId) {
-        query += ` WHERE imam_profile_id = $${params.length + 1}`;
+        query += ` WHERE imam_profile_id = $1`;
         params.push(imamProfileId);
       }
       
-      const scoped = scopeQuery(
-        { text: query, values: params },
-        { centerId, isSuperAdmin, column: "center_id" },
-      );
+      query += ` ORDER BY id DESC`;
 
-      const res = await pool.query(scoped.text, scoped.values);
+      const res = await pool.query(query, params);
       res.rows = res.rows.map((row) => {
         if (row.Baby_Image && row.Baby_Image_Filename) {
           row.Baby_Image = "exists";
@@ -45,17 +42,10 @@ const newBabyBonusModel = {
     }
   },
 
-  getById: async (id, centerId = null, isSuperAdmin = false) => {
+  getById: async (id) => {
     try {
-      const scoped = scopeQuery(
-        {
-          text: `SELECT * FROM ${tableName} WHERE id = $1`,
-          values: [id],
-        },
-        { centerId, isSuperAdmin, column: "center_id" },
-      );
-
-      const res = await pool.query(scoped.text, scoped.values);
+      const query = `SELECT * FROM ${tableName} WHERE id = $1`;
+      const res = await pool.query(query, [id]);
       if (!res.rows[0]) return null;
       const row = res.rows[0];
       if (row.Baby_Image && row.Baby_Image_Filename) {
@@ -89,22 +79,15 @@ const newBabyBonusModel = {
     }
   },
 
-  update: async (id, fields, centerId = null, isSuperAdmin = false) => {
+  update: async (id, fields) => {
     try {
       const { setClause, values } = buildUpdateFragments(fields, {
         quote: false,
       });
-      const scoped = scopeQuery(
-        {
-          text: `UPDATE ${tableName} SET ${setClause} WHERE id = $${
-            values.length + 1
-          } RETURNING *`,
-          values: [...values, id],
-        },
-        { centerId, isSuperAdmin, column: "center_id" },
-      );
-
-      const res = await pool.query(scoped.text, scoped.values);
+      const query = `UPDATE ${tableName} SET ${setClause} WHERE id = $${
+        values.length + 1
+      } RETURNING *`;
+      const res = await pool.query(query, [...values, id]);
       if (res.rowCount === 0) return null;
       return res.rows[0];
     } catch (err) {
@@ -114,17 +97,10 @@ const newBabyBonusModel = {
     }
   },
 
-  delete: async (id, centerId = null, isSuperAdmin = false) => {
+  delete: async (id) => {
     try {
-      const scoped = scopeQuery(
-        {
-          text: `DELETE FROM ${tableName} WHERE id = $1 RETURNING *`,
-          values: [id],
-        },
-        { centerId, isSuperAdmin, column: "center_id" },
-      );
-
-      const res = await pool.query(scoped.text, scoped.values);
+      const query = `DELETE FROM ${tableName} WHERE id = $1 RETURNING *`;
+      const res = await pool.query(query, [id]);
       if (res.rowCount === 0) return null;
       return res.rows[0];
     } catch (err) {

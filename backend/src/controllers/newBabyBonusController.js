@@ -4,10 +4,8 @@ const fs = require('fs').promises;
 const newBabyBonusController = {
   getAll: async (req, res) => { 
     try {
-      const centerId = req.center_id || req.user?.center_id;
-      const isSuperAdmin = req.isAppAdmin || false;
       const imamProfileId = req.query.imam_profile_id || null;
-      const data = await newBabyBonusModel.getAll(centerId, isSuperAdmin, imamProfileId); 
+      const data = await newBabyBonusModel.getAll(imamProfileId); 
       res.json(data); 
     } catch(err){ 
       res.status(500).json({error: err.message}); 
@@ -16,9 +14,7 @@ const newBabyBonusController = {
   
   getById: async (req, res) => { 
     try {
-      const centerId = req.center_id || req.user?.center_id;
-      const isSuperAdmin = req.isAppAdmin || false;
-      const data = await newBabyBonusModel.getById(req.params.id, centerId, isSuperAdmin); 
+      const data = await newBabyBonusModel.getById(req.params.id); 
       if(!data) return res.status(404).json({error: 'Not found'}); 
       res.json(data); 
     } catch(err){ 
@@ -33,8 +29,6 @@ const newBabyBonusController = {
       const username = req.user?.username || 'system';
       fields.created_by = username;
       fields.updated_by = username;
-      
-      fields.center_id = req.center_id || req.user?.center_id;
       
       if (req.files && req.files.Baby_Image && req.files.Baby_Image.length > 0) {
         const file = req.files.Baby_Image[0];
@@ -95,9 +89,7 @@ const newBabyBonusController = {
         await fs.unlink(file.path);
       }
       
-      const centerId = req.center_id || req.user?.center_id;
-      const isSuperAdmin = req.isAppAdmin || false;
-      const data = await newBabyBonusModel.update(req.params.id, fields, centerId, isSuperAdmin); 
+      const data = await newBabyBonusModel.update(req.params.id, fields); 
       if (!data) {
         return res.status(404).json({error: 'Not found'}); 
       }
@@ -109,9 +101,7 @@ const newBabyBonusController = {
   
   delete: async (req, res) => { 
     try {
-      const centerId = req.center_id || req.user?.center_id;
-      const isSuperAdmin = req.isAppAdmin || false;
-      const deleted = await newBabyBonusModel.delete(req.params.id, centerId, isSuperAdmin); 
+      const deleted = await newBabyBonusModel.delete(req.params.id); 
       if (!deleted) {
         return res.status(404).json({error: 'Not found'}); 
       }
@@ -123,9 +113,7 @@ const newBabyBonusController = {
 
   downloadBabyImage: async (req, res) => {
     try {
-      const centerId = req.center_id || req.user?.center_id;
-      const isSuperAdmin = req.isAppAdmin || false;
-      const record = await newBabyBonusModel.getById(req.params.id, centerId, isSuperAdmin);
+      const record = await newBabyBonusModel.getById(req.params.id);
       if (!record) return res.status(404).send("Record not found");
       if (!record.Baby_Image) return res.status(404).send("No baby image found");
   
@@ -152,9 +140,7 @@ const newBabyBonusController = {
 
   downloadBirthCertificate: async (req, res) => {
     try {
-      const centerId = req.center_id || req.user?.center_id;
-      const isSuperAdmin = req.isAppAdmin || false;
-      const record = await newBabyBonusModel.getById(req.params.id, centerId, isSuperAdmin);
+      const record = await newBabyBonusModel.getById(req.params.id);
       if (!record) return res.status(404).send("Record not found");
       if (!record.Birth_Certificate) return res.status(404).send("No birth certificate found");
   

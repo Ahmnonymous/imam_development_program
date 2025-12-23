@@ -1355,7 +1355,9 @@ CREATE TABLE IF NOT EXISTS Imam_Profiles (
     Race BIGINT,
     Gender BIGINT,
     Marital_Status BIGINT,
-    center_id BIGINT,
+    nationality_id BIGINT,
+    province_id BIGINT,
+    suburb_id BIGINT,
     Created_By VARCHAR(255),
     Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     Updated_By VARCHAR(255),
@@ -1365,8 +1367,9 @@ CREATE TABLE IF NOT EXISTS Imam_Profiles (
     CONSTRAINT fk_imam_madhab FOREIGN KEY (Madhab) REFERENCES Madhab(ID),
     CONSTRAINT fk_imam_race FOREIGN KEY (Race) REFERENCES Race(ID),
     CONSTRAINT fk_imam_gender FOREIGN KEY (Gender) REFERENCES Gender(ID),
-    CONSTRAINT fk_imam_marital_status FOREIGN KEY (Marital_Status) REFERENCES Marital_Status(ID),
-    CONSTRAINT fk_imam_center_id FOREIGN KEY (center_id) REFERENCES Center_Detail(ID)
+    CONSTRAINT fk_imam_marital_status FOREIGN KEY (Marital_Status) REFERENCES Marital_Status(ID)
+    -- Note: Foreign keys for nationality_id, province_id, suburb_id are added by migration block
+    -- after Country, Province, and Suburb tables are created
 );
 
 -- ============================================================
@@ -1386,7 +1389,6 @@ CREATE TABLE IF NOT EXISTS Jumuah_Khutbah_Topic_Submission (
     status_id BIGINT NOT NULL DEFAULT 1,
     comment TEXT,
     datestamp TIMESTAMPTZ NOT NULL DEFAULT now(),
-    center_id BIGINT,
     Created_By VARCHAR(255),
     Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     Updated_By VARCHAR(255),
@@ -1394,8 +1396,7 @@ CREATE TABLE IF NOT EXISTS Jumuah_Khutbah_Topic_Submission (
     CONSTRAINT fk_jumuah_imam FOREIGN KEY (imam_profile_id) REFERENCES Imam_Profiles(ID) ON DELETE CASCADE,
     CONSTRAINT fk_jumuah_town FOREIGN KEY (town) REFERENCES Suburb(ID),
     CONSTRAINT fk_jumuah_language FOREIGN KEY (language) REFERENCES Language(ID),
-    CONSTRAINT fk_jumuah_status FOREIGN KEY (status_id) REFERENCES Status(ID),
-    CONSTRAINT fk_jumuah_center_id FOREIGN KEY (center_id) REFERENCES Center_Detail(ID)
+    CONSTRAINT fk_jumuah_status FOREIGN KEY (status_id) REFERENCES Status(ID)
 );
 
 -- Jumuah Audio Khutbah
@@ -1416,15 +1417,13 @@ CREATE TABLE IF NOT EXISTS Jumuah_Audio_Khutbah (
     status_id BIGINT NOT NULL DEFAULT 1,
     comment TEXT,
     datestamp TIMESTAMPTZ NOT NULL DEFAULT now(),
-    center_id BIGINT,
     Created_By VARCHAR(255),
     Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     Updated_By VARCHAR(255),
     Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     CONSTRAINT fk_audio_imam FOREIGN KEY (imam_profile_id) REFERENCES Imam_Profiles(ID) ON DELETE CASCADE,
     CONSTRAINT fk_audio_language FOREIGN KEY (language) REFERENCES Language(ID),
-    CONSTRAINT fk_audio_status FOREIGN KEY (status_id) REFERENCES Status(ID),
-    CONSTRAINT fk_audio_center_id FOREIGN KEY (center_id) REFERENCES Center_Detail(ID)
+    CONSTRAINT fk_audio_status FOREIGN KEY (status_id) REFERENCES Status(ID)
 );
 
 -- Pearls of Wisdom
@@ -1444,15 +1443,13 @@ CREATE TABLE IF NOT EXISTS Pearls_Of_Wisdom (
     status_id BIGINT NOT NULL DEFAULT 1,
     comment TEXT,
     datestamp TIMESTAMPTZ NOT NULL DEFAULT now(),
-    center_id BIGINT,
     Created_By VARCHAR(255),
     Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     Updated_By VARCHAR(255),
     Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     CONSTRAINT fk_pearls_imam FOREIGN KEY (imam_profile_id) REFERENCES Imam_Profiles(ID) ON DELETE CASCADE,
     CONSTRAINT fk_pearls_resource_type FOREIGN KEY (resource_type) REFERENCES Resource_Type(ID),
-    CONSTRAINT fk_pearls_status FOREIGN KEY (status_id) REFERENCES Status(ID),
-    CONSTRAINT fk_pearls_center_id FOREIGN KEY (center_id) REFERENCES Center_Detail(ID)
+    CONSTRAINT fk_pearls_status FOREIGN KEY (status_id) REFERENCES Status(ID)
 );
 
 -- Medical Reimbursement
@@ -1481,7 +1478,6 @@ CREATE TABLE IF NOT EXISTS Medical_Reimbursement (
     status_id BIGINT NOT NULL DEFAULT 1,
     comment TEXT,
     datestamp TIMESTAMPTZ NOT NULL DEFAULT now(),
-    center_id BIGINT,
     Created_By VARCHAR(255),
     Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     Updated_By VARCHAR(255),
@@ -1490,8 +1486,7 @@ CREATE TABLE IF NOT EXISTS Medical_Reimbursement (
     CONSTRAINT fk_medical_relationship_type FOREIGN KEY (relationship_type) REFERENCES Relationship_Types(ID),
     CONSTRAINT fk_medical_visit_type FOREIGN KEY (visit_type) REFERENCES Medical_Visit_Type(ID),
     CONSTRAINT fk_medical_service_provider FOREIGN KEY (service_provider) REFERENCES Medical_Service_Provider(ID),
-    CONSTRAINT fk_medical_status FOREIGN KEY (status_id) REFERENCES Status(ID),
-    CONSTRAINT fk_medical_center_id FOREIGN KEY (center_id) REFERENCES Center_Detail(ID)
+    CONSTRAINT fk_medical_status FOREIGN KEY (status_id) REFERENCES Status(ID)
 );
 
 -- Community Engagement
@@ -1511,15 +1506,13 @@ CREATE TABLE IF NOT EXISTS Community_Engagement (
     status_id BIGINT NOT NULL DEFAULT 1,
     comment TEXT,
     datestamp TIMESTAMPTZ NOT NULL DEFAULT now(),
-    center_id BIGINT,
     Created_By VARCHAR(255),
     Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     Updated_By VARCHAR(255),
     Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     CONSTRAINT fk_engagement_imam FOREIGN KEY (imam_profile_id) REFERENCES Imam_Profiles(ID) ON DELETE CASCADE,
     CONSTRAINT fk_engagement_type FOREIGN KEY (engagement_type) REFERENCES Community_Engagement_Type(ID),
-    CONSTRAINT fk_engagement_status FOREIGN KEY (status_id) REFERENCES Status(ID),
-    CONSTRAINT fk_engagement_center_id FOREIGN KEY (center_id) REFERENCES Center_Detail(ID)
+    CONSTRAINT fk_engagement_status FOREIGN KEY (status_id) REFERENCES Status(ID)
 );
 
 -- Nikah Bonus
@@ -1545,15 +1538,13 @@ CREATE TABLE IF NOT EXISTS Nikah_Bonus (
     status_id BIGINT NOT NULL DEFAULT 1,
     comment TEXT,
     datestamp TIMESTAMPTZ NOT NULL DEFAULT now(),
-    center_id BIGINT,
     Created_By VARCHAR(255),
     Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     Updated_By VARCHAR(255),
     Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     CONSTRAINT fk_nikah_imam FOREIGN KEY (imam_profile_id) REFERENCES Imam_Profiles(ID) ON DELETE CASCADE,
     CONSTRAINT fk_nikah_first FOREIGN KEY (is_first_nikah) REFERENCES Yes_No(ID),
-    CONSTRAINT fk_nikah_status FOREIGN KEY (status_id) REFERENCES Status(ID),
-    CONSTRAINT fk_nikah_center_id FOREIGN KEY (center_id) REFERENCES Center_Detail(ID)
+    CONSTRAINT fk_nikah_status FOREIGN KEY (status_id) REFERENCES Status(ID)
 );
 
 -- New Muslim Bonus
@@ -1572,7 +1563,6 @@ CREATE TABLE IF NOT EXISTS New_Muslim_Bonus (
     status_id BIGINT NOT NULL DEFAULT 1,
     comment TEXT,
     datestamp TIMESTAMPTZ NOT NULL DEFAULT now(),
-    center_id BIGINT,
     Created_By VARCHAR(255),
     Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     Updated_By VARCHAR(255),
@@ -1581,8 +1571,7 @@ CREATE TABLE IF NOT EXISTS New_Muslim_Bonus (
     CONSTRAINT fk_newmuslim_gender FOREIGN KEY (revert_gender) REFERENCES Gender(ID),
     CONSTRAINT fk_newmuslim_pack FOREIGN KEY (revert_pack_requested) REFERENCES Yes_No(ID),
     CONSTRAINT fk_newmuslim_course FOREIGN KEY (course_completed) REFERENCES Yes_No(ID),
-    CONSTRAINT fk_newmuslim_status FOREIGN KEY (status_id) REFERENCES Status(ID),
-    CONSTRAINT fk_newmuslim_center_id FOREIGN KEY (center_id) REFERENCES Center_Detail(ID)
+    CONSTRAINT fk_newmuslim_status FOREIGN KEY (status_id) REFERENCES Status(ID)
 );
 
 -- New Baby Bonus
@@ -1609,15 +1598,13 @@ CREATE TABLE IF NOT EXISTS New_Baby_Bonus (
     status_id BIGINT NOT NULL DEFAULT 1,
     comment TEXT,
     datestamp TIMESTAMPTZ NOT NULL DEFAULT now(),
-    center_id BIGINT,
     Created_By VARCHAR(255),
     Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     Updated_By VARCHAR(255),
     Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     CONSTRAINT fk_baby_imam FOREIGN KEY (imam_profile_id) REFERENCES Imam_Profiles(ID) ON DELETE CASCADE,
     CONSTRAINT fk_baby_gender FOREIGN KEY (baby_gender) REFERENCES Gender(ID),
-    CONSTRAINT fk_baby_status FOREIGN KEY (status_id) REFERENCES Status(ID),
-    CONSTRAINT fk_baby_center_id FOREIGN KEY (center_id) REFERENCES Center_Detail(ID)
+    CONSTRAINT fk_baby_status FOREIGN KEY (status_id) REFERENCES Status(ID)
 );
 
 -- ============================================================
@@ -1850,18 +1837,357 @@ CREATE INDEX idx_applicant_expense_type_id ON Applicant_Expense (Expense_Type_ID
 CREATE INDEX idx_applicant_income_assessment_id ON Applicant_Income (Financial_Assessment_ID);
 CREATE INDEX idx_applicant_income_type_id ON Applicant_Income (Income_Type_ID);
 
--- Imam Management System Indexes
-CREATE INDEX IF NOT EXISTS idx_imam_profiles_center ON Imam_Profiles(center_id);
-CREATE INDEX IF NOT EXISTS idx_imam_profiles_nationality ON Imam_Profiles(Nationality);
-CREATE INDEX IF NOT EXISTS idx_jumuah_imam ON Jumuah_Khutbah_Topic_Submission(imam_profile_id);
-CREATE INDEX IF NOT EXISTS idx_pearls_imam ON Pearls_Of_Wisdom(imam_profile_id);
-CREATE INDEX IF NOT EXISTS idx_medical_imam ON Medical_Reimbursement(imam_profile_id);
-CREATE INDEX IF NOT EXISTS idx_engagement_imam ON Community_Engagement(imam_profile_id);
-CREATE INDEX IF NOT EXISTS idx_nikah_imam ON Nikah_Bonus(imam_profile_id);
-CREATE INDEX IF NOT EXISTS idx_newmuslim_imam ON New_Muslim_Bonus(imam_profile_id);
-CREATE INDEX IF NOT EXISTS idx_baby_imam ON New_Baby_Bonus(imam_profile_id);
-CREATE INDEX IF NOT EXISTS idx_province_country ON Province(country_id);
-CREATE INDEX IF NOT EXISTS idx_suburb_province ON Suburb(province_id);
+-- Imam Management System Indexes (created conditionally to ensure tables exist)
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'Imam_Profiles' AND table_schema = current_schema()) THEN
+        CREATE INDEX IF NOT EXISTS idx_imam_profiles_nationality ON Imam_Profiles(Nationality);
+        CREATE INDEX IF NOT EXISTS idx_imam_profiles_nationality_id ON Imam_Profiles(nationality_id);
+        CREATE INDEX IF NOT EXISTS idx_imam_profiles_province_id ON Imam_Profiles(province_id);
+        CREATE INDEX IF NOT EXISTS idx_imam_profiles_suburb_id ON Imam_Profiles(suburb_id);
+    END IF;
+    
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'Jumuah_Khutbah_Topic_Submission' AND table_schema = current_schema()) THEN
+        CREATE INDEX IF NOT EXISTS idx_jumuah_imam ON Jumuah_Khutbah_Topic_Submission(imam_profile_id);
+    END IF;
+    
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'Pearls_Of_Wisdom' AND table_schema = current_schema()) THEN
+        CREATE INDEX IF NOT EXISTS idx_pearls_imam ON Pearls_Of_Wisdom(imam_profile_id);
+    END IF;
+    
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'Medical_Reimbursement' AND table_schema = current_schema()) THEN
+        CREATE INDEX IF NOT EXISTS idx_medical_imam ON Medical_Reimbursement(imam_profile_id);
+    END IF;
+    
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'Community_Engagement' AND table_schema = current_schema()) THEN
+        CREATE INDEX IF NOT EXISTS idx_engagement_imam ON Community_Engagement(imam_profile_id);
+    END IF;
+    
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'Nikah_Bonus' AND table_schema = current_schema()) THEN
+        CREATE INDEX IF NOT EXISTS idx_nikah_imam ON Nikah_Bonus(imam_profile_id);
+    END IF;
+    
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'New_Muslim_Bonus' AND table_schema = current_schema()) THEN
+        CREATE INDEX IF NOT EXISTS idx_newmuslim_imam ON New_Muslim_Bonus(imam_profile_id);
+    END IF;
+    
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'New_Baby_Bonus' AND table_schema = current_schema()) THEN
+        CREATE INDEX IF NOT EXISTS idx_baby_imam ON New_Baby_Bonus(imam_profile_id);
+    END IF;
+    
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'Province' AND table_schema = current_schema()) THEN
+        CREATE INDEX IF NOT EXISTS idx_province_country ON Province(country_id);
+    END IF;
+    
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'Suburb' AND table_schema = current_schema()) THEN
+        CREATE INDEX IF NOT EXISTS idx_suburb_province ON Suburb(province_id);
+    END IF;
+END $$;
+
+-- ============================================================
+-- IMAM MODULE REFACTOR: Remove center_id, Add Location Fields
+-- (Safe migration for existing databases - runs after all tables are created)
+-- ============================================================
+DO $$
+BEGIN
+    -- Only run if tables exist (for existing database migrations)
+    IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'Imam_Profiles' AND table_schema = current_schema()) THEN
+        RETURN;
+    END IF;
+
+    -- Remove center_id from Imam_Profiles and all child tables
+    -- Step 1: Drop foreign key constraints
+    IF EXISTS (
+        SELECT 1 FROM information_schema.table_constraints 
+        WHERE table_name = 'Imam_Profiles' 
+        AND constraint_name = 'fk_imam_center_id'
+        AND table_schema = current_schema()
+    ) THEN
+        ALTER TABLE Imam_Profiles DROP CONSTRAINT fk_imam_center_id;
+        RAISE NOTICE 'Dropped fk_imam_center_id constraint';
+    END IF;
+
+    -- Drop center_id from child tables
+    IF EXISTS (
+        SELECT 1 FROM information_schema.table_constraints 
+        WHERE table_name = 'Jumuah_Khutbah_Topic_Submission' 
+        AND constraint_name = 'fk_jumuah_center_id'
+        AND table_schema = current_schema()
+    ) THEN
+        ALTER TABLE Jumuah_Khutbah_Topic_Submission DROP CONSTRAINT fk_jumuah_center_id;
+        RAISE NOTICE 'Dropped fk_jumuah_center_id constraint';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1 FROM information_schema.table_constraints 
+        WHERE table_name = 'Jumuah_Audio_Khutbah' 
+        AND constraint_name = 'fk_audio_center_id'
+        AND table_schema = current_schema()
+    ) THEN
+        ALTER TABLE Jumuah_Audio_Khutbah DROP CONSTRAINT fk_audio_center_id;
+        RAISE NOTICE 'Dropped fk_audio_center_id constraint';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1 FROM information_schema.table_constraints 
+        WHERE table_name = 'Pearls_Of_Wisdom' 
+        AND constraint_name = 'fk_pearls_center_id'
+        AND table_schema = current_schema()
+    ) THEN
+        ALTER TABLE Pearls_Of_Wisdom DROP CONSTRAINT fk_pearls_center_id;
+        RAISE NOTICE 'Dropped fk_pearls_center_id constraint';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1 FROM information_schema.table_constraints 
+        WHERE table_name = 'Medical_Reimbursement' 
+        AND constraint_name = 'fk_medical_center_id'
+        AND table_schema = current_schema()
+    ) THEN
+        ALTER TABLE Medical_Reimbursement DROP CONSTRAINT fk_medical_center_id;
+        RAISE NOTICE 'Dropped fk_medical_center_id constraint';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1 FROM information_schema.table_constraints 
+        WHERE table_name = 'Community_Engagement' 
+        AND constraint_name = 'fk_engagement_center_id'
+        AND table_schema = current_schema()
+    ) THEN
+        ALTER TABLE Community_Engagement DROP CONSTRAINT fk_engagement_center_id;
+        RAISE NOTICE 'Dropped fk_engagement_center_id constraint';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1 FROM information_schema.table_constraints 
+        WHERE table_name = 'Nikah_Bonus' 
+        AND constraint_name = 'fk_nikah_center_id'
+        AND table_schema = current_schema()
+    ) THEN
+        ALTER TABLE Nikah_Bonus DROP CONSTRAINT fk_nikah_center_id;
+        RAISE NOTICE 'Dropped fk_nikah_center_id constraint';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1 FROM information_schema.table_constraints 
+        WHERE table_name = 'New_Muslim_Bonus' 
+        AND constraint_name = 'fk_newmuslim_center_id'
+        AND table_schema = current_schema()
+    ) THEN
+        ALTER TABLE New_Muslim_Bonus DROP CONSTRAINT fk_newmuslim_center_id;
+        RAISE NOTICE 'Dropped fk_newmuslim_center_id constraint';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1 FROM information_schema.table_constraints 
+        WHERE table_name = 'New_Baby_Bonus' 
+        AND constraint_name = 'fk_baby_center_id'
+        AND table_schema = current_schema()
+    ) THEN
+        ALTER TABLE New_Baby_Bonus DROP CONSTRAINT fk_baby_center_id;
+        RAISE NOTICE 'Dropped fk_baby_center_id constraint';
+    END IF;
+
+    -- Step 2: Drop indexes
+    IF EXISTS (
+        SELECT 1 FROM pg_indexes 
+        WHERE indexname = 'idx_imam_profiles_center'
+        AND schemaname = current_schema()
+    ) THEN
+        DROP INDEX IF EXISTS idx_imam_profiles_center;
+        RAISE NOTICE 'Dropped idx_imam_profiles_center index';
+    END IF;
+
+    -- Step 3: Drop center_id columns
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'Imam_Profiles' 
+        AND column_name = 'center_id'
+        AND table_schema = current_schema()
+    ) THEN
+        ALTER TABLE Imam_Profiles DROP COLUMN center_id;
+        RAISE NOTICE 'Dropped center_id from Imam_Profiles';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'Jumuah_Khutbah_Topic_Submission' 
+        AND column_name = 'center_id'
+        AND table_schema = current_schema()
+    ) THEN
+        ALTER TABLE Jumuah_Khutbah_Topic_Submission DROP COLUMN center_id;
+        RAISE NOTICE 'Dropped center_id from Jumuah_Khutbah_Topic_Submission';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'Jumuah_Audio_Khutbah' 
+        AND column_name = 'center_id'
+        AND table_schema = current_schema()
+    ) THEN
+        ALTER TABLE Jumuah_Audio_Khutbah DROP COLUMN center_id;
+        RAISE NOTICE 'Dropped center_id from Jumuah_Audio_Khutbah';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'Pearls_Of_Wisdom' 
+        AND column_name = 'center_id'
+        AND table_schema = current_schema()
+    ) THEN
+        ALTER TABLE Pearls_Of_Wisdom DROP COLUMN center_id;
+        RAISE NOTICE 'Dropped center_id from Pearls_Of_Wisdom';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'Medical_Reimbursement' 
+        AND column_name = 'center_id'
+        AND table_schema = current_schema()
+    ) THEN
+        ALTER TABLE Medical_Reimbursement DROP COLUMN center_id;
+        RAISE NOTICE 'Dropped center_id from Medical_Reimbursement';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'Community_Engagement' 
+        AND column_name = 'center_id'
+        AND table_schema = current_schema()
+    ) THEN
+        ALTER TABLE Community_Engagement DROP COLUMN center_id;
+        RAISE NOTICE 'Dropped center_id from Community_Engagement';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'Nikah_Bonus' 
+        AND column_name = 'center_id'
+        AND table_schema = current_schema()
+    ) THEN
+        ALTER TABLE Nikah_Bonus DROP COLUMN center_id;
+        RAISE NOTICE 'Dropped center_id from Nikah_Bonus';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'New_Muslim_Bonus' 
+        AND column_name = 'center_id'
+        AND table_schema = current_schema()
+    ) THEN
+        ALTER TABLE New_Muslim_Bonus DROP COLUMN center_id;
+        RAISE NOTICE 'Dropped center_id from New_Muslim_Bonus';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'New_Baby_Bonus' 
+        AND column_name = 'center_id'
+        AND table_schema = current_schema()
+    ) THEN
+        ALTER TABLE New_Baby_Bonus DROP COLUMN center_id;
+        RAISE NOTICE 'Dropped center_id from New_Baby_Bonus';
+    END IF;
+
+    -- Step 4: Add location fields to Imam_Profiles (only if they don't exist)
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'Imam_Profiles' 
+        AND column_name = 'nationality_id'
+        AND table_schema = current_schema()
+    ) THEN
+        ALTER TABLE Imam_Profiles ADD COLUMN nationality_id BIGINT;
+        RAISE NOTICE 'Added nationality_id to Imam_Profiles';
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'Imam_Profiles' 
+        AND column_name = 'province_id'
+        AND table_schema = current_schema()
+    ) THEN
+        ALTER TABLE Imam_Profiles ADD COLUMN province_id BIGINT;
+        RAISE NOTICE 'Added province_id to Imam_Profiles';
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'Imam_Profiles' 
+        AND column_name = 'suburb_id'
+        AND table_schema = current_schema()
+    ) THEN
+        ALTER TABLE Imam_Profiles ADD COLUMN suburb_id BIGINT;
+        RAISE NOTICE 'Added suburb_id to Imam_Profiles';
+    END IF;
+
+    -- Step 5: Add foreign key constraints for location fields (only if Country/Province/Suburb tables exist)
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'Country' AND table_schema = current_schema()) THEN
+        IF NOT EXISTS (
+            SELECT 1 FROM information_schema.table_constraints 
+            WHERE table_name = 'Imam_Profiles' 
+            AND constraint_name = 'fk_imam_nationality_id'
+            AND table_schema = current_schema()
+        ) THEN
+            ALTER TABLE Imam_Profiles 
+            ADD CONSTRAINT fk_imam_nationality_id FOREIGN KEY (nationality_id) REFERENCES Country(ID);
+            RAISE NOTICE 'Added fk_imam_nationality_id constraint';
+        END IF;
+    END IF;
+
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'Province' AND table_schema = current_schema()) THEN
+        IF NOT EXISTS (
+            SELECT 1 FROM information_schema.table_constraints 
+            WHERE table_name = 'Imam_Profiles' 
+            AND constraint_name = 'fk_imam_province_id'
+            AND table_schema = current_schema()
+        ) THEN
+            ALTER TABLE Imam_Profiles 
+            ADD CONSTRAINT fk_imam_province_id FOREIGN KEY (province_id) REFERENCES Province(ID);
+            RAISE NOTICE 'Added fk_imam_province_id constraint';
+        END IF;
+    END IF;
+
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'Suburb' AND table_schema = current_schema()) THEN
+        IF NOT EXISTS (
+            SELECT 1 FROM information_schema.table_constraints 
+            WHERE table_name = 'Imam_Profiles' 
+            AND constraint_name = 'fk_imam_suburb_id'
+            AND table_schema = current_schema()
+        ) THEN
+            ALTER TABLE Imam_Profiles 
+            ADD CONSTRAINT fk_imam_suburb_id FOREIGN KEY (suburb_id) REFERENCES Suburb(ID);
+            RAISE NOTICE 'Added fk_imam_suburb_id constraint';
+        END IF;
+    END IF;
+
+    -- Step 6: Create indexes for location fields (if they don't exist)
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_indexes 
+        WHERE indexname = 'idx_imam_profiles_nationality_id'
+        AND schemaname = current_schema()
+    ) THEN
+        CREATE INDEX idx_imam_profiles_nationality_id ON Imam_Profiles(nationality_id);
+        RAISE NOTICE 'Created idx_imam_profiles_nationality_id index';
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_indexes 
+        WHERE indexname = 'idx_imam_profiles_province_id'
+        AND schemaname = current_schema()
+    ) THEN
+        CREATE INDEX idx_imam_profiles_province_id ON Imam_Profiles(province_id);
+        RAISE NOTICE 'Created idx_imam_profiles_province_id index';
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_indexes 
+        WHERE indexname = 'idx_imam_profiles_suburb_id'
+        AND schemaname = current_schema()
+    ) THEN
+        CREATE INDEX idx_imam_profiles_suburb_id ON Imam_Profiles(suburb_id);
+        RAISE NOTICE 'Created idx_imam_profiles_suburb_id index';
+    END IF;
+END $$;
 
 -- Views
 CREATE OR REPLACE VIEW Service_Rating_With_Score AS

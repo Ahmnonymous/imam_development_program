@@ -3,10 +3,8 @@ const jumuahKhutbahTopicSubmissionModel = require('../models/jumuahKhutbahTopicS
 const jumuahKhutbahTopicSubmissionController = {
   getAll: async (req, res) => { 
     try {
-      const centerId = req.center_id || req.user?.center_id;
-      const isSuperAdmin = req.isAppAdmin || false;
       const imamProfileId = req.query.imam_profile_id || null;
-      const data = await jumuahKhutbahTopicSubmissionModel.getAll(centerId, isSuperAdmin, imamProfileId); 
+      const data = await jumuahKhutbahTopicSubmissionModel.getAll(imamProfileId); 
       res.json(data); 
     } catch(err){ 
       res.status(500).json({error: err.message}); 
@@ -15,9 +13,7 @@ const jumuahKhutbahTopicSubmissionController = {
   
   getById: async (req, res) => { 
     try {
-      const centerId = req.center_id || req.user?.center_id;
-      const isSuperAdmin = req.isAppAdmin || false;
-      const data = await jumuahKhutbahTopicSubmissionModel.getById(req.params.id, centerId, isSuperAdmin); 
+      const data = await jumuahKhutbahTopicSubmissionModel.getById(req.params.id); 
       if(!data) return res.status(404).json({error: 'Not found'}); 
       res.json(data); 
     } catch(err){ 
@@ -32,8 +28,6 @@ const jumuahKhutbahTopicSubmissionController = {
       const username = req.user?.username || 'system';
       fields.created_by = username;
       fields.updated_by = username;
-      
-      fields.center_id = req.center_id || req.user?.center_id;
       
       const data = await jumuahKhutbahTopicSubmissionModel.create(fields); 
       res.status(201).json(data); 
@@ -50,9 +44,7 @@ const jumuahKhutbahTopicSubmissionController = {
       fields.updated_by = username;
       delete fields.created_by;
       
-      const centerId = req.center_id || req.user?.center_id;
-      const isSuperAdmin = req.isAppAdmin || false;
-      const data = await jumuahKhutbahTopicSubmissionModel.update(req.params.id, fields, centerId, isSuperAdmin); 
+      const data = await jumuahKhutbahTopicSubmissionModel.update(req.params.id, fields); 
       if (!data) {
         return res.status(404).json({error: 'Not found'}); 
       }
@@ -64,9 +56,7 @@ const jumuahKhutbahTopicSubmissionController = {
   
   delete: async (req, res) => { 
     try {
-      const centerId = req.center_id || req.user?.center_id;
-      const isSuperAdmin = req.isAppAdmin || false;
-      const deleted = await jumuahKhutbahTopicSubmissionModel.delete(req.params.id, centerId, isSuperAdmin); 
+      const deleted = await jumuahKhutbahTopicSubmissionModel.delete(req.params.id); 
       if (!deleted) {
         return res.status(404).json({error: 'Not found'}); 
       }
