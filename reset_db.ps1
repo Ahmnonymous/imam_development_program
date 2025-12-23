@@ -7,14 +7,23 @@ $DB_NAME     = "idp_app"
 $DB_USER     = "postgres"
 $DB_HOST     = "localhost"
 $DB_PORT     = "5432"
-$SCHEMA_FILE = "D:\WORK\LUQMAN\IDP_Project\IDP\backend\src\schema\schema.sql"
+$SCHEMA_FILE_1 = "D:\WORK\LUQMAN\IDP_Project\IDP\backend\src\schema\schema.sql"
+$SCHEMA_FILE_2 = "C:\imam_development_program\backend\src\schema\schema.sql"
 
 # Optional: set password once (avoid prompt)
 $env:PGPASSWORD = "123456"
 
-# ---- SAFETY CHECK ----
-if (-not (Test-Path $SCHEMA_FILE)) {
-    Write-Error "Schema file not found: $SCHEMA_FILE"
+# ---- SCHEMA FILE SELECTION ----
+if (Test-Path $SCHEMA_FILE_1) {
+    $SCHEMA_FILE = $SCHEMA_FILE_1
+    Write-Host "Using schema file: $SCHEMA_FILE"
+} elseif (Test-Path $SCHEMA_FILE_2) {
+    $SCHEMA_FILE = $SCHEMA_FILE_2
+    Write-Host "Using schema file: $SCHEMA_FILE"
+} else {
+    Write-Error "Schema file not found in either location:"
+    Write-Error "  - $SCHEMA_FILE_1"
+    Write-Error "  - $SCHEMA_FILE_2"
     exit 1
 }
 

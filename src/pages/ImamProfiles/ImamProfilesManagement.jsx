@@ -51,18 +51,10 @@ const ImamProfilesManagement = () => {
     relationshipType: [],
   });
 
-  // Fetch all imam profiles on mount
-  useEffect(() => {
-    fetchImamProfiles();
-    fetchLookupData();
+  const showAlert = useCallback((message, color = "success") => {
+    setAlert({ message, color });
+    setTimeout(() => setAlert(null), 4000);
   }, []);
-
-  // Fetch detail data when an imam profile is selected
-  useEffect(() => {
-    if (selectedImamProfile) {
-      fetchImamProfileDetails(selectedImamProfile.id);
-    }
-  }, [selectedImamProfile]);
 
   const fetchImamProfiles = async () => {
     try {
@@ -79,6 +71,44 @@ const ImamProfilesManagement = () => {
       setLoading(false);
     }
   };
+
+  const fetchImamProfileDetails = useCallback(async (imamProfileId) => {
+    if (!imamProfileId) return;
+    
+    try {
+      const [
+        jumuahKhutbahTopicsRes,
+        jumuahAudioKhutbahRes,
+        pearlsOfWisdomRes,
+        medicalReimbursementsRes,
+        communityEngagementsRes,
+        nikahBonusesRes,
+        newMuslimBonusesRes,
+        newBabyBonusesRes,
+      ] = await Promise.all([
+        axiosApi.get(`${API_BASE_URL}/jumuahKhutbahTopicSubmission?imam_profile_id=${imamProfileId}`),
+        axiosApi.get(`${API_BASE_URL}/jumuahAudioKhutbah?imam_profile_id=${imamProfileId}`),
+        axiosApi.get(`${API_BASE_URL}/pearlsOfWisdom?imam_profile_id=${imamProfileId}`),
+        axiosApi.get(`${API_BASE_URL}/medicalReimbursement?imam_profile_id=${imamProfileId}`),
+        axiosApi.get(`${API_BASE_URL}/communityEngagement?imam_profile_id=${imamProfileId}`),
+        axiosApi.get(`${API_BASE_URL}/nikahBonus?imam_profile_id=${imamProfileId}`),
+        axiosApi.get(`${API_BASE_URL}/newMuslimBonus?imam_profile_id=${imamProfileId}`),
+        axiosApi.get(`${API_BASE_URL}/newBabyBonus?imam_profile_id=${imamProfileId}`),
+      ]);
+
+      setJumuahKhutbahTopics(jumuahKhutbahTopicsRes.data || []);
+      setJumuahAudioKhutbah(jumuahAudioKhutbahRes.data || []);
+      setPearlsOfWisdom(pearlsOfWisdomRes.data || []);
+      setMedicalReimbursements(medicalReimbursementsRes.data || []);
+      setCommunityEngagements(communityEngagementsRes.data || []);
+      setNikahBonuses(nikahBonusesRes.data || []);
+      setNewMuslimBonuses(newMuslimBonusesRes.data || []);
+      setNewBabyBonuses(newBabyBonusesRes.data || []);
+    } catch (error) {
+      console.error("Error fetching imam profile details:", error);
+      showAlert("Failed to fetch imam profile details", "warning");
+    }
+  }, [showAlert]);
 
   const fetchLookupData = async () => {
     try {
@@ -148,46 +178,18 @@ const ImamProfilesManagement = () => {
     }
   };
 
-  const fetchImamProfileDetails = async (imamProfileId) => {
-    try {
-      const [
-        jumuahKhutbahTopicsRes,
-        jumuahAudioKhutbahRes,
-        pearlsOfWisdomRes,
-        medicalReimbursementsRes,
-        communityEngagementsRes,
-        nikahBonusesRes,
-        newMuslimBonusesRes,
-        newBabyBonusesRes,
-      ] = await Promise.all([
-        axiosApi.get(`${API_BASE_URL}/jumuahKhutbahTopicSubmission?imam_profile_id=${imamProfileId}`),
-        axiosApi.get(`${API_BASE_URL}/jumuahAudioKhutbah?imam_profile_id=${imamProfileId}`),
-        axiosApi.get(`${API_BASE_URL}/pearlsOfWisdom?imam_profile_id=${imamProfileId}`),
-        axiosApi.get(`${API_BASE_URL}/medicalReimbursement?imam_profile_id=${imamProfileId}`),
-        axiosApi.get(`${API_BASE_URL}/communityEngagement?imam_profile_id=${imamProfileId}`),
-        axiosApi.get(`${API_BASE_URL}/nikahBonus?imam_profile_id=${imamProfileId}`),
-        axiosApi.get(`${API_BASE_URL}/newMuslimBonus?imam_profile_id=${imamProfileId}`),
-        axiosApi.get(`${API_BASE_URL}/newBabyBonus?imam_profile_id=${imamProfileId}`),
-      ]);
+  // Fetch all imam profiles on mount
+  useEffect(() => {
+    fetchImamProfiles();
+    fetchLookupData();
+  }, []);
 
-      setJumuahKhutbahTopics(jumuahKhutbahTopicsRes.data || []);
-      setJumuahAudioKhutbah(jumuahAudioKhutbahRes.data || []);
-      setPearlsOfWisdom(pearlsOfWisdomRes.data || []);
-      setMedicalReimbursements(medicalReimbursementsRes.data || []);
-      setCommunityEngagements(communityEngagementsRes.data || []);
-      setNikahBonuses(nikahBonusesRes.data || []);
-      setNewMuslimBonuses(newMuslimBonusesRes.data || []);
-      setNewBabyBonuses(newBabyBonusesRes.data || []);
-    } catch (error) {
-      console.error("Error fetching imam profile details:", error);
-      showAlert("Failed to fetch imam profile details", "warning");
+  // Fetch detail data when an imam profile is selected
+  useEffect(() => {
+    if (selectedImamProfile?.id) {
+      fetchImamProfileDetails(selectedImamProfile.id);
     }
-  };
-
-  const showAlert = (message, color = "success") => {
-    setAlert({ message, color });
-    setTimeout(() => setAlert(null), 4000);
-  };
+  }, [selectedImamProfile?.id, fetchImamProfileDetails]);
 
   const getAlertIcon = (color) => {
     switch (color) {
@@ -245,10 +247,7 @@ const ImamProfilesManagement = () => {
     setNikahBonuses([]);
     setNewMuslimBonuses([]);
     setNewBabyBonuses([]);
-    // Fetch fresh detail data immediately for better UX
-    if (imamProfile?.id) {
-      fetchImamProfileDetails(imamProfile.id);
-    }
+    // Note: fetchImamProfileDetails will be called by useEffect when selectedImamProfile.id changes
   };
 
   const handleImamProfileUpdate = useCallback(() => {

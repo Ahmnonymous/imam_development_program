@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo } from "react";
 import { Card, CardBody, Nav, NavItem, NavLink, TabContent, TabPane } from "reactstrap";
 import classnames from "classnames";
 import { useRole } from "../../../helpers/useRole";
@@ -29,46 +29,46 @@ const DetailTabs = ({
   const { isOrgExecutive } = useRole();
   const [activeTab, setActiveTab] = useState("all");
 
-  const toggleTab = useCallback((tab) => {
+  const toggleTab = (tab) => {
     if (activeTab !== tab) {
       setActiveTab(tab);
     }
-  }, [activeTab]);
+  };
 
   const currentId = Number(imamProfileId);
-  const safeNum = useCallback((v) => (v === null || v === undefined || v === "" ? NaN : Number(v)), []);
+  const safeNum = (v) => (v === null || v === undefined || v === "" ? NaN : Number(v));
 
   const topicsForImam = useMemo(() => 
     (jumuahKhutbahTopics || []).filter((x) => safeNum(x.imam_profile_id) === currentId),
-    [jumuahKhutbahTopics, currentId, safeNum]
+    [jumuahKhutbahTopics, currentId]
   );
   const audioForImam = useMemo(() => 
     (jumuahAudioKhutbah || []).filter((x) => safeNum(x.imam_profile_id) === currentId),
-    [jumuahAudioKhutbah, currentId, safeNum]
+    [jumuahAudioKhutbah, currentId]
   );
   const pearlsForImam = useMemo(() => 
     (pearlsOfWisdom || []).filter((x) => safeNum(x.imam_profile_id) === currentId),
-    [pearlsOfWisdom, currentId, safeNum]
+    [pearlsOfWisdom, currentId]
   );
   const medicalForImam = useMemo(() => 
     (medicalReimbursements || []).filter((x) => safeNum(x.imam_profile_id) === currentId),
-    [medicalReimbursements, currentId, safeNum]
+    [medicalReimbursements, currentId]
   );
   const engagementForImam = useMemo(() => 
     (communityEngagements || []).filter((x) => safeNum(x.imam_profile_id) === currentId),
-    [communityEngagements, currentId, safeNum]
+    [communityEngagements, currentId]
   );
   const nikahForImam = useMemo(() => 
     (nikahBonuses || []).filter((x) => safeNum(x.imam_profile_id) === currentId),
-    [nikahBonuses, currentId, safeNum]
+    [nikahBonuses, currentId]
   );
   const newMuslimForImam = useMemo(() => 
     (newMuslimBonuses || []).filter((x) => safeNum(x.imam_profile_id) === currentId),
-    [newMuslimBonuses, currentId, safeNum]
+    [newMuslimBonuses, currentId]
   );
   const newBabyForImam = useMemo(() => 
     (newBabyBonuses || []).filter((x) => safeNum(x.imam_profile_id) === currentId),
-    [newBabyBonuses, currentId, safeNum]
+    [newBabyBonuses, currentId]
   );
 
   const tabs = [
