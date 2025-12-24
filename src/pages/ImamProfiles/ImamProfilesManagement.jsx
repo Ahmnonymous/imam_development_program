@@ -10,7 +10,7 @@ import DetailTabs from "./components/DetailTabs";
 
 const ImamProfilesManagement = () => {
   // Meta title
-  document.title = "Imam Profiles Management | IDP";
+  document.title = "Imam Profile Management | Welfare App";
 
   // State management
   const [imamProfiles, setImamProfiles] = useState([]);
@@ -19,42 +19,40 @@ const ImamProfilesManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [alert, setAlert] = useState(null);
 
-  // Detail data states
-  const [jumuahKhutbahTopics, setJumuahKhutbahTopics] = useState([]);
-  const [jumuahAudioKhutbah, setJumuahAudioKhutbah] = useState([]);
+  // Detail data states - ALL FROM IMAM TABLES
   const [pearlsOfWisdom, setPearlsOfWisdom] = useState([]);
-  const [medicalReimbursements, setMedicalReimbursements] = useState([]);
-  const [communityEngagements, setCommunityEngagements] = useState([]);
-  const [nikahBonuses, setNikahBonuses] = useState([]);
-  const [newMuslimBonuses, setNewMuslimBonuses] = useState([]);
-  const [newBabyBonuses, setNewBabyBonuses] = useState([]);
+  const [jumuahKhutbahTopicSubmission, setJumuahKhutbahTopicSubmission] = useState([]);
+  const [nikahBonus, setNikahBonus] = useState([]);
+  const [communityEngagement, setCommunityEngagement] = useState([]);
+  const [medicalReimbursement, setMedicalReimbursement] = useState([]);
+  const [jumuahAudioKhutbah, setJumuahAudioKhutbah] = useState([]);
+  const [newMuslimBonus, setNewMuslimBonus] = useState([]);
+  const [newBabyBonus, setNewBabyBonus] = useState([]);
 
   // Lookup data states
   const [lookupData, setLookupData] = useState({
-    title: [],
-    madhab: [],
-    status: [],
-    yesNo: [],
-    resourceType: [],
-    medicalVisitType: [],
-    medicalServiceProvider: [],
-    communityEngagementType: [],
-    language: [],
-    currency: [],
-    country: [],
-    province: [],
-    suburb: [],
-    nationality: [],
     race: [],
+    nationality: [],
     gender: [],
     maritalStatus: [],
-    relationshipType: [],
+    suburb: [],
+    title: [],
+    madhab: [],
+    province: [],
   });
 
-  const showAlert = useCallback((message, color = "success") => {
-    setAlert({ message, color });
-    setTimeout(() => setAlert(null), 4000);
+  // Fetch all imam profiles on mount
+  useEffect(() => {
+    fetchImamProfiles();
+    fetchLookupData();
   }, []);
+
+  // Fetch detail data when an imam profile is selected
+  useEffect(() => {
+    if (selectedImamProfile) {
+      fetchImamProfileDetails(selectedImamProfile.id);
+    }
+  }, [selectedImamProfile]);
 
   const fetchImamProfiles = async () => {
     try {
@@ -72,105 +70,37 @@ const ImamProfilesManagement = () => {
     }
   };
 
-  const fetchImamProfileDetails = useCallback(async (imamProfileId) => {
-    if (!imamProfileId) return;
-    
-    try {
-      const [
-        jumuahKhutbahTopicsRes,
-        jumuahAudioKhutbahRes,
-        pearlsOfWisdomRes,
-        medicalReimbursementsRes,
-        communityEngagementsRes,
-        nikahBonusesRes,
-        newMuslimBonusesRes,
-        newBabyBonusesRes,
-      ] = await Promise.all([
-        axiosApi.get(`${API_BASE_URL}/jumuahKhutbahTopicSubmission?imam_profile_id=${imamProfileId}`),
-        axiosApi.get(`${API_BASE_URL}/jumuahAudioKhutbah?imam_profile_id=${imamProfileId}`),
-        axiosApi.get(`${API_BASE_URL}/pearlsOfWisdom?imam_profile_id=${imamProfileId}`),
-        axiosApi.get(`${API_BASE_URL}/medicalReimbursement?imam_profile_id=${imamProfileId}`),
-        axiosApi.get(`${API_BASE_URL}/communityEngagement?imam_profile_id=${imamProfileId}`),
-        axiosApi.get(`${API_BASE_URL}/nikahBonus?imam_profile_id=${imamProfileId}`),
-        axiosApi.get(`${API_BASE_URL}/newMuslimBonus?imam_profile_id=${imamProfileId}`),
-        axiosApi.get(`${API_BASE_URL}/newBabyBonus?imam_profile_id=${imamProfileId}`),
-      ]);
-
-      setJumuahKhutbahTopics(jumuahKhutbahTopicsRes.data || []);
-      setJumuahAudioKhutbah(jumuahAudioKhutbahRes.data || []);
-      setPearlsOfWisdom(pearlsOfWisdomRes.data || []);
-      setMedicalReimbursements(medicalReimbursementsRes.data || []);
-      setCommunityEngagements(communityEngagementsRes.data || []);
-      setNikahBonuses(nikahBonusesRes.data || []);
-      setNewMuslimBonuses(newMuslimBonusesRes.data || []);
-      setNewBabyBonuses(newBabyBonusesRes.data || []);
-    } catch (error) {
-      console.error("Error fetching imam profile details:", error);
-      showAlert("Failed to fetch imam profile details", "warning");
-    }
-  }, [showAlert]);
-
   const fetchLookupData = async () => {
     try {
       const [
-        titleRes,
-        madhabRes,
-        statusRes,
-        yesNoRes,
-        resourceTypeRes,
-        medicalVisitTypeRes,
-        medicalServiceProviderRes,
-        communityEngagementTypeRes,
-        languageRes,
-        currencyRes,
-        countryRes,
-        provinceRes,
-        suburbRes,
-        nationalityRes,
         raceRes,
+        nationalityRes,
         genderRes,
         maritalStatusRes,
-        relationshipTypeRes,
+        suburbRes,
+        titleRes,
+        madhabRes,
+        provinceRes,
       ] = await Promise.all([
-        axiosApi.get(`${API_BASE_URL}/lookup/Title_Lookup`),
-        axiosApi.get(`${API_BASE_URL}/lookup/Madhab`),
-        axiosApi.get(`${API_BASE_URL}/lookup/Status`),
-        axiosApi.get(`${API_BASE_URL}/lookup/Yes_No`),
-        axiosApi.get(`${API_BASE_URL}/lookup/Resource_Type`),
-        axiosApi.get(`${API_BASE_URL}/lookup/Medical_Visit_Type`),
-        axiosApi.get(`${API_BASE_URL}/lookup/Medical_Service_Provider`),
-        axiosApi.get(`${API_BASE_URL}/lookup/Community_Engagement_Type`),
-        axiosApi.get(`${API_BASE_URL}/lookup/Language`),
-        axiosApi.get(`${API_BASE_URL}/lookup/Currency`),
-        axiosApi.get(`${API_BASE_URL}/lookup/Country`),
-        axiosApi.get(`${API_BASE_URL}/lookup/Province`),
-        axiosApi.get(`${API_BASE_URL}/lookup/Suburb`),
-        axiosApi.get(`${API_BASE_URL}/lookup/Nationality`),
         axiosApi.get(`${API_BASE_URL}/lookup/Race`),
+        axiosApi.get(`${API_BASE_URL}/lookup/Nationality`),
         axiosApi.get(`${API_BASE_URL}/lookup/Gender`),
         axiosApi.get(`${API_BASE_URL}/lookup/Marital_Status`),
-        axiosApi.get(`${API_BASE_URL}/lookup/Relationship_Types`),
+        axiosApi.get(`${API_BASE_URL}/lookup/Suburb`),
+        axiosApi.get(`${API_BASE_URL}/lookup/Title_Lookup`),
+        axiosApi.get(`${API_BASE_URL}/lookup/Madhab`),
+        axiosApi.get(`${API_BASE_URL}/lookup/Province`),
       ]);
 
       setLookupData({
-        title: titleRes.data || [],
-        madhab: madhabRes.data || [],
-        status: statusRes.data || [],
-        yesNo: yesNoRes.data || [],
-        resourceType: resourceTypeRes.data || [],
-        medicalVisitType: medicalVisitTypeRes.data || [],
-        medicalServiceProvider: medicalServiceProviderRes.data || [],
-        communityEngagementType: communityEngagementTypeRes.data || [],
-        language: languageRes.data || [],
-        currency: currencyRes.data || [],
-        country: countryRes.data || [],
-        province: provinceRes.data || [],
-        suburb: suburbRes.data || [],
-        nationality: nationalityRes.data || [],
         race: raceRes.data || [],
+        nationality: nationalityRes.data || [],
         gender: genderRes.data || [],
         maritalStatus: maritalStatusRes.data || [],
-        relationshipType: relationshipTypeRes.data || [],
+        suburb: suburbRes.data || [],
+        title: titleRes.data || [],
+        madhab: madhabRes.data || [],
+        province: provinceRes.data || [],
       });
     } catch (error) {
       console.error("Error fetching lookup data:", error);
@@ -178,18 +108,46 @@ const ImamProfilesManagement = () => {
     }
   };
 
-  // Fetch all imam profiles on mount
-  useEffect(() => {
-    fetchImamProfiles();
-    fetchLookupData();
-  }, []);
+  const fetchImamProfileDetails = async (imamProfileId) => {
+    try {
+      const [
+        pearlsOfWisdomRes,
+        jumuahKhutbahTopicsRes,
+        nikahBonusesRes,
+        communityEngagementsRes,
+        medicalReimbursementsRes,
+        jumuahAudioKhutbahsRes,
+        newMuslimBonusesRes,
+        newBabyBonusesRes,
+      ] = await Promise.all([
+        axiosApi.get(`${API_BASE_URL}/pearlsOfWisdom?imam_profile_id=${imamProfileId}`),
+        axiosApi.get(`${API_BASE_URL}/jumuahKhutbahTopicSubmission?imam_profile_id=${imamProfileId}`),
+        axiosApi.get(`${API_BASE_URL}/nikahBonus?imam_profile_id=${imamProfileId}`),
+        axiosApi.get(`${API_BASE_URL}/communityEngagement?imam_profile_id=${imamProfileId}`),
+        axiosApi.get(`${API_BASE_URL}/medicalReimbursement?imam_profile_id=${imamProfileId}`),
+        axiosApi.get(`${API_BASE_URL}/jumuahAudioKhutbah?imam_profile_id=${imamProfileId}`),
+        axiosApi.get(`${API_BASE_URL}/newMuslimBonus?imam_profile_id=${imamProfileId}`),
+        axiosApi.get(`${API_BASE_URL}/newBabyBonus?imam_profile_id=${imamProfileId}`),
+      ]);
 
-  // Fetch detail data when an imam profile is selected
-  useEffect(() => {
-    if (selectedImamProfile?.id) {
-      fetchImamProfileDetails(selectedImamProfile.id);
+      setPearlsOfWisdom(pearlsOfWisdomRes.data || []);
+      setJumuahKhutbahTopicSubmission(jumuahKhutbahTopicsRes.data || []);
+      setNikahBonus(nikahBonusesRes.data || []);
+      setCommunityEngagement(communityEngagementsRes.data || []);
+      setMedicalReimbursement(medicalReimbursementsRes.data || []);
+      setJumuahAudioKhutbah(jumuahAudioKhutbahsRes.data || []);
+      setNewMuslimBonus(newMuslimBonusesRes.data || []);
+      setNewBabyBonus(newBabyBonusesRes.data || []);
+    } catch (error) {
+      console.error("Error fetching imam profile details:", error);
+      showAlert("Failed to fetch imam profile details", "warning");
     }
-  }, [selectedImamProfile?.id, fetchImamProfileDetails]);
+  };
+
+  const showAlert = (message, color = "success") => {
+    setAlert({ message, color });
+    setTimeout(() => setAlert(null), 4000);
+  };
 
   const getAlertIcon = (color) => {
     switch (color) {
@@ -239,15 +197,18 @@ const ImamProfilesManagement = () => {
   const handleImamProfileSelect = (imamProfile) => {
     setSelectedImamProfile(imamProfile);
     // Clear existing detail data to avoid showing stale records while fetching
-    setJumuahKhutbahTopics([]);
-    setJumuahAudioKhutbah([]);
     setPearlsOfWisdom([]);
-    setMedicalReimbursements([]);
-    setCommunityEngagements([]);
-    setNikahBonuses([]);
-    setNewMuslimBonuses([]);
-    setNewBabyBonuses([]);
-    // Note: fetchImamProfileDetails will be called by useEffect when selectedImamProfile.id changes
+    setJumuahKhutbahTopicSubmission([]);
+    setNikahBonus([]);
+    setCommunityEngagement([]);
+    setMedicalReimbursement([]);
+    setJumuahAudioKhutbah([]);
+    setNewMuslimBonus([]);
+    setNewBabyBonus([]);
+    // Fetch fresh detail data immediately for better UX
+    if (imamProfile?.id) {
+      fetchImamProfileDetails(imamProfile.id);
+    }
   };
 
   const handleImamProfileUpdate = useCallback(() => {
@@ -268,6 +229,7 @@ const ImamProfilesManagement = () => {
     return (
       (imamProfile.name || "").toLowerCase().includes(searchLower) ||
       (imamProfile.surname || "").toLowerCase().includes(searchLower) ||
+      (imamProfile.file_number || "").toLowerCase().includes(searchLower) ||
       (imamProfile.id_number || "").toLowerCase().includes(searchLower)
     );
   });
@@ -300,7 +262,7 @@ const ImamProfilesManagement = () => {
           </div>
         )}
 
-        <Breadcrumbs title="Imam Profiles" breadcrumbItem="Imam Profiles Management" />
+        <Breadcrumbs title="Imam Profiles" breadcrumbItem="Imam Profile Management" />
 
         <Row>
           {/* Left Panel - Imam Profile List */}
@@ -323,14 +285,10 @@ const ImamProfilesManagement = () => {
                 {/* Summary Metrics */}
                 <SummaryMetrics
                   imamProfileId={selectedImamProfile.id}
-                  jumuahKhutbahTopics={jumuahKhutbahTopics}
+                  medicalReimbursement={medicalReimbursement}
+                  communityEngagement={communityEngagement}
+                  jumuahKhutbahTopicSubmission={jumuahKhutbahTopicSubmission}
                   jumuahAudioKhutbah={jumuahAudioKhutbah}
-                  pearlsOfWisdom={pearlsOfWisdom}
-                  medicalReimbursements={medicalReimbursements}
-                  communityEngagements={communityEngagements}
-                  nikahBonuses={nikahBonuses}
-                  newMuslimBonuses={newMuslimBonuses}
-                  newBabyBonuses={newBabyBonuses}
                 />
 
                 {/* Imam Profile Summary */}
@@ -346,14 +304,14 @@ const ImamProfilesManagement = () => {
                   key={selectedImamProfile.id}
                   imamProfileId={selectedImamProfile.id}
                   imamProfile={selectedImamProfile}
-                  jumuahKhutbahTopics={jumuahKhutbahTopics}
-                  jumuahAudioKhutbah={jumuahAudioKhutbah}
                   pearlsOfWisdom={pearlsOfWisdom}
-                  medicalReimbursements={medicalReimbursements}
-                  communityEngagements={communityEngagements}
-                  nikahBonuses={nikahBonuses}
-                  newMuslimBonuses={newMuslimBonuses}
-                  newBabyBonuses={newBabyBonuses}
+                  jumuahKhutbahTopicSubmission={jumuahKhutbahTopicSubmission}
+                  jumuahAudioKhutbah={jumuahAudioKhutbah}
+                  medicalReimbursement={medicalReimbursement}
+                  communityEngagement={communityEngagement}
+                  nikahBonus={nikahBonus}
+                  newMuslimBonus={newMuslimBonus}
+                  newBabyBonus={newBabyBonus}
                   lookupData={lookupData}
                   onUpdate={handleDetailUpdate}
                   showAlert={showAlert}
@@ -375,4 +333,3 @@ const ImamProfilesManagement = () => {
 };
 
 export default ImamProfilesManagement;
-

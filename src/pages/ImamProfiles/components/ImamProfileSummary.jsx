@@ -14,7 +14,13 @@ import {
   Label,
   Input,
   FormFeedback,
+  Nav,
+  NavItem,
+  NavLink,
+  TabContent,
+  TabPane,
 } from "reactstrap";
+import classnames from "classnames";
 import { useForm, Controller } from "react-hook-form";
 import DeleteConfirmationModal from "../../../components/Common/DeleteConfirmationModal";
 import useDeleteConfirmation from "../../../hooks/useDeleteConfirmation";
@@ -26,6 +32,7 @@ import { createFieldTabMap, handleTabbedFormErrors } from "../../../helpers/form
 
 const EDIT_IMAM_PROFILE_TAB_LABELS = {
   1: "Personal Info",
+  2: "Additional Details",
 };
 
 const EDIT_IMAM_PROFILE_TAB_FIELDS = {
@@ -33,27 +40,25 @@ const EDIT_IMAM_PROFILE_TAB_FIELDS = {
     "Name",
     "Surname",
     "ID_Number",
+    "Nationality",
     "Title",
     "DOB",
-    "Nationality",
-    "nationality_id",
-    "province_id",
-    "suburb_id",
-    "Madhab",
     "Race",
     "Gender",
     "Marital_Status",
+  ],
+  2: [
+    "Madhab",
+    "suburb_id",
+    "province_id",
+    "nationality_id",
   ],
 };
 
 const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) => {
   const { isOrgExecutive } = useRole();
   const [modalOpen, setModalOpen] = useState(false);
-  const [countries, setCountries] = useState([]);
-  const [provinces, setProvinces] = useState([]);
-  const [suburbs, setSuburbs] = useState([]);
-  const [filteredProvinces, setFilteredProvinces] = useState([]);
-  const [filteredSuburbs, setFilteredSuburbs] = useState([]);
+  const [activeTab, setActiveTab] = useState("1");
 
   // Delete confirmation hook
   const {
@@ -70,12 +75,7 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
     handleSubmit,
     formState: { errors, isSubmitting },
     reset,
-    watch,
-    setValue,
   } = useForm();
-
-  const watchedCountry = watch("nationality_id");
-  const watchedProvince = watch("province_id");
   const tabFieldGroups = useMemo(() => EDIT_IMAM_PROFILE_TAB_FIELDS, []);
   const fieldTabMap = useMemo(() => createFieldTabMap(tabFieldGroups), [tabFieldGroups]);
 
@@ -84,29 +84,9 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
       errors: formErrors,
       fieldTabMap,
       tabLabelMap: EDIT_IMAM_PROFILE_TAB_LABELS,
-      setActiveTab: () => {},
+      setActiveTab,
       showAlert,
     });
-
-  useEffect(() => {
-    if (modalOpen) {
-      const fetchLocationData = async () => {
-        try {
-          const [countriesRes, provincesRes, suburbsRes] = await Promise.all([
-            axiosApi.get(`${API_BASE_URL}/lookup/Country`),
-            axiosApi.get(`${API_BASE_URL}/lookup/Province`),
-            axiosApi.get(`${API_BASE_URL}/lookup/Suburb`),
-          ]);
-          setCountries(countriesRes.data || []);
-          setProvinces(provincesRes.data || []);
-          setSuburbs(suburbsRes.data || []);
-        } catch (error) {
-          console.error("Error fetching location data:", error);
-        }
-      };
-      fetchLocationData();
-    }
-  }, [modalOpen]);
 
   useEffect(() => {
     if (imamProfile && modalOpen) {
@@ -114,48 +94,25 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
         Name: imamProfile.name || "",
         Surname: imamProfile.surname || "",
         ID_Number: imamProfile.id_number || "",
+        Nationality: imamProfile.nationality || "",
         Title: imamProfile.title || "",
         DOB: imamProfile.dob || "",
-        Nationality: imamProfile.nationality || "",
-        nationality_id: imamProfile.nationality_id || "",
-        province_id: imamProfile.province_id || "",
-        suburb_id: imamProfile.suburb_id || "",
-        Madhab: imamProfile.madhab || "",
         Race: imamProfile.race || "",
         Gender: imamProfile.gender || "",
         Marital_Status: imamProfile.marital_status || "",
+        Madhab: imamProfile.madhab || "",
+        suburb_id: imamProfile.suburb_id || "",
+        province_id: imamProfile.province_id || "",
+        nationality_id: imamProfile.nationality_id || "",
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [imamProfile, modalOpen]);
-
-  // Filter provinces by selected country
-  useEffect(() => {
-    if (watchedCountry) {
-      const filtered = provinces.filter(
-        (p) => String(p.country_id || p.Country_ID || p.country_ID) === String(watchedCountry)
-      );
-      setFilteredProvinces(filtered);
-    } else {
-      setFilteredProvinces([]);
-    }
-  }, [watchedCountry, provinces]);
-
-  // Filter suburbs by selected province
-  useEffect(() => {
-    if (watchedProvince) {
-      const filtered = suburbs.filter(
-        (s) => String(s.province_id || s.Province_ID || s.province_ID) === String(watchedProvince)
-      );
-      setFilteredSuburbs(filtered);
-    } else {
-      setFilteredSuburbs([]);
-    }
-  }, [watchedProvince, suburbs]);
-
+  }, [imamProfile, modalOpen, reset]);
 
   const toggleModal = () => {
     setModalOpen(!modalOpen);
+    if (!modalOpen) {
+      setActiveTab("1");
+    }
   };
 
   const onSubmit = async (data) => {
@@ -164,22 +121,22 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
         name: data.Name,
         surname: data.Surname,
         id_number: data.ID_Number || null,
+        nationality: data.Nationality && data.Nationality !== "" ? parseInt(data.Nationality) : null,
         title: data.Title && data.Title !== "" ? parseInt(data.Title) : null,
         dob: data.DOB || null,
-        nationality: data.Nationality && data.Nationality !== "" ? parseInt(data.Nationality) : null,
-        nationality_id: data.nationality_id && data.nationality_id !== "" ? parseInt(data.nationality_id) : null,
-        province_id: data.province_id && data.province_id !== "" ? parseInt(data.province_id) : null,
-        suburb_id: data.suburb_id && data.suburb_id !== "" ? parseInt(data.suburb_id) : null,
-        madhab: data.Madhab && data.Madhab !== "" ? parseInt(data.Madhab) : null,
         race: data.Race && data.Race !== "" ? parseInt(data.Race) : null,
         gender: data.Gender && data.Gender !== "" ? parseInt(data.Gender) : null,
         marital_status: data.Marital_Status && data.Marital_Status !== "" ? parseInt(data.Marital_Status) : null,
+        madhab: data.Madhab && data.Madhab !== "" ? parseInt(data.Madhab) : null,
+        suburb_id: data.suburb_id && data.suburb_id !== "" ? parseInt(data.suburb_id) : null,
+        province_id: data.province_id && data.province_id !== "" ? parseInt(data.province_id) : null,
+        nationality_id: data.nationality_id && data.nationality_id !== "" ? parseInt(data.nationality_id) : null,
         updated_by: getAuditName(),
       };
 
       await axiosApi.put(`${API_BASE_URL}/imamProfiles/${imamProfile.id}`, payload);
       
-      showAlert("Imam Profile has been updated successfully", "success");
+      showAlert("Imam profile has been updated successfully", "success");
       onUpdate();
       toggleModal();
     } catch (error) {
@@ -189,16 +146,16 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
   };
 
   const handleDelete = () => {
-    const imamName = `${imamProfile.name || ''} ${imamProfile.surname || ''}`.trim() || 'Unknown Imam';
+    const imamProfileName = `${imamProfile.name || ''} ${imamProfile.surname || ''}`.trim() || 'Unknown Imam Profile';
     
     showDeleteConfirmation({
       id: imamProfile.id,
-      name: imamName,
+      name: imamProfileName,
       type: "imam profile",
       message: "This imam profile and all associated data will be permanently removed from the system."
     }, async () => {
       await axiosApi.delete(`${API_BASE_URL}/imamProfiles/${imamProfile.id}`);
-      showAlert("Imam Profile has been deleted successfully", "success");
+      showAlert("Imam profile has been deleted successfully", "success");
       onUpdate();
       if (modalOpen) {
         setModalOpen(false);
@@ -215,6 +172,12 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
   const formatDate = (dateStr) => {
     if (!dateStr) return "-";
     return new Date(dateStr).toLocaleDateString();
+  };
+
+  const toggleTab = (tab) => {
+    if (activeTab !== tab) {
+      setActiveTab(tab);
+    }
   };
 
   return (
@@ -250,45 +213,53 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
               <p className="mb-2 fw-medium font-size-12">{imamProfile.id_number || "-"}</p>
             </Col>
             <Col md={3}>
-              <p className="text-muted mb-1 font-size-11 text-uppercase">Title</p>
-              <p className="mb-2 fw-medium font-size-12">{getLookupName(lookupData.title, imamProfile.title)}</p>
+              <p className="text-muted mb-1 font-size-11 text-uppercase">Date of Birth</p>
+              <p className="mb-2 fw-medium font-size-12">{formatDate(imamProfile.dob)}</p>
             </Col>
           </Row>
 
           <Row className="mb-2">
             <Col md={3}>
-              <p className="text-muted mb-1 font-size-11 text-uppercase">Date of Birth</p>
-              <p className="mb-2 fw-medium font-size-12">{formatDate(imamProfile.dob)}</p>
+              <p className="text-muted mb-1 font-size-11 text-uppercase">Title</p>
+              <p className="mb-2 fw-medium font-size-12">{getLookupName(lookupData.title, imamProfile.title)}</p>
             </Col>
             <Col md={3}>
               <p className="text-muted mb-1 font-size-11 text-uppercase">Nationality</p>
               <p className="mb-2 fw-medium font-size-12">{getLookupName(lookupData.nationality, imamProfile.nationality)}</p>
             </Col>
             <Col md={3}>
-              <p className="text-muted mb-1 font-size-11 text-uppercase">Madhab</p>
-              <p className="mb-2 fw-medium font-size-12">{getLookupName(lookupData.madhab, imamProfile.madhab)}</p>
-            </Col>
-            <Col md={3}>
               <p className="text-muted mb-1 font-size-11 text-uppercase">Race</p>
               <p className="mb-2 fw-medium font-size-12">{getLookupName(lookupData.race, imamProfile.race)}</p>
             </Col>
-          </Row>
-
-          <Row className="mb-0">
             <Col md={3}>
               <p className="text-muted mb-1 font-size-11 text-uppercase">Gender</p>
               <p className="mb-2 fw-medium font-size-12">{getLookupName(lookupData.gender, imamProfile.gender)}</p>
             </Col>
+          </Row>
+
+          <Row className="mb-2">
             <Col md={3}>
               <p className="text-muted mb-1 font-size-11 text-uppercase">Marital Status</p>
               <p className="mb-2 fw-medium font-size-12">{getLookupName(lookupData.maritalStatus, imamProfile.marital_status)}</p>
+            </Col>
+            <Col md={3}>
+              <p className="text-muted mb-1 font-size-11 text-uppercase">Madhab</p>
+              <p className="mb-2 fw-medium font-size-12">{getLookupName(lookupData.madhab, imamProfile.madhab)}</p>
+            </Col>
+            <Col md={3}>
+              <p className="text-muted mb-1 font-size-11 text-uppercase">Province</p>
+              <p className="mb-2 fw-medium font-size-12">{getLookupName(lookupData.province, imamProfile.province_id)}</p>
+            </Col>
+            <Col md={3}>
+              <p className="text-muted mb-1 font-size-11 text-uppercase">Suburb</p>
+              <p className="mb-2 fw-medium font-size-12">{getLookupName(lookupData.suburb, imamProfile.suburb_id)}</p>
             </Col>
           </Row>
         </CardBody>
       </Card>
 
       {/* Edit Modal */}
-      <Modal isOpen={modalOpen} toggle={toggleModal} centered size="lg" backdrop="static">
+      <Modal isOpen={modalOpen} toggle={toggleModal} centered size="xl" backdrop="static">
         <ModalHeader toggle={toggleModal}>
           <i className="bx bx-edit me-2"></i>
           Edit Imam Profile - {imamProfile.name} {imamProfile.surname}
@@ -296,243 +267,265 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
 
         <Form onSubmit={handleSubmit(onSubmit, handleFormError)}>
           <ModalBody>
-            <Row>
-              <Col md={6}>
-                <FormGroup>
-                  <Label>Name <span className="text-danger">*</span></Label>
-                  <Controller
-                    name="Name"
-                    control={control}
-                    rules={{ required: "Name is required" }}
-                    render={({ field }) => <Input type="text" invalid={!!errors.Name} {...field} />}
-                  />
-                  {errors.Name && <FormFeedback>{errors.Name.message}</FormFeedback>}
-                </FormGroup>
-              </Col>
-              <Col md={6}>
-                <FormGroup>
-                  <Label>Surname <span className="text-danger">*</span></Label>
-                  <Controller
-                    name="Surname"
-                    control={control}
-                    rules={{ required: "Surname is required" }}
-                    render={({ field }) => <Input type="text" invalid={!!errors.Surname} {...field} />}
-                  />
-                  {errors.Surname && <FormFeedback>{errors.Surname.message}</FormFeedback>}
-                </FormGroup>
-              </Col>
-              <Col md={6}>
-                <FormGroup>
-                  <Label>ID Number</Label>
-                  <Controller
-                    name="ID_Number"
-                    control={control}
-                    render={({ field }) => <Input type="text" {...field} />}
-                  />
-                </FormGroup>
-              </Col>
-              <Col md={6}>
-                <FormGroup>
-                  <Label>Title</Label>
-                  <Controller
-                    name="Title"
-                    control={control}
-                    render={({ field }) => (
-                      <Input type="select" {...field}>
-                        <option value="">Select Title</option>
-                        {lookupData.title.map((item) => (
-                          <option key={item.id} value={item.id}>
-                            {item.name}
-                          </option>
-                        ))}
-                      </Input>
-                    )}
-                  />
-                </FormGroup>
-              </Col>
-              <Col md={6}>
-                <FormGroup>
-                  <Label>Date of Birth</Label>
-                  <Controller
-                    name="DOB"
-                    control={control}
-                    render={({ field }) => <Input type="date" {...field} />}
-                  />
-                </FormGroup>
-              </Col>
-              <Col md={6}>
-                <FormGroup>
-                  <Label>Nationality</Label>
-                  <Controller
-                    name="Nationality"
-                    control={control}
-                    render={({ field }) => (
-                      <Input type="select" {...field}>
-                        <option value="">Select Nationality</option>
-                        {lookupData.nationality.map((item) => (
-                          <option key={item.id} value={item.id}>
-                            {item.name}
-                          </option>
-                        ))}
-                      </Input>
-                    )}
-                  />
-                </FormGroup>
-              </Col>
-              <Col md={6}>
-                <FormGroup>
-                  <Label>Country</Label>
-                  <Controller
-                    name="nationality_id"
-                    control={control}
-                    render={({ field }) => (
-                      <Input 
-                        type="select" 
-                        {...field}
-                        onChange={(e) => {
-                          field.onChange(e);
-                          setValue("province_id", "");
-                          setValue("suburb_id", "");
-                        }}
-                      >
-                        <option value="">Select Country</option>
-                        {countries.map((country) => (
-                          <option key={country.id || country.ID} value={country.id || country.ID}>
-                            {country.name || country.Name} {country.code || country.Code ? `(${country.code || country.Code})` : ""}
-                          </option>
-                        ))}
-                      </Input>
-                    )}
-                  />
-                </FormGroup>
-              </Col>
-              <Col md={6}>
-                <FormGroup>
-                  <Label>Province</Label>
-                  <Controller
-                    name="province_id"
-                    control={control}
-                    render={({ field }) => (
-                      <Input 
-                        type="select" 
-                        {...field}
-                        disabled={!watchedCountry}
-                        onChange={(e) => {
-                          field.onChange(e);
-                          setValue("suburb_id", "");
-                        }}
-                      >
-                        <option value="">Select Province</option>
-                        {filteredProvinces.map((province) => (
-                          <option key={province.id || province.ID} value={province.id || province.ID}>
-                            {province.name || province.Name}
-                          </option>
-                        ))}
-                      </Input>
-                    )}
-                  />
-                </FormGroup>
-              </Col>
-              <Col md={6}>
-                <FormGroup>
-                  <Label>Suburb</Label>
-                  <Controller
-                    name="suburb_id"
-                    control={control}
-                    render={({ field }) => (
-                      <Input 
-                        type="select" 
-                        {...field}
-                        disabled={!watchedProvince}
-                      >
-                        <option value="">Select Suburb</option>
-                        {filteredSuburbs.map((suburb) => (
-                          <option key={suburb.id || suburb.ID} value={suburb.id || suburb.ID}>
-                            {suburb.name || suburb.Name}
-                          </option>
-                        ))}
-                      </Input>
-                    )}
-                  />
-                </FormGroup>
-              </Col>
-              <Col md={6}>
-                <FormGroup>
-                  <Label>Madhab</Label>
-                  <Controller
-                    name="Madhab"
-                    control={control}
-                    render={({ field }) => (
-                      <Input type="select" {...field}>
-                        <option value="">Select Madhab</option>
-                        {lookupData.madhab.map((item) => (
-                          <option key={item.id} value={item.id}>
-                            {item.name}
-                          </option>
-                        ))}
-                      </Input>
-                    )}
-                  />
-                </FormGroup>
-              </Col>
-              <Col md={6}>
-                <FormGroup>
-                  <Label>Race</Label>
-                  <Controller
-                    name="Race"
-                    control={control}
-                    render={({ field }) => (
-                      <Input type="select" {...field}>
-                        <option value="">Select Race</option>
-                        {lookupData.race.map((item) => (
-                          <option key={item.id} value={item.id}>
-                            {item.name}
-                          </option>
-                        ))}
-                      </Input>
-                    )}
-                  />
-                </FormGroup>
-              </Col>
-              <Col md={6}>
-                <FormGroup>
-                  <Label>Gender</Label>
-                  <Controller
-                    name="Gender"
-                    control={control}
-                    render={({ field }) => (
-                      <Input type="select" {...field}>
-                        <option value="">Select Gender</option>
-                        {lookupData.gender.map((item) => (
-                          <option key={item.id} value={item.id}>
-                            {item.name}
-                          </option>
-                        ))}
-                      </Input>
-                    )}
-                  />
-                </FormGroup>
-              </Col>
-              <Col md={6}>
-                <FormGroup>
-                  <Label>Marital Status</Label>
-                  <Controller
-                    name="Marital_Status"
-                    control={control}
-                    render={({ field }) => (
-                      <Input type="select" {...field}>
-                        <option value="">Select Status</option>
-                        {lookupData.maritalStatus.map((item) => (
-                          <option key={item.id} value={item.id}>
-                            {item.name}
-                          </option>
-                        ))}
-                      </Input>
-                    )}
-                  />
-                </FormGroup>
-              </Col>
-            </Row>
+            <Nav tabs>
+              <NavItem>
+                <NavLink
+                  className={classnames({ active: activeTab === "1" })}
+                  onClick={() => toggleTab("1")}
+                  style={{ cursor: "pointer" }}
+                >
+                  Personal Info
+                </NavLink>
+              </NavItem>
+              <NavItem>
+                <NavLink
+                  className={classnames({ active: activeTab === "2" })}
+                  onClick={() => toggleTab("2")}
+                  style={{ cursor: "pointer" }}
+                >
+                  Additional Details
+                </NavLink>
+              </NavItem>
+            </Nav>
+
+            <TabContent activeTab={activeTab} className="pt-3">
+              <TabPane tabId="1">
+                <Row>
+                  <Col md={6}>
+                    <FormGroup>
+                      <Label>Name <span className="text-danger">*</span></Label>
+                      <Controller
+                        name="Name"
+                        control={control}
+                        rules={{ required: "Name is required" }}
+                        render={({ field }) => <Input type="text" invalid={!!errors.Name} {...field} />}
+                      />
+                      {errors.Name && <FormFeedback>{errors.Name.message}</FormFeedback>}
+                    </FormGroup>
+                  </Col>
+                  <Col md={6}>
+                    <FormGroup>
+                      <Label>Surname <span className="text-danger">*</span></Label>
+                      <Controller
+                        name="Surname"
+                        control={control}
+                        rules={{ required: "Surname is required" }}
+                        render={({ field }) => <Input type="text" invalid={!!errors.Surname} {...field} />}
+                      />
+                      {errors.Surname && <FormFeedback>{errors.Surname.message}</FormFeedback>}
+                    </FormGroup>
+                  </Col>
+                  <Col md={6}>
+                    <FormGroup>
+                      <Label>ID Number</Label>
+                      <Controller
+                        name="ID_Number"
+                        control={control}
+                        render={({ field }) => (
+                          <Input
+                            type="text"
+                            maxLength={13}
+                            onInput={(e) => {
+                              e.target.value = (e.target.value || "").replace(/\D/g, "").slice(0, 13);
+                              field.onChange(e);
+                            }}
+                            value={field.value}
+                            onBlur={field.onBlur}
+                            {...field}
+                          />
+                        )}
+                      />
+                    </FormGroup>
+                  </Col>
+                  <Col md={6}>
+                    <FormGroup>
+                      <Label>Date of Birth</Label>
+                      <Controller
+                        name="DOB"
+                        control={control}
+                        render={({ field }) => <Input type="date" {...field} />}
+                      />
+                    </FormGroup>
+                  </Col>
+                  <Col md={6}>
+                    <FormGroup>
+                      <Label>Title</Label>
+                      <Controller
+                        name="Title"
+                        control={control}
+                        render={({ field }) => (
+                          <Input type="select" {...field}>
+                            <option value="">Select Title</option>
+                            {(lookupData.title || []).map((item) => (
+                              <option key={item.id} value={item.id}>
+                                {item.name}
+                              </option>
+                            ))}
+                          </Input>
+                        )}
+                      />
+                    </FormGroup>
+                  </Col>
+                  <Col md={6}>
+                    <FormGroup>
+                      <Label>Nationality</Label>
+                      <Controller
+                        name="Nationality"
+                        control={control}
+                        render={({ field }) => (
+                          <Input type="select" {...field}>
+                            <option value="">Select Nationality</option>
+                            {(lookupData.nationality || []).map((item) => (
+                              <option key={item.id} value={item.id}>
+                                {item.name}
+                              </option>
+                            ))}
+                          </Input>
+                        )}
+                      />
+                    </FormGroup>
+                  </Col>
+                  <Col md={6}>
+                    <FormGroup>
+                      <Label>Race</Label>
+                      <Controller
+                        name="Race"
+                        control={control}
+                        render={({ field }) => (
+                          <Input type="select" {...field}>
+                            <option value="">Select Race</option>
+                            {(lookupData.race || []).map((item) => (
+                              <option key={item.id} value={item.id}>
+                                {item.name}
+                              </option>
+                            ))}
+                          </Input>
+                        )}
+                      />
+                    </FormGroup>
+                  </Col>
+                  <Col md={6}>
+                    <FormGroup>
+                      <Label>Gender</Label>
+                      <Controller
+                        name="Gender"
+                        control={control}
+                        render={({ field }) => (
+                          <Input type="select" {...field}>
+                            <option value="">Select Gender</option>
+                            {(lookupData.gender || []).map((item) => (
+                              <option key={item.id} value={item.id}>
+                                {item.name}
+                              </option>
+                            ))}
+                          </Input>
+                        )}
+                      />
+                    </FormGroup>
+                  </Col>
+                  <Col md={6}>
+                    <FormGroup>
+                      <Label>Marital Status</Label>
+                      <Controller
+                        name="Marital_Status"
+                        control={control}
+                        render={({ field }) => (
+                          <Input type="select" {...field}>
+                            <option value="">Select Status</option>
+                            {(lookupData.maritalStatus || []).map((item) => (
+                              <option key={item.id} value={item.id}>
+                                {item.name}
+                              </option>
+                            ))}
+                          </Input>
+                        )}
+                      />
+                    </FormGroup>
+                  </Col>
+                </Row>
+              </TabPane>
+
+              <TabPane tabId="2">
+                <Row>
+                  <Col md={6}>
+                    <FormGroup>
+                      <Label>Madhab</Label>
+                      <Controller
+                        name="Madhab"
+                        control={control}
+                        render={({ field }) => (
+                          <Input type="select" {...field}>
+                            <option value="">Select Madhab</option>
+                            {(lookupData.madhab || []).map((item) => (
+                              <option key={item.id} value={item.id}>
+                                {item.name}
+                              </option>
+                            ))}
+                          </Input>
+                        )}
+                      />
+                    </FormGroup>
+                  </Col>
+                  <Col md={6}>
+                    <FormGroup>
+                      <Label>Province</Label>
+                      <Controller
+                        name="province_id"
+                        control={control}
+                        render={({ field }) => (
+                          <Input type="select" {...field}>
+                            <option value="">Select Province</option>
+                            {(lookupData.province || []).map((item) => (
+                              <option key={item.id} value={item.id}>
+                                {item.name}
+                              </option>
+                            ))}
+                          </Input>
+                        )}
+                      />
+                    </FormGroup>
+                  </Col>
+                  <Col md={6}>
+                    <FormGroup>
+                      <Label>Suburb</Label>
+                      <Controller
+                        name="suburb_id"
+                        control={control}
+                        render={({ field }) => (
+                          <Input type="select" {...field}>
+                            <option value="">Select Suburb</option>
+                            {(lookupData.suburb || []).map((item) => (
+                              <option key={item.id} value={item.id}>
+                                {item.name}
+                              </option>
+                            ))}
+                          </Input>
+                        )}
+                      />
+                    </FormGroup>
+                  </Col>
+                  <Col md={6}>
+                    <FormGroup>
+                      <Label>Nationality ID</Label>
+                      <Controller
+                        name="nationality_id"
+                        control={control}
+                        render={({ field }) => (
+                          <Input type="select" {...field}>
+                            <option value="">Select Nationality ID</option>
+                            {(lookupData.nationality || []).map((item) => (
+                              <option key={item.id} value={item.id}>
+                                {item.name}
+                              </option>
+                            ))}
+                          </Input>
+                        )}
+                      />
+                    </FormGroup>
+                  </Col>
+                </Row>
+              </TabPane>
+            </TabContent>
           </ModalBody>
 
           <ModalFooter className="d-flex justify-content-between">
@@ -583,4 +576,3 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
 };
 
 export default ImamProfileSummary;
-

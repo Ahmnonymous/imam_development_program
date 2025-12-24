@@ -251,15 +251,15 @@ const TableContainer = ({
                 <div className={paginationWrapper} style={{ display: 'flex', alignItems: 'center', height: '38px' }}>
                   <ul className={pagination} style={{ marginBottom: 0 }}>
                     <li className={`paginate_button page-item previous ${!getCanPreviousPage() ? "disabled" : ""}`}>
-                      <Link to="#" className="page-link" onClick={previousPage}><i className="mdi mdi-chevron-left"></i></Link>
+                      <Link to="#" className="page-link" onClick={(e) => { e.preventDefault(); previousPage(); }}><i className="mdi mdi-chevron-left"></i></Link>
                     </li>
                     {getPageOptions().map((item, key) => (
                       <li key={key} className={`paginate_button page-item ${getState().pagination.pageIndex === item ? "active" : ""}`}>
-                        <Link to="#" className="page-link" onClick={() => setPageIndex(item)}>{item + 1}</Link>
+                        <Link to="#" className="page-link" onClick={(e) => { e.preventDefault(); setPageIndex(item); }}>{item + 1}</Link>
                       </li>
                     ))}
                     <li className={`paginate_button page-item next ${!getCanNextPage() ? "disabled" : ""}`}>
-                      <Link to="#" className="page-link" onClick={nextPage}><i className="mdi mdi-chevron-right"></i></Link>
+                      <Link to="#" className="page-link" onClick={(e) => { e.preventDefault(); nextPage(); }}><i className="mdi mdi-chevron-right"></i></Link>
                     </li>
                   </ul>
                 </div>

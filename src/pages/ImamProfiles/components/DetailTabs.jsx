@@ -1,10 +1,10 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { Card, CardBody, Nav, NavItem, NavLink, TabContent, TabPane } from "reactstrap";
 import classnames from "classnames";
 import { useRole } from "../../../helpers/useRole";
-import JumuahKhutbahTopicTab from "./tabs/JumuahKhutbahTopicTab";
-import JumuahAudioKhutbahTab from "./tabs/JumuahAudioKhutbahTab";
 import PearlsOfWisdomTab from "./tabs/PearlsOfWisdomTab";
+import JumuahKhutbahTopicSubmissionTab from "./tabs/JumuahKhutbahTopicSubmissionTab";
+import JumuahAudioKhutbahTab from "./tabs/JumuahAudioKhutbahTab";
 import MedicalReimbursementTab from "./tabs/MedicalReimbursementTab";
 import CommunityEngagementTab from "./tabs/CommunityEngagementTab";
 import NikahBonusTab from "./tabs/NikahBonusTab";
@@ -14,20 +14,24 @@ import NewBabyBonusTab from "./tabs/NewBabyBonusTab";
 const DetailTabs = ({
   imamProfileId,
   imamProfile,
-  jumuahKhutbahTopics,
-  jumuahAudioKhutbah,
   pearlsOfWisdom,
-  medicalReimbursements,
-  communityEngagements,
-  nikahBonuses,
-  newMuslimBonuses,
-  newBabyBonuses,
+  jumuahKhutbahTopicSubmission,
+  jumuahAudioKhutbah,
+  medicalReimbursement,
+  communityEngagement,
+  nikahBonus,
+  newMuslimBonus,
+  newBabyBonus,
   lookupData,
   onUpdate,
   showAlert,
 }) => {
   const { isOrgExecutive } = useRole();
   const [activeTab, setActiveTab] = useState("all");
+
+  if (!imamProfileId) {
+    return null;
+  }
 
   const toggleTab = (tab) => {
     if (activeTab !== tab) {
@@ -38,262 +42,156 @@ const DetailTabs = ({
   const currentId = Number(imamProfileId);
   const safeNum = (v) => (v === null || v === undefined || v === "" ? NaN : Number(v));
 
-  const topicsForImam = useMemo(() => 
-    (jumuahKhutbahTopics || []).filter((x) => safeNum(x.imam_profile_id) === currentId),
-    [jumuahKhutbahTopics, currentId]
-  );
-  const audioForImam = useMemo(() => 
-    (jumuahAudioKhutbah || []).filter((x) => safeNum(x.imam_profile_id) === currentId),
-    [jumuahAudioKhutbah, currentId]
-  );
-  const pearlsForImam = useMemo(() => 
-    (pearlsOfWisdom || []).filter((x) => safeNum(x.imam_profile_id) === currentId),
-    [pearlsOfWisdom, currentId]
-  );
-  const medicalForImam = useMemo(() => 
-    (medicalReimbursements || []).filter((x) => safeNum(x.imam_profile_id) === currentId),
-    [medicalReimbursements, currentId]
-  );
-  const engagementForImam = useMemo(() => 
-    (communityEngagements || []).filter((x) => safeNum(x.imam_profile_id) === currentId),
-    [communityEngagements, currentId]
-  );
-  const nikahForImam = useMemo(() => 
-    (nikahBonuses || []).filter((x) => safeNum(x.imam_profile_id) === currentId),
-    [nikahBonuses, currentId]
-  );
-  const newMuslimForImam = useMemo(() => 
-    (newMuslimBonuses || []).filter((x) => safeNum(x.imam_profile_id) === currentId),
-    [newMuslimBonuses, currentId]
-  );
-  const newBabyForImam = useMemo(() => 
-    (newBabyBonuses || []).filter((x) => safeNum(x.imam_profile_id) === currentId),
-    [newBabyBonuses, currentId]
-  );
+  const pearlsForImam = (pearlsOfWisdom || []).filter((x) => safeNum(x.imam_profile_id) === currentId);
+  const khutbahTopicsForImam = (jumuahKhutbahTopicSubmission || []).filter((x) => safeNum(x.imam_profile_id) === currentId);
+  const audioKhutbahForImam = (jumuahAudioKhutbah || []).filter((x) => safeNum(x.imam_profile_id) === currentId);
+  const medicalForImam = (medicalReimbursement || []).filter((x) => safeNum(x.imam_profile_id) === currentId);
+  const engagementForImam = (communityEngagement || []).filter((x) => safeNum(x.imam_profile_id) === currentId);
+  const nikahForImam = (nikahBonus || []).filter((x) => safeNum(x.imam_profile_id) === currentId);
+  const newMuslimForImam = (newMuslimBonus || []).filter((x) => safeNum(x.imam_profile_id) === currentId);
+  const newBabyForImam = (newBabyBonus || []).filter((x) => safeNum(x.imam_profile_id) === currentId);
 
   const tabs = [
     { id: "all", label: "Show All" },
-    { id: "jumuahTopics", label: "Topics" },
-    { id: "jumuahAudio", label: "Audio" },
-    { id: "pearls", label: "Pearls of Wisdom" },
-    { id: "medical", label: "Reimbursement" },
+    { id: "khutbahTopics", label: "Topics" },
+    { id: "audioKhutbah", label: "Audio" },
+    { id: "pearls", label: "Wisdom Pearls" },
+    { id: "medical", label: "Medical" },
     { id: "engagement", label: "Community" },
     { id: "nikah", label: "Nikah Bonus" },
     { id: "newMuslim", label: "Muslim Bonus" },
     { id: "newBaby", label: "Baby Bonus" },
   ];
 
-  // Disable child tabs if imam profile doesn't exist yet
-  const isProfileCreated = !!imamProfileId;
-
   return (
     <Card>
       <CardBody className="py-4">
         <Nav pills className="nav-pills-custom mb-1 d-flex flex-wrap border-bottom">
-          {tabs.map((tab) => {
-            const isDisabled = tab.id !== "all" && !isProfileCreated;
-            return (
-              <NavItem key={tab.id} className="me-2 mb-3">
-                <NavLink
-                  className={classnames({ 
-                    active: activeTab === tab.id,
-                    disabled: isDisabled
-                  })}
-                  onClick={() => !isDisabled && toggleTab(tab.id)}
-                  style={{ 
-                    cursor: isDisabled ? "not-allowed" : "pointer", 
-                    padding: "0.25rem 0.5rem", 
-                    fontSize: "0.75rem",
-                    opacity: isDisabled ? 0.5 : 1
-                  }}
-                >
-                  <span>{tab.label}</span>
-                </NavLink>
-              </NavItem>
-            );
-          })}
+          {tabs.map((tab) => (
+            <NavItem key={tab.id} className="me-2 mb-3">
+              <NavLink
+                className={classnames({ active: activeTab === tab.id })}
+                onClick={() => toggleTab(tab.id)}
+                style={{ cursor: "pointer", padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}
+              >
+                <span>{tab.label}</span>
+              </NavLink>
+            </NavItem>
+          ))}
         </Nav>
 
         <TabContent activeTab={activeTab} className="mt-3">
-          {activeTab === "all" && (
-            <TabPane tabId="all">
-              <div className="border rounded p-3 mb-3">
-                <JumuahKhutbahTopicTab 
-                  imamProfileId={imamProfileId} 
-                  topics={topicsForImam} 
-                  lookupData={lookupData}
-                  onUpdate={onUpdate} 
-                  showAlert={showAlert} 
-                />
-              </div>
-              
-              <div className="border rounded p-3 mb-3">
-                <JumuahAudioKhutbahTab 
-                  imamProfileId={imamProfileId} 
-                  audioKhutbah={audioForImam} 
-                  lookupData={lookupData}
-                  onUpdate={onUpdate} 
-                  showAlert={showAlert} 
-                />
-              </div>
-              
-              <div className="border rounded p-3 mb-3">
-                <PearlsOfWisdomTab 
-                  imamProfileId={imamProfileId} 
-                  pearls={pearlsForImam} 
-                  lookupData={lookupData}
-                  onUpdate={onUpdate} 
-                  showAlert={showAlert} 
-                />
-              </div>
-              
-              <div className="border rounded p-3 mb-3">
-                <MedicalReimbursementTab 
-                  imamProfileId={imamProfileId} 
-                  reimbursements={medicalForImam} 
-                  lookupData={lookupData}
-                  onUpdate={onUpdate} 
-                  showAlert={showAlert} 
-                />
-              </div>
-              
-              <div className="border rounded p-3 mb-3">
-                <CommunityEngagementTab 
-                  imamProfileId={imamProfileId} 
-                  engagements={engagementForImam} 
-                  lookupData={lookupData}
-                  onUpdate={onUpdate} 
-                  showAlert={showAlert} 
-                />
-              </div>
-              
-              <div className="border rounded p-3 mb-3">
-                <NikahBonusTab 
-                  imamProfileId={imamProfileId} 
-                  bonuses={nikahForImam} 
-                  lookupData={lookupData}
-                  onUpdate={onUpdate} 
-                  showAlert={showAlert} 
-                />
-              </div>
-              
-              <div className="border rounded p-3 mb-3">
-                <NewMuslimBonusTab 
-                  imamProfileId={imamProfileId} 
-                  bonuses={newMuslimForImam} 
-                  lookupData={lookupData}
-                  onUpdate={onUpdate} 
-                  showAlert={showAlert} 
-                />
-              </div>
-              
-              <div className="border rounded p-3 mb-3">
-                <NewBabyBonusTab 
-                  imamProfileId={imamProfileId} 
-                  bonuses={newBabyForImam} 
-                  lookupData={lookupData}
-                  onUpdate={onUpdate} 
-                  showAlert={showAlert} 
-                />
-              </div>
-            </TabPane>
-          )}
+          <TabPane tabId="all">
+            <div className="border rounded p-3 mb-3">
+              <JumuahKhutbahTopicSubmissionTab imamProfileId={imamProfileId} jumuahKhutbahTopicSubmission={khutbahTopicsForImam} lookupData={lookupData} onUpdate={onUpdate} showAlert={showAlert} />
+            </div>
+            
+            <div className="border rounded p-3 mb-3">
+              <JumuahAudioKhutbahTab imamProfileId={imamProfileId} jumuahAudioKhutbah={audioKhutbahForImam} onUpdate={onUpdate} showAlert={showAlert} />
+            </div>
+            
+            <div className="border rounded p-3 mb-3">
+              <PearlsOfWisdomTab imamProfileId={imamProfileId} pearlsOfWisdom={pearlsForImam} onUpdate={onUpdate} showAlert={showAlert} />
+            </div>
+            
+            <div className="border rounded p-3 mb-3">
+              <MedicalReimbursementTab imamProfileId={imamProfileId} medicalReimbursement={medicalForImam} lookupData={lookupData} onUpdate={onUpdate} showAlert={showAlert} />
+            </div>
+            
+            <div className="border rounded p-3 mb-3">
+              <CommunityEngagementTab imamProfileId={imamProfileId} communityEngagement={engagementForImam} lookupData={lookupData} onUpdate={onUpdate} showAlert={showAlert} />
+            </div>
+            
+            <div className="border rounded p-3 mb-3">
+              <NikahBonusTab imamProfileId={imamProfileId} nikahBonus={nikahForImam} lookupData={lookupData} onUpdate={onUpdate} showAlert={showAlert} />
+            </div>
+            
+            <div className="border rounded p-3 mb-3">
+              <NewMuslimBonusTab imamProfileId={imamProfileId} newMuslimBonus={newMuslimForImam} lookupData={lookupData} onUpdate={onUpdate} showAlert={showAlert} />
+            </div>
+            
+            <div className="border rounded p-3 mb-3">
+              <NewBabyBonusTab imamProfileId={imamProfileId} newBabyBonus={newBabyForImam} lookupData={lookupData} onUpdate={onUpdate} showAlert={showAlert} />
+            </div>
+          </TabPane>
 
-          {activeTab === "jumuahTopics" && (
-            <TabPane tabId="jumuahTopics">
-              <JumuahKhutbahTopicTab
-                imamProfileId={imamProfileId}
-                topics={topicsForImam}
-                lookupData={lookupData}
-                onUpdate={onUpdate}
-                showAlert={showAlert}
-              />
-            </TabPane>
-          )}
+          <TabPane tabId="pearls">
+            <PearlsOfWisdomTab
+              imamProfileId={imamProfileId}
+              pearlsOfWisdom={pearlsForImam}
+              onUpdate={onUpdate}
+              showAlert={showAlert}
+            />
+          </TabPane>
 
-          {activeTab === "jumuahAudio" && (
-            <TabPane tabId="jumuahAudio">
-              <JumuahAudioKhutbahTab
-                imamProfileId={imamProfileId}
-                audioKhutbah={audioForImam}
-                lookupData={lookupData}
-                onUpdate={onUpdate}
-                showAlert={showAlert}
-              />
-            </TabPane>
-          )}
+          <TabPane tabId="khutbahTopics">
+            <JumuahKhutbahTopicSubmissionTab
+              imamProfileId={imamProfileId}
+              jumuahKhutbahTopicSubmission={khutbahTopicsForImam}
+              lookupData={lookupData}
+              onUpdate={onUpdate}
+              showAlert={showAlert}
+            />
+          </TabPane>
 
-          {activeTab === "pearls" && (
-            <TabPane tabId="pearls">
-              <PearlsOfWisdomTab
-                imamProfileId={imamProfileId}
-                pearls={pearlsForImam}
-                lookupData={lookupData}
-                onUpdate={onUpdate}
-                showAlert={showAlert}
-              />
-            </TabPane>
-          )}
+          <TabPane tabId="audioKhutbah">
+            <JumuahAudioKhutbahTab
+              imamProfileId={imamProfileId}
+              jumuahAudioKhutbah={audioKhutbahForImam}
+              onUpdate={onUpdate}
+              showAlert={showAlert}
+            />
+          </TabPane>
 
-          {activeTab === "medical" && (
-            <TabPane tabId="medical">
-              <MedicalReimbursementTab
-                imamProfileId={imamProfileId}
-                reimbursements={medicalForImam}
-                lookupData={lookupData}
-                onUpdate={onUpdate}
-                showAlert={showAlert}
-              />
-            </TabPane>
-          )}
+          <TabPane tabId="medical">
+            <MedicalReimbursementTab
+              imamProfileId={imamProfileId}
+              medicalReimbursement={medicalForImam}
+              lookupData={lookupData}
+              onUpdate={onUpdate}
+              showAlert={showAlert}
+            />
+          </TabPane>
 
-          {activeTab === "engagement" && (
-            <TabPane tabId="engagement">
-              <CommunityEngagementTab
-                imamProfileId={imamProfileId}
-                engagements={engagementForImam}
-                lookupData={lookupData}
-                onUpdate={onUpdate}
-                showAlert={showAlert}
-              />
-            </TabPane>
-          )}
+          <TabPane tabId="engagement">
+            <CommunityEngagementTab
+              imamProfileId={imamProfileId}
+              communityEngagement={engagementForImam}
+              lookupData={lookupData}
+              onUpdate={onUpdate}
+              showAlert={showAlert}
+            />
+          </TabPane>
 
-          {activeTab === "nikah" && (
-            <TabPane tabId="nikah">
-              <NikahBonusTab
-                imamProfileId={imamProfileId}
-                bonuses={nikahForImam}
-                lookupData={lookupData}
-                onUpdate={onUpdate}
-                showAlert={showAlert}
-              />
-            </TabPane>
-          )}
+          <TabPane tabId="nikah">
+            <NikahBonusTab
+              imamProfileId={imamProfileId}
+              nikahBonus={nikahForImam}
+              lookupData={lookupData}
+              onUpdate={onUpdate}
+              showAlert={showAlert}
+            />
+          </TabPane>
 
-          {activeTab === "newMuslim" && (
-            <TabPane tabId="newMuslim">
-              <NewMuslimBonusTab
-                imamProfileId={imamProfileId}
-                bonuses={newMuslimForImam}
-                lookupData={lookupData}
-                onUpdate={onUpdate}
-                showAlert={showAlert}
-              />
-            </TabPane>
-          )}
+          <TabPane tabId="newMuslim">
+            <NewMuslimBonusTab
+              imamProfileId={imamProfileId}
+              newMuslimBonus={newMuslimForImam}
+              lookupData={lookupData}
+              onUpdate={onUpdate}
+              showAlert={showAlert}
+            />
+          </TabPane>
 
-          {activeTab === "newBaby" && (
-            <TabPane tabId="newBaby">
-              <NewBabyBonusTab
-                imamProfileId={imamProfileId}
-                bonuses={newBabyForImam}
-                lookupData={lookupData}
-                onUpdate={onUpdate}
-                showAlert={showAlert}
-              />
-            </TabPane>
-          )}
+          <TabPane tabId="newBaby">
+            <NewBabyBonusTab
+              imamProfileId={imamProfileId}
+              newBabyBonus={newBabyForImam}
+              lookupData={lookupData}
+              onUpdate={onUpdate}
+              showAlert={showAlert}
+            />
+          </TabPane>
         </TabContent>
       </CardBody>
     </Card>
