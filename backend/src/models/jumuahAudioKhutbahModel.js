@@ -5,7 +5,7 @@ const {
   scopeQuery,
 } = require("../utils/modelHelpers");
 
-const tableName = "Jumuah_Audio_Khutbah";
+const tableName = "jumuah_audio_khutbah";
 
 const jumuahAudioKhutbahModel = {
   getAll: async (imamProfileId = null) => {
@@ -22,10 +22,10 @@ const jumuahAudioKhutbahModel = {
 
       const res = await pool.query(query, params);
       res.rows = res.rows.map((row) => {
-        if (row.Audio && row.Audio_Filename) {
-          row.Audio = "exists";
-        } else if (row.Audio) {
-          row.Audio = row.Audio.toString("base64");
+        if (row.audio && row.audio_filename) {
+          row.audio = "exists";
+        } else if (row.audio) {
+          row.audio = row.audio.toString("base64");
         }
         return row;
       });
@@ -43,10 +43,10 @@ const jumuahAudioKhutbahModel = {
       const res = await pool.query(query, [id]);
       if (!res.rows[0]) return null;
       const row = res.rows[0];
-      if (row.Audio && row.Audio_Filename) {
-        row.Audio = "exists";
-      } else if (row.Audio) {
-        row.Audio = row.Audio.toString("base64");
+      if (row.audio && row.audio_filename) {
+        row.audio = "exists";
+      } else if (row.audio) {
+        row.audio = row.audio.toString("base64");
       }
       return row;
     } catch (err) {

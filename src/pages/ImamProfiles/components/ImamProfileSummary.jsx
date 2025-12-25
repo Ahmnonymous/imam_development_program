@@ -88,6 +88,16 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
       showAlert,
     });
 
+  const formatDateForInput = (dateValue) => {
+    if (!dateValue) return "";
+    const date = new Date(dateValue);
+    if (isNaN(date.getTime())) return "";
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
   useEffect(() => {
     if (imamProfile && modalOpen) {
       reset({
@@ -96,7 +106,7 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
         ID_Number: imamProfile.id_number || "",
         Nationality: imamProfile.nationality || "",
         Title: imamProfile.title || "",
-        DOB: imamProfile.dob || "",
+        DOB: formatDateForInput(imamProfile.dob),
         Race: imamProfile.race || "",
         Gender: imamProfile.gender || "",
         Marital_Status: imamProfile.marital_status || "",
@@ -576,3 +586,4 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
 };
 
 export default ImamProfileSummary;
+

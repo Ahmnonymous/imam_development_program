@@ -6,7 +6,7 @@ import DeleteConfirmationModal from "../../../../components/Common/DeleteConfirm
 import useDeleteConfirmation from "../../../../hooks/useDeleteConfirmation";
 import { useRole } from "../../../../helpers/useRole";
 import axiosApi from "../../../../helpers/api_helper";
-import { API_BASE_URL } from "../../../../helpers/url_helper";
+import { API_BASE_URL, API_STREAM_BASE_URL } from "../../../../helpers/url_helper";
 import { getAuditName } from "../../../../helpers/userStorage";
 
 const NikahBonusTab = ({ imamProfileId, nikahBonus, lookupData, onUpdate, showAlert }) => {
@@ -17,12 +17,33 @@ const NikahBonusTab = ({ imamProfileId, nikahBonus, lookupData, onUpdate, showAl
   const { deleteModalOpen, deleteItem, deleteLoading, showDeleteConfirmation, hideDeleteConfirmation, confirmDelete } = useDeleteConfirmation();
   const { control, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm();
 
+  const formatDateForInput = (dateValue) => {
+    if (!dateValue) return "";
+    const date = new Date(dateValue);
+    if (isNaN(date.getTime())) return "";
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  const formatFileSize = (bytes) => {
+    if (!bytes) return "0 B";
+    const k = 1024;
+    const sizes = ["B", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
+  };
+
+
   useEffect(() => {
     if (modalOpen) {
       reset({
         spouse_name: editItem?.spouse_name || "",
-        nikah_date: editItem?.nikah_date || "",
+        nikah_date: formatDateForInput(editItem?.nikah_date),
         comment: editItem?.comment || "",
+        Certificate: null,
+        Nikah_Image: null,
       });
     }
   }, [editItem, modalOpen, reset]);
@@ -44,18 +65,27 @@ const NikahBonusTab = ({ imamProfileId, nikahBonus, lookupData, onUpdate, showAl
 
   const onSubmit = async (data) => {
     try {
+      const hasCertificate = data.Certificate && data.Certificate.length > 0;
+      const hasNikahImage = data.Nikah_Image && data.Nikah_Image.length > 0;
       const formData = new FormData();
       formData.append("imam_profile_id", imamProfileId);
       formData.append("spouse_name", data.spouse_name);
       formData.append("nikah_date", data.nikah_date);
       formData.append("comment", data.comment || "");
-      formData.append("created_by", getAuditName());
-      formData.append("updated_by", getAuditName());
+      
+      if (hasCertificate) {
+        formData.append("Certificate", data.Certificate[0]);
+      }
+      if (hasNikahImage) {
+        formData.append("Nikah_Image", data.Nikah_Image[0]);
+      }
 
       if (editItem) {
+        formData.append("updated_by", getAuditName());
         await axiosApi.put(`${API_BASE_URL}/nikahBonus/${editItem.id}`, formData, { headers: { "Content-Type": "multipart/form-data" } });
         showAlert("Nikah bonus updated successfully", "success");
       } else {
+        formData.append("created_by", getAuditName());
         await axiosApi.post(`${API_BASE_URL}/nikahBonus`, formData, { headers: { "Content-Type": "multipart/form-data" } });
         showAlert("Nikah bonus created successfully", "success");
       }
@@ -113,6 +143,60 @@ const NikahBonusTab = ({ imamProfileId, nikahBonus, lookupData, onUpdate, showAl
         cell: (cell) => {
           const value = cell.getValue();
           return value ? new Date(value).toLocaleDateString() : "-";
+        },
+      },
+      {
+        header: "Certificate",
+        accessorKey: "certificate",
+        enableSorting: false,
+        enableColumnFilter: false,
+        cell: (cell) => {
+          const cert = cell.getValue();
+          const rowId = cell.row.original.id;
+          return cert && (cert === "exists" || cell.row.original.certificate_filename) ? (
+            <div className="d-flex justify-content-center">
+              <a
+                href={`${API_STREAM_BASE_URL}/nikahBonus/${rowId}/view-certificate`}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="View"
+              >
+                <i
+                  className="bx bx-show text-success"
+                  style={{ cursor: "pointer", fontSize: "16px" }}
+                ></i>
+              </a>
+            </div>
+          ) : (
+            <span className="d-block text-center">-</span>
+          );
+        },
+      },
+      {
+        header: "Image",
+        accessorKey: "nikah_image",
+        enableSorting: false,
+        enableColumnFilter: false,
+        cell: (cell) => {
+          const image = cell.getValue();
+          const rowId = cell.row.original.id;
+          return image && (image === "exists" || cell.row.original.nikah_image_filename) ? (
+            <div className="d-flex justify-content-center">
+              <a
+                href={`${API_STREAM_BASE_URL}/nikahBonus/${rowId}/view-nikah-image`}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="View"
+              >
+                <i
+                  className="bx bx-show text-success"
+                  style={{ cursor: "pointer", fontSize: "16px" }}
+                ></i>
+              </a>
+            </div>
+          ) : (
+            <span className="d-block text-center">-</span>
+          );
         },
       },
       {
@@ -217,13 +301,85 @@ const NikahBonusTab = ({ imamProfileId, nikahBonus, lookupData, onUpdate, showAl
               <Col md={6}>
                 <FormGroup>
                   <Label>Certificate</Label>
-                  <Input type="file" accept="image/*,.pdf" disabled={isOrgExecutive} />
+                  <Controller
+                    name="Certificate"
+                    control={control}
+                    render={({ field: { onChange, value, ...field } }) => (
+                      <Input
+                        type="file"
+                        accept="image/*,.pdf"
+                        onChange={(e) => onChange(e.target.files)}
+                        disabled={isOrgExecutive}
+                        {...field}
+                      />
+                    )}
+                  />
+                  {editItem && (editItem.Certificate || editItem.certificate || editItem.Certificate_Filename || editItem.certificate_filename) && (
+                    <div className="mt-2 p-2 border rounded bg-light">
+                      <div className="d-flex align-items-center">
+                        <i className="bx bx-file font-size-24 text-primary me-2"></i>
+                        <div className="flex-grow-1">
+                          <div className="fw-medium">{editItem.Certificate_Filename || editItem.certificate_filename || "file"}</div>
+                          <small className="text-muted">
+                            {formatFileSize(editItem.Certificate_Size || editItem.certificate_size)} • Current file
+                          </small>
+                        </div>
+                        <a
+                          href={`${API_STREAM_BASE_URL}/nikahBonus/${editItem.id}/view-certificate`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title="View"
+                        >
+                          <i 
+                            className="bx bx-show text-success" 
+                            style={{ cursor: "pointer", fontSize: "16px" }}
+                          ></i>
+                        </a>
+                      </div>
+                    </div>
+                  )}
                 </FormGroup>
               </Col>
               <Col md={6}>
                 <FormGroup>
                   <Label>Nikah Image</Label>
-                  <Input type="file" accept="image/*" disabled={isOrgExecutive} />
+                  <Controller
+                    name="Nikah_Image"
+                    control={control}
+                    render={({ field: { onChange, value, ...field } }) => (
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => onChange(e.target.files)}
+                        disabled={isOrgExecutive}
+                        {...field}
+                      />
+                    )}
+                  />
+                  {editItem && (editItem.Nikah_Image || editItem.nikah_image || editItem.Nikah_Image_Filename || editItem.nikah_image_filename) && (
+                    <div className="mt-2 p-2 border rounded bg-light">
+                      <div className="d-flex align-items-center">
+                        <i className="bx bx-file font-size-24 text-primary me-2"></i>
+                        <div className="flex-grow-1">
+                          <div className="fw-medium">{editItem.Nikah_Image_Filename || editItem.nikah_image_filename || "file"}</div>
+                          <small className="text-muted">
+                            {formatFileSize(editItem.Nikah_Image_Size || editItem.nikah_image_size)} • Current file
+                          </small>
+                        </div>
+                        <a
+                          href={`${API_STREAM_BASE_URL}/nikahBonus/${editItem.id}/view-nikah-image`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title="View"
+                        >
+                          <i 
+                            className="bx bx-show text-success" 
+                            style={{ cursor: "pointer", fontSize: "16px" }}
+                          ></i>
+                        </a>
+                      </div>
+                    </div>
+                  )}
                 </FormGroup>
               </Col>
               <Col md={12}>

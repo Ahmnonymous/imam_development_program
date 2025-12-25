@@ -30,7 +30,6 @@ module.exports = function (req, res, next) {
       // Attach decoded user data to request (e.g., id, username, userType)
       req.user = decoded;
     } catch (err) {
-      console.log("⚠️ Token provided but invalid, proceeding without auth:", err.message);
       // Continue without authentication if token is invalid
     }
 

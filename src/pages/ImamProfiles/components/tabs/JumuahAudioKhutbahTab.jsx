@@ -6,7 +6,7 @@ import DeleteConfirmationModal from "../../../../components/Common/DeleteConfirm
 import useDeleteConfirmation from "../../../../hooks/useDeleteConfirmation";
 import { useRole } from "../../../../helpers/useRole";
 import axiosApi from "../../../../helpers/api_helper";
-import { API_BASE_URL } from "../../../../helpers/url_helper";
+import { API_BASE_URL, API_STREAM_BASE_URL } from "../../../../helpers/url_helper";
 import { getAuditName } from "../../../../helpers/userStorage";
 
 const JumuahAudioKhutbahTab = ({ imamProfileId, jumuahAudioKhutbah, onUpdate, showAlert }) => {
@@ -17,13 +17,33 @@ const JumuahAudioKhutbahTab = ({ imamProfileId, jumuahAudioKhutbah, onUpdate, sh
   const { deleteModalOpen, deleteItem, deleteLoading, showDeleteConfirmation, hideDeleteConfirmation, confirmDelete } = useDeleteConfirmation();
   const { control, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm();
 
+  const formatDateForInput = (dateValue) => {
+    if (!dateValue) return "";
+    const date = new Date(dateValue);
+    if (isNaN(date.getTime())) return "";
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  const formatFileSize = (bytes) => {
+    if (!bytes) return "0 B";
+    const k = 1024;
+    const sizes = ["B", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
+  };
+
+
   useEffect(() => {
     if (modalOpen) {
       reset({
         khutbah_topic: editItem?.khutbah_topic || "",
-        khutbah_date: editItem?.khutbah_date || "",
+        khutbah_date: formatDateForInput(editItem?.khutbah_date),
         attendance_count: editItem?.attendance_count || "",
         comment: editItem?.comment || "",
+        Audio: null,
       });
     }
   }, [editItem, modalOpen, reset]);
@@ -45,19 +65,24 @@ const JumuahAudioKhutbahTab = ({ imamProfileId, jumuahAudioKhutbah, onUpdate, sh
 
   const onSubmit = async (data) => {
     try {
+      const hasFile = data.Audio && data.Audio.length > 0;
       const formData = new FormData();
       formData.append("imam_profile_id", imamProfileId);
       formData.append("khutbah_topic", data.khutbah_topic);
       formData.append("khutbah_date", data.khutbah_date);
       formData.append("attendance_count", data.attendance_count || "");
       formData.append("comment", data.comment || "");
-      formData.append("created_by", getAuditName());
-      formData.append("updated_by", getAuditName());
+      
+      if (hasFile) {
+        formData.append("Audio", data.Audio[0]);
+      }
 
       if (editItem) {
+        formData.append("updated_by", getAuditName());
         await axiosApi.put(`${API_BASE_URL}/jumuahAudioKhutbah/${editItem.id}`, formData, { headers: { "Content-Type": "multipart/form-data" } });
         showAlert("Audio Khutbah updated successfully", "success");
       } else {
+        formData.append("created_by", getAuditName());
         await axiosApi.post(`${API_BASE_URL}/jumuahAudioKhutbah`, formData, { headers: { "Content-Type": "multipart/form-data" } });
         showAlert("Audio Khutbah created successfully", "success");
       }
@@ -123,6 +148,33 @@ const JumuahAudioKhutbahTab = ({ imamProfileId, jumuahAudioKhutbah, onUpdate, sh
         enableSorting: true,
         enableColumnFilter: false,
         cell: (cell) => cell.getValue() || "-",
+      },
+      {
+        header: "Audio",
+        accessorKey: "audio",
+        enableSorting: false,
+        enableColumnFilter: false,
+        cell: (cell) => {
+          const audio = cell.getValue();
+          const rowId = cell.row.original.id;
+          return audio && (audio === "exists" || cell.row.original.audio_filename) ? (
+            <div className="d-flex justify-content-center">
+              <a
+                href={`${API_STREAM_BASE_URL}/jumuahAudioKhutbah/${rowId}/view-audio`}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="View"
+              >
+                <i
+                  className="bx bx-show text-success"
+                  style={{ cursor: "pointer", fontSize: "16px" }}
+                ></i>
+              </a>
+            </div>
+          ) : (
+            <span className="d-block text-center">-</span>
+          );
+        },
       },
       {
         header: "Created By",
@@ -236,7 +288,43 @@ const JumuahAudioKhutbahTab = ({ imamProfileId, jumuahAudioKhutbah, onUpdate, sh
               <Col md={6}>
                 <FormGroup>
                   <Label>Audio File</Label>
-                  <Input type="file" accept="audio/*" disabled={isOrgExecutive} />
+                  <Controller
+                    name="Audio"
+                    control={control}
+                    render={({ field: { onChange, value, ...field } }) => (
+                      <Input
+                        type="file"
+                        accept="audio/*"
+                        onChange={(e) => onChange(e.target.files)}
+                        disabled={isOrgExecutive}
+                        {...field}
+                      />
+                    )}
+                  />
+                  {editItem && (editItem.Audio === "exists" || editItem.audio === "exists" || editItem.Audio_Filename || editItem.audio_filename) && (
+                    <div className="mt-2 p-2 border rounded bg-light">
+                      <div className="d-flex align-items-center">
+                        <i className="bx bx-file font-size-24 text-primary me-2"></i>
+                        <div className="flex-grow-1">
+                          <div className="fw-medium">{editItem.Audio_Filename || editItem.audio_filename || "file"}</div>
+                          <small className="text-muted">
+                            {formatFileSize(editItem.Audio_Size || editItem.audio_size)} • Current file
+                          </small>
+                        </div>
+                        <a
+                          href={`${API_STREAM_BASE_URL}/jumuahAudioKhutbah/${editItem.id}/view-audio`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title="View"
+                        >
+                          <i 
+                            className="bx bx-show text-success" 
+                            style={{ cursor: "pointer", fontSize: "16px" }}
+                          ></i>
+                        </a>
+                      </div>
+                    </div>
+                  )}
                 </FormGroup>
               </Col>
               <Col md={12}>

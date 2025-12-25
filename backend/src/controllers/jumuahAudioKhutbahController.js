@@ -33,11 +33,11 @@ const jumuahAudioKhutbahController = {
       if (req.files && req.files.Audio && req.files.Audio.length > 0) {
         const file = req.files.Audio[0];
         const buffer = await fs.readFile(file.path);
-        fields.Audio = buffer;
-        fields.Audio_Filename = file.originalname;
-        fields.Audio_Mime = file.mimetype;
-        fields.Audio_Size = file.size;
-        fields.Audio_Updated_At = new Date().toISOString();
+        fields.audio = buffer;
+        fields.audio_filename = file.originalname;
+        fields.audio_mime = file.mimetype;
+        fields.audio_size = file.size;
+        fields.audio_updated_at = new Date().toISOString();
         await fs.unlink(file.path);
       }
       
@@ -59,11 +59,11 @@ const jumuahAudioKhutbahController = {
       if (req.files && req.files.Audio && req.files.Audio.length > 0) {
         const file = req.files.Audio[0];
         const buffer = await fs.readFile(file.path);
-        fields.Audio = buffer;
-        fields.Audio_Filename = file.originalname;
-        fields.Audio_Mime = file.mimetype;
-        fields.Audio_Size = file.size;
-        fields.Audio_Updated_At = new Date().toISOString();
+        fields.audio = buffer;
+        fields.audio_filename = file.originalname;
+        fields.audio_mime = file.mimetype;
+        fields.audio_size = file.size;
+        fields.audio_updated_at = new Date().toISOString();
         await fs.unlink(file.path);
       }
       
@@ -89,16 +89,69 @@ const jumuahAudioKhutbahController = {
     } 
   },
 
+  viewAudio: async (req, res) => {
+    try {
+      const pool = require('../config/db');
+      const query = `SELECT audio, audio_filename, audio_mime, audio_size FROM jumuah_audio_khutbah WHERE id = $1`;
+      const res_db = await pool.query(query, [req.params.id]);
+      const record = res_db.rows[0];
+      
+      if (!record) return res.status(404).send("Record not found");
+      if (!record.audio && !record.audio_filename) return res.status(404).send("No audio file found");
+  
+      const mimeType = record.audio_mime || "audio/mpeg";
+      const filename = record.audio_filename || "audio";
+  
+      // If filename exists but BYTEA is null, the file data is missing
+      if (record.audio_filename && !record.audio) {
+        return res.status(404).send("Audio file data not found in database");
+      }
+  
+      let buffer = record.audio;
+      
+      if (!buffer) {
+        return res.status(404).send("No audio file found");
+      }
+      
+      if (!Buffer.isBuffer(buffer)) {
+        if (typeof buffer === "string") {
+          if (buffer.startsWith("\\x")) {
+            buffer = Buffer.from(buffer.slice(2), "hex");
+          } else if (/^[A-Za-z0-9+/=]+$/.test(buffer)) {
+            buffer = Buffer.from(buffer, "base64");
+          } else {
+            throw new Error("Unknown audio encoding");
+          }
+        } else {
+          throw new Error("Invalid audio data type");
+        }
+      }
+  
+      if (!buffer || !buffer.length) {
+        return res.status(500).send("Audio buffer is empty or corrupted");
+      }
+  
+      res.setHeader("Content-Type", mimeType);
+      res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
+      res.setHeader("Content-Length", buffer.length);
+  
+      res.end(buffer, "binary");
+    } catch (err) {
+      console.error("Error viewing audio:", err);
+      res.status(500).json({ error: "Error viewing audio: " + err.message });
+    }
+  },
+
   downloadAudio: async (req, res) => {
     try {
       const record = await jumuahAudioKhutbahModel.getById(req.params.id);
       if (!record) return res.status(404).send("Record not found");
-      if (!record.Audio) return res.status(404).send("No audio file found");
+      if (!record.audio) return res.status(404).send("No audio file found");
   
-      const mimeType = record.Audio_Mime || "audio/mpeg";
-      const filename = record.Audio_Filename || "audio";
+      const mimeType = record.audio_mime || "audio/mpeg";
+      const filename = record.audio_filename || "audio";
   
-      let buffer = record.Audio;
+      let buffer = record.audio;
       if (typeof buffer === "string") {
         if (buffer.startsWith("\\x")) {
           buffer = Buffer.from(buffer.slice(2), "hex");

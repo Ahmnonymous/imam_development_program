@@ -5,7 +5,7 @@ const {
   scopeQuery,
 } = require("../utils/modelHelpers");
 
-const tableName = "Medical_Reimbursement";
+const tableName = "medical_reimbursement";
 
 const medicalReimbursementModel = {
   getAll: async (imamProfileId = null) => {
@@ -22,15 +22,15 @@ const medicalReimbursementModel = {
 
       const res = await pool.query(query, params);
       res.rows = res.rows.map((row) => {
-        if (row.Receipt && row.Receipt_Filename) {
-          row.Receipt = "exists";
-        } else if (row.Receipt) {
-          row.Receipt = row.Receipt.toString("base64");
+        if (row.receipt && row.receipt_filename) {
+          row.receipt = "exists";
+        } else if (row.receipt) {
+          row.receipt = row.receipt.toString("base64");
         }
-        if (row.Supporting_Docs && row.Supporting_Docs_Filename) {
-          row.Supporting_Docs = "exists";
-        } else if (row.Supporting_Docs) {
-          row.Supporting_Docs = row.Supporting_Docs.toString("base64");
+        if (row.supporting_docs && row.supporting_docs_filename) {
+          row.supporting_docs = "exists";
+        } else if (row.supporting_docs) {
+          row.supporting_docs = row.supporting_docs.toString("base64");
         }
         return row;
       });
@@ -48,15 +48,15 @@ const medicalReimbursementModel = {
       const res = await pool.query(query, [id]);
       if (!res.rows[0]) return null;
       const row = res.rows[0];
-      if (row.Receipt && row.Receipt_Filename) {
-        row.Receipt = "exists";
-      } else if (row.Receipt) {
-        row.Receipt = row.Receipt.toString("base64");
+      if (row.receipt && row.receipt_filename) {
+        row.receipt = "exists";
+      } else if (row.receipt) {
+        row.receipt = row.receipt.toString("base64");
       }
-      if (row.Supporting_Docs && row.Supporting_Docs_Filename) {
-        row.Supporting_Docs = "exists";
-      } else if (row.Supporting_Docs) {
-        row.Supporting_Docs = row.Supporting_Docs.toString("base64");
+      if (row.supporting_docs && row.supporting_docs_filename) {
+        row.supporting_docs = "exists";
+      } else if (row.supporting_docs) {
+        row.supporting_docs = row.supporting_docs.toString("base64");
       }
       return row;
     } catch (err) {
@@ -71,10 +71,31 @@ const medicalReimbursementModel = {
       const { columns, values, placeholders } = buildInsertFragments(fields, {
         quote: false,
       });
-      const query = `INSERT INTO ${tableName} (${columns}) VALUES (${placeholders}) RETURNING *`;
-      const res = await pool.query(query, values);
-      return res.rows[0];
+      const query = `INSERT INTO ${tableName} (${columns}) VALUES (${placeholders}) RETURNING id, receipt_filename, supporting_docs_filename`;
+      
+      let res;
+      try {
+        res = await pool.query(query, values);
+      } catch (dbError) {
+        console.error('Model create - Database error:', dbError.message);
+        console.error('Model create - Database error code:', dbError.code);
+        throw dbError;
+      }
+      const result = res.rows[0];
+      
+      // Verify by querying directly - RETURNING * might not return BYTEA fields
+      if (result.id) {
+        const verifyQuery = `SELECT receipt, receipt_filename, supporting_docs, supporting_docs_filename FROM ${tableName} WHERE id = $1`;
+        const verifyRes = await pool.query(verifyQuery, [result.id]);
+        const verifyRow = verifyRes.rows[0];
+        
+        // Return the verified data with BYTEA fields
+        return verifyRow || result;
+      }
+      
+      return result;
     } catch (err) {
+      console.error('Model create - Error:', err.message);
       throw new Error(`Error creating record in ${tableName}: ${err.message}`);
     }
   },
@@ -89,8 +110,10 @@ const medicalReimbursementModel = {
       } RETURNING *`;
       const res = await pool.query(query, [...values, id]);
       if (res.rowCount === 0) return null;
-      return res.rows[0];
+      const result = res.rows[0];
+      return result;
     } catch (err) {
+      console.error('Model update - Error:', err.message);
       throw new Error(
         `Error updating record in ${tableName}: ${err.message}`,
       );

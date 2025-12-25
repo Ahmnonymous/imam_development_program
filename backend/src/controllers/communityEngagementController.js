@@ -33,11 +33,11 @@ const communityEngagementController = {
       if (req.files && req.files.Engagement_Image && req.files.Engagement_Image.length > 0) {
         const file = req.files.Engagement_Image[0];
         const buffer = await fs.readFile(file.path);
-        fields.Engagement_Image = buffer;
-        fields.Engagement_Image_Filename = file.originalname;
-        fields.Engagement_Image_Mime = file.mimetype;
-        fields.Engagement_Image_Size = file.size;
-        fields.Engagement_Image_Updated_At = new Date().toISOString();
+        fields.engagement_image = buffer;
+        fields.engagement_image_filename = file.originalname;
+        fields.engagement_image_mime = file.mimetype;
+        fields.engagement_image_size = file.size;
+        fields.engagement_image_updated_at = new Date().toISOString();
         await fs.unlink(file.path);
       }
       
@@ -59,11 +59,11 @@ const communityEngagementController = {
       if (req.files && req.files.Engagement_Image && req.files.Engagement_Image.length > 0) {
         const file = req.files.Engagement_Image[0];
         const buffer = await fs.readFile(file.path);
-        fields.Engagement_Image = buffer;
-        fields.Engagement_Image_Filename = file.originalname;
-        fields.Engagement_Image_Mime = file.mimetype;
-        fields.Engagement_Image_Size = file.size;
-        fields.Engagement_Image_Updated_At = new Date().toISOString();
+        fields.engagement_image = buffer;
+        fields.engagement_image_filename = file.originalname;
+        fields.engagement_image_mime = file.mimetype;
+        fields.engagement_image_size = file.size;
+        fields.engagement_image_updated_at = new Date().toISOString();
         await fs.unlink(file.path);
       }
       
@@ -89,16 +89,69 @@ const communityEngagementController = {
     } 
   },
 
+  viewEngagementImage: async (req, res) => {
+    try {
+      const pool = require('../config/db');
+      const query = `SELECT engagement_image, engagement_image_filename, engagement_image_mime, engagement_image_size FROM community_engagement WHERE id = $1`;
+      const res_db = await pool.query(query, [req.params.id]);
+      const record = res_db.rows[0];
+      
+      if (!record) return res.status(404).send("Record not found");
+      if (!record.engagement_image && !record.engagement_image_filename) return res.status(404).send("No image found");
+  
+      const mimeType = record.engagement_image_mime || "image/jpeg";
+      const filename = record.engagement_image_filename || "engagement_image";
+  
+      // If filename exists but BYTEA is null, the file data is missing
+      if (record.engagement_image_filename && !record.engagement_image) {
+        return res.status(404).send("Engagement image file data not found in database");
+      }
+  
+      let buffer = record.engagement_image;
+      
+      if (!buffer) {
+        return res.status(404).send("No image found");
+      }
+      
+      if (!Buffer.isBuffer(buffer)) {
+        if (typeof buffer === "string") {
+          if (buffer.startsWith("\\x")) {
+            buffer = Buffer.from(buffer.slice(2), "hex");
+          } else if (/^[A-Za-z0-9+/=]+$/.test(buffer)) {
+            buffer = Buffer.from(buffer, "base64");
+          } else {
+            throw new Error("Unknown image encoding");
+          }
+        } else {
+          throw new Error("Invalid image data type");
+        }
+      }
+  
+      if (!buffer || !buffer.length) {
+        return res.status(500).send("Image buffer is empty or corrupted");
+      }
+  
+      res.setHeader("Content-Type", mimeType);
+      res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
+      res.setHeader("Content-Length", buffer.length);
+  
+      res.end(buffer, "binary");
+    } catch (err) {
+      console.error("Error viewing engagement image:", err);
+      res.status(500).json({ error: "Error viewing engagement image: " + err.message });
+    }
+  },
+
   downloadImage: async (req, res) => {
     try {
       const record = await communityEngagementModel.getById(req.params.id);
       if (!record) return res.status(404).send("Record not found");
-      if (!record.Engagement_Image) return res.status(404).send("No image found");
+      if (!record.engagement_image) return res.status(404).send("No image found");
   
-      const mimeType = record.Engagement_Image_Mime || "image/jpeg";
-      const filename = record.Engagement_Image_Filename || "engagement_image";
+      const mimeType = record.engagement_image_mime || "image/jpeg";
+      const filename = record.engagement_image_filename || "engagement_image";
   
-      let buffer = record.Engagement_Image;
+      let buffer = record.engagement_image;
       if (typeof buffer === "string") {
         if (buffer.startsWith("\\x")) {
           buffer = Buffer.from(buffer.slice(2), "hex");

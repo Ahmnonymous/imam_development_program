@@ -5,7 +5,7 @@ const {
   scopeQuery,
 } = require("../utils/modelHelpers");
 
-const tableName = "Nikah_Bonus";
+const tableName = "nikah_bonus";
 
 const nikahBonusModel = {
   getAll: async (imamProfileId = null) => {
@@ -22,15 +22,15 @@ const nikahBonusModel = {
 
       const res = await pool.query(query, params);
       res.rows = res.rows.map((row) => {
-        if (row.Certificate && row.Certificate_Filename) {
-          row.Certificate = "exists";
-        } else if (row.Certificate) {
-          row.Certificate = row.Certificate.toString("base64");
+        if (row.certificate && row.certificate_filename) {
+          row.certificate = "exists";
+        } else if (row.certificate) {
+          row.certificate = row.certificate.toString("base64");
         }
-        if (row.Nikah_Image && row.Nikah_Image_Filename) {
-          row.Nikah_Image = "exists";
-        } else if (row.Nikah_Image) {
-          row.Nikah_Image = row.Nikah_Image.toString("base64");
+        if (row.nikah_image && row.nikah_image_filename) {
+          row.nikah_image = "exists";
+        } else if (row.nikah_image) {
+          row.nikah_image = row.nikah_image.toString("base64");
         }
         return row;
       });
@@ -48,15 +48,15 @@ const nikahBonusModel = {
       const res = await pool.query(query, [id]);
       if (!res.rows[0]) return null;
       const row = res.rows[0];
-      if (row.Certificate && row.Certificate_Filename) {
-        row.Certificate = "exists";
-      } else if (row.Certificate) {
-        row.Certificate = row.Certificate.toString("base64");
+      if (row.certificate && row.certificate_filename) {
+        row.certificate = "exists";
+      } else if (row.certificate) {
+        row.certificate = row.certificate.toString("base64");
       }
-      if (row.Nikah_Image && row.Nikah_Image_Filename) {
-        row.Nikah_Image = "exists";
-      } else if (row.Nikah_Image) {
-        row.Nikah_Image = row.Nikah_Image.toString("base64");
+      if (row.nikah_image && row.nikah_image_filename) {
+        row.nikah_image = "exists";
+      } else if (row.nikah_image) {
+        row.nikah_image = row.nikah_image.toString("base64");
       }
       return row;
     } catch (err) {

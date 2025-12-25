@@ -5,7 +5,7 @@ const {
   scopeQuery,
 } = require("../utils/modelHelpers");
 
-const tableName = "New_Baby_Bonus";
+const tableName = "new_baby_bonus";
 
 const newBabyBonusModel = {
   getAll: async (imamProfileId = null) => {
@@ -22,15 +22,15 @@ const newBabyBonusModel = {
 
       const res = await pool.query(query, params);
       res.rows = res.rows.map((row) => {
-        if (row.Baby_Image && row.Baby_Image_Filename) {
-          row.Baby_Image = "exists";
-        } else if (row.Baby_Image) {
-          row.Baby_Image = row.Baby_Image.toString("base64");
+        if (row.baby_image && row.baby_image_filename) {
+          row.baby_image = "exists";
+        } else if (row.baby_image) {
+          row.baby_image = row.baby_image.toString("base64");
         }
-        if (row.Birth_Certificate && row.Birth_Certificate_Filename) {
-          row.Birth_Certificate = "exists";
-        } else if (row.Birth_Certificate) {
-          row.Birth_Certificate = row.Birth_Certificate.toString("base64");
+        if (row.birth_certificate && row.birth_certificate_filename) {
+          row.birth_certificate = "exists";
+        } else if (row.birth_certificate) {
+          row.birth_certificate = row.birth_certificate.toString("base64");
         }
         return row;
       });
@@ -48,15 +48,15 @@ const newBabyBonusModel = {
       const res = await pool.query(query, [id]);
       if (!res.rows[0]) return null;
       const row = res.rows[0];
-      if (row.Baby_Image && row.Baby_Image_Filename) {
-        row.Baby_Image = "exists";
-      } else if (row.Baby_Image) {
-        row.Baby_Image = row.Baby_Image.toString("base64");
+      if (row.baby_image && row.baby_image_filename) {
+        row.baby_image = "exists";
+      } else if (row.baby_image) {
+        row.baby_image = row.baby_image.toString("base64");
       }
-      if (row.Birth_Certificate && row.Birth_Certificate_Filename) {
-        row.Birth_Certificate = "exists";
-      } else if (row.Birth_Certificate) {
-        row.Birth_Certificate = row.Birth_Certificate.toString("base64");
+      if (row.birth_certificate && row.birth_certificate_filename) {
+        row.birth_certificate = "exists";
+      } else if (row.birth_certificate) {
+        row.birth_certificate = row.birth_certificate.toString("base64");
       }
       return row;
     } catch (err) {

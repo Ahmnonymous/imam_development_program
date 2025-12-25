@@ -5,7 +5,7 @@ const {
   scopeQuery,
 } = require("../utils/modelHelpers");
 
-const tableName = "Community_Engagement";
+const tableName = "community_engagement";
 
 const communityEngagementModel = {
   getAll: async (imamProfileId = null) => {
@@ -22,10 +22,10 @@ const communityEngagementModel = {
 
       const res = await pool.query(query, params);
       res.rows = res.rows.map((row) => {
-        if (row.Engagement_Image && row.Engagement_Image_Filename) {
-          row.Engagement_Image = "exists";
-        } else if (row.Engagement_Image) {
-          row.Engagement_Image = row.Engagement_Image.toString("base64");
+        if (row.engagement_image && row.engagement_image_filename) {
+          row.engagement_image = "exists";
+        } else if (row.engagement_image) {
+          row.engagement_image = row.engagement_image.toString("base64");
         }
         return row;
       });
@@ -43,10 +43,10 @@ const communityEngagementModel = {
       const res = await pool.query(query, [id]);
       if (!res.rows[0]) return null;
       const row = res.rows[0];
-      if (row.Engagement_Image && row.Engagement_Image_Filename) {
-        row.Engagement_Image = "exists";
-      } else if (row.Engagement_Image) {
-        row.Engagement_Image = row.Engagement_Image.toString("base64");
+      if (row.engagement_image && row.engagement_image_filename) {
+        row.engagement_image = "exists";
+      } else if (row.engagement_image) {
+        row.engagement_image = row.engagement_image.toString("base64");
       }
       return row;
     } catch (err) {

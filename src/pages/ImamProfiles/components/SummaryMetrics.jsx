@@ -3,47 +3,60 @@ import { Row, Col, Card, CardBody } from "reactstrap";
 
 const SummaryMetrics = ({
   imamProfileId,
-  medicalReimbursements,
-  communityEngagements,
-  jumuahKhutbahTopics,
+  medicalReimbursement,
+  communityEngagement,
+  jumuahKhutbahTopicSubmission,
+  jumuahAudioKhutbah,
 }) => {
+  if (!imamProfileId) return null;
+
   // Ensure metrics reflect ONLY the selected imam profile
-  const medicalForImam = (medicalReimbursements || []).filter(
+  const medicalForImam = (medicalReimbursement || []).filter(
     (x) => String(x.imam_profile_id) === String(imamProfileId)
   );
-  const engagementsForImam = (communityEngagements || []).filter(
+  const engagementsForImam = (communityEngagement || []).filter(
     (x) => String(x.imam_profile_id) === String(imamProfileId)
   );
-  const topicsForImam = (jumuahKhutbahTopics || []).filter(
+  const topicsForImam = (jumuahKhutbahTopicSubmission || []).filter(
+    (x) => String(x.imam_profile_id) === String(imamProfileId)
+  );
+  const audioForImam = (jumuahAudioKhutbah || []).filter(
     (x) => String(x.imam_profile_id) === String(imamProfileId)
   );
 
   // Calculate totals
-  const totalMedicalReimbursement = medicalForImam.reduce(
-    (sum, item) => sum + (parseFloat(item.reimbursement_amount) || 0),
+  const totalMedicalAmount = medicalForImam.reduce(
+    (sum, item) => sum + (parseFloat(item.amount) || 0),
     0
   );
   const totalEngagements = engagementsForImam.length;
-  const totalKhutbahTopics = topicsForImam.length;
+  const totalTopics = topicsForImam.length;
+  const totalAudio = audioForImam.length;
 
   const metrics = [
     {
-      title: "Medical Reimbursement",
-      value: `R ${totalMedicalReimbursement.toFixed(2)}`,
+      title: "Medical",
+      value: medicalForImam.length,
       icon: "bx-money",
       color: "primary",
     },
     {
-      title: "Community Engagements",
+      title: "Community",
       value: totalEngagements,
       icon: "bx-home",
       color: "success",
     },
     {
-      title: "Khutbah Topics",
-      value: totalKhutbahTopics,
+      title: "Topics",
+      value: totalTopics,
       icon: "bx-book",
       color: "info",
+    },
+    {
+      title: "Audio",
+      value: totalAudio,
+      icon: "bx-music",
+      color: "warning",
     },
   ];
 
@@ -55,7 +68,7 @@ const SummaryMetrics = ({
             <CardBody>
               <div className="d-flex">
                 <div className="flex-grow-1">
-                  <p className="text-muted fw-medium">{metric.title}</p>
+                  <p className="text-muted fw-medium mb-1">{metric.title}</p>
                   <h4 className="mb-0">{metric.value}</h4>
                 </div>
                 <div className="avatar-sm rounded-circle bg-primary align-self-center mini-stat-icon">
