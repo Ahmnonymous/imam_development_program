@@ -38,9 +38,16 @@ import { withTranslation } from "react-i18next";
 import axiosApi from "../../helpers/api_helper";
 import { API_BASE_URL } from "../../helpers/url_helper";
 
+// Role-based access
+import { useRole } from "../../helpers/useRole";
+
 const ApplicantStatistics = (props) => {
   // Meta title
   document.title = "Dashboard | IDP";
+
+  // Get user role
+  const { userType } = useRole();
+  const isImamUser = userType === 6;
 
   // State
   const [loading, setLoading] = useState(true);
@@ -72,8 +79,13 @@ const ApplicantStatistics = (props) => {
   });
 
   useEffect(() => {
-    fetchStatisticsData();
-  }, []);
+    // Only fetch statistics if not Imam User
+    if (!isImamUser) {
+      fetchStatisticsData();
+    } else {
+      setLoading(false);
+    }
+  }, [isImamUser]);
 
   const fetchStatisticsData = async () => {
     try {
@@ -253,6 +265,9 @@ const ApplicantStatistics = (props) => {
             </Col> */}
           </Row>
 
+          {/* For Imam User, show only welcome card - hide all other content */}
+          {isImamUser ? null : (
+            <>
           {/* Summary KPI Cards */}
           <Row className="mb-4">
             {[
@@ -507,6 +522,8 @@ const ApplicantStatistics = (props) => {
               </Card>
             </Col>
           </Row>
+            </>
+          )}
         </Container>
       </div>
     </React.Fragment>

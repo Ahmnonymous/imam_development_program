@@ -39,8 +39,6 @@ module.exports = (req, res, next) => {
     if (req.user) {
       const roleId = parseRoleId(req.user);
       const roleKey = ROLE_KEY_BY_ID[roleId] || null;
-      const enforceCenterFilter =
-        req.accessScope?.enforceCenterFilter ?? needsCenterRestriction(roleId);
 
       const isAppAdmin = roleKey === "AppAdmin";
       const isHQ = roleKey === "HQ";
@@ -50,22 +48,11 @@ module.exports = (req, res, next) => {
       req.isAppAdmin = isAppAdmin;
       req.isHQ = isHQ;
       req.isGlobalAdmin = isGlobalAdmin;
-      req.isMultiCenter = !enforceCenterFilter;
+      req.isMultiCenter = true; // All users have multi-center access now (center_id removed)
 
-      if (!enforceCenterFilter) {
-        req.center_id = null;
-      } else if (req.user.center_id !== null && req.user.center_id !== undefined) {
-        const centerIdValue = parseInt(req.user.center_id, 10);
-        req.center_id = Number.isNaN(centerIdValue) ? null : centerIdValue;
-      } else {
-        req.center_id = null;
-      }
-
+      // Legacy function - center_id has been removed
       req.applyCenterFilter = (query, options = {}) =>
-        applyCenterFilter(query, { ...req.user, center_id: req.center_id }, {
-          centerId: req.center_id,
-          ...options,
-        });
+        applyCenterFilter(query, req.user, options);
     }
 
     next();

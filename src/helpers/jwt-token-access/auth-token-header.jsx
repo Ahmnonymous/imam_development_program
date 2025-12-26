@@ -21,6 +21,19 @@ export const login = async (username, password) => {
   }
 };
 
+export const register = async (name, surname, username, password, confirmPassword) => {
+  console.log("📝 Starting register process for user:", username);
+  console.log("📝 Using API helper post function");
+  try {
+    const res = await post("auth/register", { name, surname, username, password, confirmPassword });
+    console.log("✅ Register API response:", res);
+    return res;
+  } catch (error) {
+    console.error("❌ Register API error:", error);
+    throw error;
+  }
+};
+
 export const logout = () => {
   console.log("🔴 Logging out - clearing all localStorage");
   // Clear ALL localStorage variables

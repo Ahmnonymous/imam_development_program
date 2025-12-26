@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   Card,
   CardBody,
@@ -14,13 +14,9 @@ import {
   Label,
   Input,
   FormFeedback,
-  Nav,
-  NavItem,
-  NavLink,
-  TabContent,
-  TabPane,
+  InputGroup,
+  InputGroupText,
 } from "reactstrap";
-import classnames from "classnames";
 import { useForm, Controller } from "react-hook-form";
 import DeleteConfirmationModal from "../../../components/Common/DeleteConfirmationModal";
 import useDeleteConfirmation from "../../../hooks/useDeleteConfirmation";
@@ -28,37 +24,10 @@ import { useRole } from "../../../helpers/useRole";
 import axiosApi from "../../../helpers/api_helper";
 import { API_BASE_URL } from "../../../helpers/url_helper";
 import { getAuditName } from "../../../helpers/userStorage";
-import { createFieldTabMap, handleTabbedFormErrors } from "../../../helpers/formErrorHandler";
-
-const EDIT_IMAM_PROFILE_TAB_LABELS = {
-  1: "Personal Info",
-  2: "Additional Details",
-};
-
-const EDIT_IMAM_PROFILE_TAB_FIELDS = {
-  1: [
-    "Name",
-    "Surname",
-    "ID_Number",
-    "Nationality",
-    "Title",
-    "DOB",
-    "Race",
-    "Gender",
-    "Marital_Status",
-  ],
-  2: [
-    "Madhab",
-    "suburb_id",
-    "province_id",
-    "nationality_id",
-  ],
-};
 
 const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) => {
-  const { isOrgExecutive } = useRole();
+  const { isOrgExecutive, isAppAdmin } = useRole();
   const [modalOpen, setModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("1");
 
   // Delete confirmation hook
   const {
@@ -75,18 +44,32 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
     handleSubmit,
     formState: { errors, isSubmitting },
     reset,
+    watch,
+    setValue,
   } = useForm();
-  const tabFieldGroups = useMemo(() => EDIT_IMAM_PROFILE_TAB_FIELDS, []);
-  const fieldTabMap = useMemo(() => createFieldTabMap(tabFieldGroups), [tabFieldGroups]);
+  
+  const [selectedCountryId, setSelectedCountryId] = useState(null);
+  const [selectedProvinceId, setSelectedProvinceId] = useState(null);
+  const [filteredProvinces, setFilteredProvinces] = useState([]);
+  const [filteredSuburbs, setFilteredSuburbs] = useState([]);
+  
+  // Add New Modal States
+  const [addCountryModal, setAddCountryModal] = useState(false);
+  const [addProvinceModal, setAddProvinceModal] = useState(false);
+  const [addSuburbModal, setAddSuburbModal] = useState(false);
+  const [newCountryName, setNewCountryName] = useState("");
+  const [newProvinceName, setNewProvinceName] = useState("");
+  const [newSuburbName, setNewSuburbName] = useState("");
+  const [addingCountry, setAddingCountry] = useState(false);
+  const [addingProvince, setAddingProvince] = useState(false);
+  const [addingSuburb, setAddingSuburb] = useState(false);
 
-  const handleFormError = (formErrors) =>
-    handleTabbedFormErrors({
-      errors: formErrors,
-      fieldTabMap,
-      tabLabelMap: EDIT_IMAM_PROFILE_TAB_LABELS,
-      setActiveTab,
-      showAlert,
-    });
+  const handleFormError = (formErrors) => {
+    const firstError = Object.keys(formErrors)[0];
+    if (firstError) {
+      showAlert(formErrors[firstError]?.message || "Please fix the form errors", "danger");
+    }
+  };
 
   const formatDateForInput = (dateValue) => {
     if (!dateValue) return "";
@@ -98,31 +81,100 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
     return `${year}-${month}-${day}`;
   };
 
+  // Filter provinces based on selected country
+  useEffect(() => {
+    if (selectedCountryId && lookupData.province) {
+      const filtered = lookupData.province.filter(
+        (p) => Number(p.country_id) === Number(selectedCountryId)
+      );
+      setFilteredProvinces(filtered);
+      // Reset province and suburb when country changes
+      if (selectedProvinceId && !filtered.find((p) => Number(p.id) === Number(selectedProvinceId))) {
+        setSelectedProvinceId(null);
+        setValue("province_id", "");
+        setValue("suburb_id", "");
+      }
+    } else {
+      setFilteredProvinces([]);
+      if (!selectedCountryId) {
+        setSelectedProvinceId(null);
+        setValue("province_id", "");
+        setValue("suburb_id", "");
+      }
+    }
+  }, [selectedCountryId, lookupData.province, selectedProvinceId, setValue]);
+
+  // Track previous province ID to detect actual changes
+  const prevProvinceIdRef = useRef(selectedProvinceId);
+
+  // Filter suburbs based on selected province
+  useEffect(() => {
+    if (selectedProvinceId && lookupData.suburb) {
+      const filtered = lookupData.suburb.filter(
+        (s) => Number(s.province_id) === Number(selectedProvinceId)
+      );
+      setFilteredSuburbs(filtered);
+      
+      // Only reset suburb when province actually changes, not when lookupData updates
+      if (prevProvinceIdRef.current !== selectedProvinceId && prevProvinceIdRef.current !== null) {
+        setValue("suburb_id", "");
+      }
+      prevProvinceIdRef.current = selectedProvinceId;
+    } else {
+      setFilteredSuburbs([]);
+      if (!selectedProvinceId) {
+        setValue("suburb_id", "");
+        prevProvinceIdRef.current = null;
+      }
+    }
+  }, [selectedProvinceId, lookupData.suburb, setValue]);
+
+  // Initialize selectedCountryId and selectedProvinceId from form values
+  useEffect(() => {
+    const subscription = watch((value, { name }) => {
+      if (name === "country_id") {
+        setSelectedCountryId(value.country_id ? String(value.country_id) : null);
+      }
+      if (name === "province_id") {
+        setSelectedProvinceId(value.province_id ? String(value.province_id) : null);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [watch]);
+
   useEffect(() => {
     if (imamProfile && modalOpen) {
-      reset({
+      const formData = {
         Name: imamProfile.name || "",
         Surname: imamProfile.surname || "",
+        Email: imamProfile.email || "",
         ID_Number: imamProfile.id_number || "",
-        Nationality: imamProfile.nationality || "",
         Title: imamProfile.title || "",
         DOB: formatDateForInput(imamProfile.dob),
         Race: imamProfile.race || "",
         Gender: imamProfile.gender || "",
         Marital_Status: imamProfile.marital_status || "",
         Madhab: imamProfile.madhab || "",
-        suburb_id: imamProfile.suburb_id || "",
-        province_id: imamProfile.province_id || "",
         nationality_id: imamProfile.nationality_id || "",
-      });
+        country_id: imamProfile.country_id || "",
+        province_id: imamProfile.province_id || "",
+        suburb_id: imamProfile.suburb_id || "",
+        status_id: imamProfile.status_id || "1",
+      };
+      reset(formData);
+      
+      // Initialize cascading dropdowns
+      if (formData.country_id) {
+        setSelectedCountryId(String(formData.country_id));
+      }
+      if (formData.province_id) {
+        setSelectedProvinceId(String(formData.province_id));
+      }
     }
   }, [imamProfile, modalOpen, reset]);
 
   const toggleModal = () => {
     setModalOpen(!modalOpen);
-    if (!modalOpen) {
-      setActiveTab("1");
-    }
   };
 
   const onSubmit = async (data) => {
@@ -130,17 +182,19 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
       const payload = {
         name: data.Name,
         surname: data.Surname,
+        email: data.Email || null,
         id_number: data.ID_Number || null,
-        nationality: data.Nationality && data.Nationality !== "" ? parseInt(data.Nationality) : null,
         title: data.Title && data.Title !== "" ? parseInt(data.Title) : null,
         dob: data.DOB || null,
         race: data.Race && data.Race !== "" ? parseInt(data.Race) : null,
         gender: data.Gender && data.Gender !== "" ? parseInt(data.Gender) : null,
         marital_status: data.Marital_Status && data.Marital_Status !== "" ? parseInt(data.Marital_Status) : null,
         madhab: data.Madhab && data.Madhab !== "" ? parseInt(data.Madhab) : null,
-        suburb_id: data.suburb_id && data.suburb_id !== "" ? parseInt(data.suburb_id) : null,
-        province_id: data.province_id && data.province_id !== "" ? parseInt(data.province_id) : null,
         nationality_id: data.nationality_id && data.nationality_id !== "" ? parseInt(data.nationality_id) : null,
+        country_id: data.country_id && data.country_id !== "" ? parseInt(data.country_id) : null,
+        province_id: data.province_id && data.province_id !== "" ? parseInt(data.province_id) : null,
+        suburb_id: data.suburb_id && data.suburb_id !== "" ? parseInt(data.suburb_id) : null,
+        status_id: data.status_id && data.status_id !== "" ? parseInt(data.status_id) : 1,
         updated_by: getAuditName(),
       };
 
@@ -152,6 +206,234 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
     } catch (error) {
       console.error("Error updating imam profile:", error);
       showAlert(error?.response?.data?.message || "Failed to update imam profile", "danger");
+    }
+  };
+
+  // Add New Country
+  const handleAddCountry = async () => {
+    if (!newCountryName.trim()) {
+      showAlert("Please enter a country name", "danger");
+      return;
+    }
+    
+    const trimmedName = newCountryName.trim();
+    
+    // Check for duplicate country name
+    const existingCountry = (lookupData.country || []).find(
+      c => c.name?.toLowerCase() === trimmedName.toLowerCase()
+    );
+    
+    if (existingCountry) {
+      showAlert(`Country "${trimmedName}" already exists. Please select it from the dropdown instead.`, "warning");
+      setValue("country_id", String(existingCountry.id));
+      setSelectedCountryId(String(existingCountry.id));
+      setNewCountryName("");
+      setAddCountryModal(false);
+      return;
+    }
+    
+    try {
+      setAddingCountry(true);
+      const response = await axiosApi.post(`${API_BASE_URL}/lookup/Country`, {
+        Name: trimmedName,
+        Created_By: getAuditName(),
+        Updated_By: getAuditName(),
+      });
+      
+      setValue("country_id", String(response.data.id));
+      setSelectedCountryId(String(response.data.id));
+      
+      setNewCountryName("");
+      setAddCountryModal(false);
+      showAlert("Country added successfully. Please refresh the page to see it in the dropdown.", "success");
+    } catch (error) {
+      console.error("Error adding country:", error);
+      // Check if error is due to duplicate (unique constraint violation)
+      if (error?.response?.data?.error?.includes("duplicate") || error?.response?.data?.error?.includes("unique")) {
+        showAlert(`Country "${trimmedName}" already exists. Please select it from the dropdown instead.`, "warning");
+        // Try to find and select the existing country
+        try {
+          const countryRes = await axiosApi.get(`${API_BASE_URL}/lookup/Country`);
+          const existing = (countryRes.data || []).find(
+            c => c.name?.toLowerCase() === trimmedName.toLowerCase()
+          );
+          if (existing) {
+            setValue("country_id", String(existing.id));
+            setSelectedCountryId(String(existing.id));
+          }
+        } catch (fetchError) {
+          console.error("Error fetching countries:", fetchError);
+        }
+      } else {
+        showAlert(error?.response?.data?.error || "Failed to add country", "danger");
+      }
+    } finally {
+      setAddingCountry(false);
+    }
+  };
+
+  // Add New Province
+  const handleAddProvince = async () => {
+    if (!newProvinceName.trim()) {
+      showAlert("Please enter a province name", "danger");
+      return;
+    }
+    if (!selectedCountryId) {
+      showAlert("Please select a country first", "danger");
+      return;
+    }
+    
+    const trimmedName = newProvinceName.trim();
+    
+    // Check for duplicate province name in the selected country
+    const existingProvince = filteredProvinces.find(
+      p => p.name?.toLowerCase() === trimmedName.toLowerCase()
+    );
+    
+    if (existingProvince) {
+      showAlert(`Province "${trimmedName}" already exists in this country. Please select it from the dropdown instead.`, "warning");
+      setValue("province_id", String(existingProvince.id));
+      setSelectedProvinceId(String(existingProvince.id));
+      setNewProvinceName("");
+      setAddProvinceModal(false);
+      return;
+    }
+    
+    try {
+      setAddingProvince(true);
+      const response = await axiosApi.post(`${API_BASE_URL}/lookup/Province`, {
+        Name: trimmedName,
+        country_id: parseInt(selectedCountryId),
+        Created_By: getAuditName(),
+        Updated_By: getAuditName(),
+      });
+      
+      setValue("province_id", String(response.data.id));
+      setSelectedProvinceId(String(response.data.id));
+      
+      setNewProvinceName("");
+      setAddProvinceModal(false);
+      showAlert("Province added successfully. Please refresh the page to see it in the dropdown.", "success");
+    } catch (error) {
+      console.error("Error adding province:", error);
+      // Check if error is due to duplicate (unique constraint violation)
+      if (error?.response?.data?.error?.includes("duplicate") || error?.response?.data?.error?.includes("unique")) {
+        showAlert(`Province "${trimmedName}" already exists in this country. Please select it from the dropdown instead.`, "warning");
+        // Try to find and select the existing province
+        try {
+          const provinceRes = await axiosApi.get(`${API_BASE_URL}/lookup/Province`);
+          const existing = (provinceRes.data || []).find(
+            p => p.name?.toLowerCase() === trimmedName.toLowerCase() && 
+                 Number(p.country_id) === Number(selectedCountryId)
+          );
+          if (existing) {
+            setValue("province_id", String(existing.id));
+            setSelectedProvinceId(String(existing.id));
+          }
+        } catch (fetchError) {
+          console.error("Error fetching provinces:", fetchError);
+        }
+      } else {
+        showAlert(error?.response?.data?.error || "Failed to add province", "danger");
+      }
+    } finally {
+      setAddingProvince(false);
+    }
+  };
+
+  // Add New Suburb
+  const handleAddSuburb = async () => {
+    if (!newSuburbName.trim()) {
+      showAlert("Please enter a suburb name", "danger");
+      return;
+    }
+    if (!selectedProvinceId) {
+      showAlert("Please select a province first", "danger");
+      return;
+    }
+    
+    const trimmedName = newSuburbName.trim();
+    
+    // Check for duplicate suburb name in the selected province
+    const existingSuburb = filteredSuburbs.find(
+      s => s.name?.toLowerCase() === trimmedName.toLowerCase()
+    );
+    
+    if (existingSuburb) {
+      showAlert(`Suburb "${trimmedName}" already exists in this province. Please select it from the dropdown instead.`, "warning");
+      setValue("suburb_id", String(existingSuburb.id));
+      setNewSuburbName("");
+      setAddSuburbModal(false);
+      return;
+    }
+    
+    try {
+      setAddingSuburb(true);
+      const response = await axiosApi.post(`${API_BASE_URL}/lookup/Suburb`, {
+        Name: trimmedName,
+        province_id: parseInt(selectedProvinceId),
+        Created_By: getAuditName(),
+        Updated_By: getAuditName(),
+      });
+      
+      // Refresh suburbs data and update filteredSuburbs
+      const suburbRes = await axiosApi.get(`${API_BASE_URL}/lookup/Suburb`);
+      const updatedSuburbs = suburbRes.data || [];
+      
+      // Manually update filteredSuburbs to include the new suburb
+      if (selectedProvinceId) {
+        const filtered = updatedSuburbs.filter(
+          (s) => Number(s.province_id) === Number(selectedProvinceId)
+        );
+        setFilteredSuburbs(filtered);
+        
+        // Set the value after a brief delay to ensure filteredSuburbs is updated
+        setTimeout(() => {
+          setValue("suburb_id", String(response.data.id), { shouldValidate: false, shouldDirty: true });
+        }, 50);
+      } else {
+        setValue("suburb_id", String(response.data.id), { shouldValidate: false, shouldDirty: true });
+      }
+      
+      setNewSuburbName("");
+      setAddSuburbModal(false);
+      showAlert("Suburb added successfully", "success");
+    } catch (error) {
+      console.error("Error adding suburb:", error);
+      // Check if error is due to duplicate (unique constraint violation)
+      if (error?.response?.data?.error?.includes("duplicate") || error?.response?.data?.error?.includes("unique")) {
+        showAlert(`Suburb "${trimmedName}" already exists in this province. Please select it from the dropdown instead.`, "warning");
+        // Try to find and select the existing suburb
+        try {
+          const suburbRes = await axiosApi.get(`${API_BASE_URL}/lookup/Suburb`);
+          const updatedSuburbs = suburbRes.data || [];
+          const existing = updatedSuburbs.find(
+            s => s.name?.toLowerCase() === trimmedName.toLowerCase() && 
+                 Number(s.province_id) === Number(selectedProvinceId)
+          );
+          if (existing) {
+            // Update filteredSuburbs
+            if (selectedProvinceId) {
+              const filtered = updatedSuburbs.filter(
+                (s) => Number(s.province_id) === Number(selectedProvinceId)
+              );
+              setFilteredSuburbs(filtered);
+              // Set the value after a brief delay to ensure filteredSuburbs is updated
+              setTimeout(() => {
+                setValue("suburb_id", String(existing.id), { shouldValidate: false, shouldDirty: true });
+              }, 50);
+            } else {
+              setValue("suburb_id", String(existing.id), { shouldValidate: false, shouldDirty: true });
+            }
+          }
+        } catch (fetchError) {
+          console.error("Error fetching suburbs:", fetchError);
+        }
+      } else {
+        showAlert(error?.response?.data?.error || "Failed to add suburb", "danger");
+      }
+    } finally {
+      setAddingSuburb(false);
     }
   };
 
@@ -184,12 +466,6 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
     return new Date(dateStr).toLocaleDateString();
   };
 
-  const toggleTab = (tab) => {
-    if (activeTab !== tab) {
-      setActiveTab(tab);
-    }
-  };
-
   return (
     <>
       <Card className="border shadow-sm">
@@ -209,6 +485,7 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
         </div>
 
         <CardBody className="py-3">
+          {/* Row 1: Name, Surname, Email, ID Number */}
           <Row className="mb-2">
             <Col md={3}>
               <p className="text-muted mb-1 font-size-11 text-uppercase">Name</p>
@@ -219,23 +496,24 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
               <p className="mb-2 fw-medium font-size-12">{imamProfile.surname || "-"}</p>
             </Col>
             <Col md={3}>
+              <p className="text-muted mb-1 font-size-11 text-uppercase">Email</p>
+              <p className="mb-2 fw-medium font-size-12">{imamProfile.email || "-"}</p>
+            </Col>
+            <Col md={3}>
               <p className="text-muted mb-1 font-size-11 text-uppercase">ID Number</p>
               <p className="mb-2 fw-medium font-size-12">{imamProfile.id_number || "-"}</p>
             </Col>
+          </Row>
+
+          {/* Row 2: Date of Birth, Title, Race, Gender */}
+          <Row className="mb-2">
             <Col md={3}>
               <p className="text-muted mb-1 font-size-11 text-uppercase">Date of Birth</p>
               <p className="mb-2 fw-medium font-size-12">{formatDate(imamProfile.dob)}</p>
             </Col>
-          </Row>
-
-          <Row className="mb-2">
             <Col md={3}>
               <p className="text-muted mb-1 font-size-11 text-uppercase">Title</p>
               <p className="mb-2 fw-medium font-size-12">{getLookupName(lookupData.title, imamProfile.title)}</p>
-            </Col>
-            <Col md={3}>
-              <p className="text-muted mb-1 font-size-11 text-uppercase">Nationality</p>
-              <p className="mb-2 fw-medium font-size-12">{getLookupName(lookupData.nationality, imamProfile.nationality)}</p>
             </Col>
             <Col md={3}>
               <p className="text-muted mb-1 font-size-11 text-uppercase">Race</p>
@@ -247,6 +525,7 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
             </Col>
           </Row>
 
+          {/* Row 3: Marital Status, Madhab, Nationality, Province */}
           <Row className="mb-2">
             <Col md={3}>
               <p className="text-muted mb-1 font-size-11 text-uppercase">Marital Status</p>
@@ -257,12 +536,32 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
               <p className="mb-2 fw-medium font-size-12">{getLookupName(lookupData.madhab, imamProfile.madhab)}</p>
             </Col>
             <Col md={3}>
+              <p className="text-muted mb-1 font-size-11 text-uppercase">Nationality</p>
+              <p className="mb-2 fw-medium font-size-12">{getLookupName(lookupData.nationality, imamProfile.nationality_id)}</p>
+            </Col>
+            <Col md={3}>
               <p className="text-muted mb-1 font-size-11 text-uppercase">Province</p>
               <p className="mb-2 fw-medium font-size-12">{getLookupName(lookupData.province, imamProfile.province_id)}</p>
             </Col>
+          </Row>
+
+          {/* Row 4: Suburb, Status */}
+          <Row className="mb-2">
             <Col md={3}>
               <p className="text-muted mb-1 font-size-11 text-uppercase">Suburb</p>
               <p className="mb-2 fw-medium font-size-12">{getLookupName(lookupData.suburb, imamProfile.suburb_id)}</p>
+            </Col>
+            <Col md={3}>
+              <p className="text-muted mb-1 font-size-11 text-uppercase">Status</p>
+              <p className="mb-2 fw-medium font-size-12">
+                <span className={`badge ${
+                  Number(imamProfile.status_id) === 1 ? "bg-warning text-dark" :
+                  Number(imamProfile.status_id) === 2 ? "bg-success text-white" :
+                  Number(imamProfile.status_id) === 3 ? "bg-danger text-white" : "bg-secondary text-white"
+                }`}>
+                  {getLookupName(lookupData.status, imamProfile.status_id)}
+                </span>
+              </p>
             </Col>
           </Row>
         </CardBody>
@@ -277,265 +576,363 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
 
         <Form onSubmit={handleSubmit(onSubmit, handleFormError)}>
           <ModalBody>
-            <Nav tabs>
-              <NavItem>
-                <NavLink
-                  className={classnames({ active: activeTab === "1" })}
-                  onClick={() => toggleTab("1")}
-                  style={{ cursor: "pointer" }}
-                >
-                  Personal Info
-                </NavLink>
-              </NavItem>
-              <NavItem>
-                <NavLink
-                  className={classnames({ active: activeTab === "2" })}
-                  onClick={() => toggleTab("2")}
-                  style={{ cursor: "pointer" }}
-                >
-                  Additional Details
-                </NavLink>
-              </NavItem>
-            </Nav>
-
-            <TabContent activeTab={activeTab} className="pt-3">
-              <TabPane tabId="1">
-                <Row>
-                  <Col md={6}>
-                    <FormGroup>
-                      <Label>Name <span className="text-danger">*</span></Label>
-                      <Controller
-                        name="Name"
-                        control={control}
-                        rules={{ required: "Name is required" }}
-                        render={({ field }) => <Input type="text" invalid={!!errors.Name} {...field} />}
+            <Row>
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Name <span className="text-danger">*</span></Label>
+                  <Controller
+                    name="Name"
+                    control={control}
+                    rules={{ required: "Name is required" }}
+                    render={({ field }) => <Input type="text" invalid={!!errors.Name} {...field} />}
+                  />
+                  {errors.Name && <FormFeedback>{errors.Name.message}</FormFeedback>}
+                </FormGroup>
+              </Col>
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Surname <span className="text-danger">*</span></Label>
+                  <Controller
+                    name="Surname"
+                    control={control}
+                    rules={{ required: "Surname is required" }}
+                    render={({ field }) => <Input type="text" invalid={!!errors.Surname} {...field} />}
+                  />
+                  {errors.Surname && <FormFeedback>{errors.Surname.message}</FormFeedback>}
+                </FormGroup>
+              </Col>
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Email</Label>
+                  <Controller
+                    name="Email"
+                    control={control}
+                    rules={{ 
+                      pattern: {
+                        value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                        message: "Invalid email address"
+                      }
+                    }}
+                    render={({ field }) => <Input type="email" invalid={!!errors.Email} {...field} />}
+                  />
+                  {errors.Email && <FormFeedback>{errors.Email.message}</FormFeedback>}
+                </FormGroup>
+              </Col>
+              <Col md={6}>
+                <FormGroup>
+                  <Label>ID Number</Label>
+                  <Controller
+                    name="ID_Number"
+                    control={control}
+                    render={({ field }) => (
+                      <Input
+                        type="text"
+                        maxLength={13}
+                        onInput={(e) => {
+                          e.target.value = (e.target.value || "").replace(/\D/g, "").slice(0, 13);
+                          field.onChange(e);
+                        }}
+                        value={field.value}
+                        onBlur={field.onBlur}
+                        {...field}
                       />
-                      {errors.Name && <FormFeedback>{errors.Name.message}</FormFeedback>}
-                    </FormGroup>
-                  </Col>
-                  <Col md={6}>
-                    <FormGroup>
-                      <Label>Surname <span className="text-danger">*</span></Label>
-                      <Controller
-                        name="Surname"
-                        control={control}
-                        rules={{ required: "Surname is required" }}
-                        render={({ field }) => <Input type="text" invalid={!!errors.Surname} {...field} />}
-                      />
-                      {errors.Surname && <FormFeedback>{errors.Surname.message}</FormFeedback>}
-                    </FormGroup>
-                  </Col>
-                  <Col md={6}>
-                    <FormGroup>
-                      <Label>ID Number</Label>
-                      <Controller
-                        name="ID_Number"
-                        control={control}
-                        render={({ field }) => (
-                          <Input
-                            type="text"
-                            maxLength={13}
-                            onInput={(e) => {
-                              e.target.value = (e.target.value || "").replace(/\D/g, "").slice(0, 13);
-                              field.onChange(e);
-                            }}
-                            value={field.value}
-                            onBlur={field.onBlur}
+                    )}
+                  />
+                </FormGroup>
+              </Col>
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Date of Birth</Label>
+                  <Controller
+                    name="DOB"
+                    control={control}
+                    render={({ field }) => <Input type="date" {...field} />}
+                  />
+                </FormGroup>
+              </Col>
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Title</Label>
+                  <Controller
+                    name="Title"
+                    control={control}
+                    render={({ field }) => (
+                      <Input type="select" {...field}>
+                        <option value="">Select Title</option>
+                        {(lookupData.title || []).map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </Input>
+                    )}
+                  />
+                </FormGroup>
+              </Col>
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Race</Label>
+                  <Controller
+                    name="Race"
+                    control={control}
+                    render={({ field }) => (
+                      <Input type="select" {...field}>
+                        <option value="">Select Race</option>
+                        {(lookupData.race || []).map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </Input>
+                    )}
+                  />
+                </FormGroup>
+              </Col>
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Gender</Label>
+                  <Controller
+                    name="Gender"
+                    control={control}
+                    render={({ field }) => (
+                      <Input type="select" {...field}>
+                        <option value="">Select Gender</option>
+                        {(lookupData.gender || []).map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </Input>
+                    )}
+                  />
+                </FormGroup>
+              </Col>
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Marital Status</Label>
+                  <Controller
+                    name="Marital_Status"
+                    control={control}
+                    render={({ field }) => (
+                      <Input type="select" {...field}>
+                        <option value="">Select Status</option>
+                        {(lookupData.maritalStatus || []).map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </Input>
+                    )}
+                  />
+                </FormGroup>
+              </Col>
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Madhab</Label>
+                  <Controller
+                    name="Madhab"
+                    control={control}
+                    render={({ field }) => (
+                      <Input type="select" {...field}>
+                        <option value="">Select Madhab</option>
+                        {(lookupData.madhab || []).map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </Input>
+                    )}
+                  />
+                </FormGroup>
+              </Col>
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Nationality</Label>
+                  <Controller
+                    name="nationality_id"
+                    control={control}
+                    render={({ field }) => (
+                      <Input type="select" {...field}>
+                        <option value="">Select Nationality</option>
+                        {(lookupData.nationality || []).map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </Input>
+                    )}
+                  />
+                </FormGroup>
+              </Col>
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Country</Label>
+                  <InputGroup>
+                    <Controller
+                      name="country_id"
+                      control={control}
+                      render={({ field }) => (
+                        <Input 
+                          type="select" 
+                          {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            setSelectedCountryId(e.target.value || null);
+                          }}
+                        >
+                          <option value="">Select Country</option>
+                          {(lookupData.country || []).map((item) => (
+                            <option key={item.id} value={item.id}>
+                              {item.name}
+                            </option>
+                          ))}
+                        </Input>
+                      )}
+                    />
+                    <InputGroupText>
+                      <Button
+                        type="button"
+                        color="primary"
+                        size="sm"
+                        onClick={() => setAddCountryModal(true)}
+                        title="Add New Country"
+                      >
+                        <i className="bx bx-plus"></i>
+                      </Button>
+                    </InputGroupText>
+                  </InputGroup>
+                </FormGroup>
+              </Col>
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Province</Label>
+                  <InputGroup>
+                    <Controller
+                      name="province_id"
+                      control={control}
+                      render={({ field }) => (
+                        <Input 
+                          type="select" 
+                          {...field}
+                          disabled={!selectedCountryId}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            setSelectedProvinceId(e.target.value || null);
+                          }}
+                        >
+                          <option value="">Select Province</option>
+                          {filteredProvinces.map((item) => (
+                            <option key={item.id} value={item.id}>
+                              {item.name}
+                            </option>
+                          ))}
+                        </Input>
+                      )}
+                    />
+                    <InputGroupText>
+                      <Button
+                        type="button"
+                        color="primary"
+                        size="sm"
+                        onClick={() => {
+                          if (!selectedCountryId) {
+                            showAlert("Please select a country first", "warning");
+                          } else {
+                            setAddProvinceModal(true);
+                          }
+                        }}
+                        disabled={!selectedCountryId}
+                        title="Add New Province"
+                      >
+                        <i className="bx bx-plus"></i>
+                      </Button>
+                    </InputGroupText>
+                  </InputGroup>
+                </FormGroup>
+              </Col>
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Suburb</Label>
+                  <InputGroup>
+                    <Controller
+                      name="suburb_id"
+                      control={control}
+                      render={({ field }) => (
+                        <Input 
+                          type="select" 
+                          {...field}
+                          disabled={!selectedProvinceId}
+                        >
+                          <option value="">Select Suburb</option>
+                          {filteredSuburbs.map((item) => (
+                            <option key={item.id} value={item.id}>
+                              {item.name}
+                            </option>
+                          ))}
+                        </Input>
+                      )}
+                    />
+                    <InputGroupText>
+                      <Button
+                        type="button"
+                        color="primary"
+                        size="sm"
+                        onClick={() => {
+                          if (!selectedProvinceId) {
+                            showAlert("Please select a province first", "warning");
+                          } else {
+                            setAddSuburbModal(true);
+                          }
+                        }}
+                        disabled={!selectedProvinceId}
+                        title="Add New Suburb"
+                      >
+                        <i className="bx bx-plus"></i>
+                      </Button>
+                    </InputGroupText>
+                  </InputGroup>
+                </FormGroup>
+              </Col>
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Status {isAppAdmin ? "" : "(Read Only)"}</Label>
+                  <Controller
+                    name="status_id"
+                    control={control}
+                    render={({ field }) => {
+                      const statusId = Number(field.value);
+                      const statusColor = 
+                        statusId === 1 ? "bg-warning text-dark" :
+                        statusId === 2 ? "bg-success text-white" :
+                        statusId === 3 ? "bg-danger text-white" : "bg-secondary text-white";
+                      
+                      return (
+                        <div>
+                          <Input 
+                            type="select" 
                             {...field}
-                          />
-                        )}
-                      />
-                    </FormGroup>
-                  </Col>
-                  <Col md={6}>
-                    <FormGroup>
-                      <Label>Date of Birth</Label>
-                      <Controller
-                        name="DOB"
-                        control={control}
-                        render={({ field }) => <Input type="date" {...field} />}
-                      />
-                    </FormGroup>
-                  </Col>
-                  <Col md={6}>
-                    <FormGroup>
-                      <Label>Title</Label>
-                      <Controller
-                        name="Title"
-                        control={control}
-                        render={({ field }) => (
-                          <Input type="select" {...field}>
-                            <option value="">Select Title</option>
-                            {(lookupData.title || []).map((item) => (
-                              <option key={item.id} value={item.id}>
-                                {item.name}
-                              </option>
-                            ))}
-                          </Input>
-                        )}
-                      />
-                    </FormGroup>
-                  </Col>
-                  <Col md={6}>
-                    <FormGroup>
-                      <Label>Nationality</Label>
-                      <Controller
-                        name="Nationality"
-                        control={control}
-                        render={({ field }) => (
-                          <Input type="select" {...field}>
-                            <option value="">Select Nationality</option>
-                            {(lookupData.nationality || []).map((item) => (
-                              <option key={item.id} value={item.id}>
-                                {item.name}
-                              </option>
-                            ))}
-                          </Input>
-                        )}
-                      />
-                    </FormGroup>
-                  </Col>
-                  <Col md={6}>
-                    <FormGroup>
-                      <Label>Race</Label>
-                      <Controller
-                        name="Race"
-                        control={control}
-                        render={({ field }) => (
-                          <Input type="select" {...field}>
-                            <option value="">Select Race</option>
-                            {(lookupData.race || []).map((item) => (
-                              <option key={item.id} value={item.id}>
-                                {item.name}
-                              </option>
-                            ))}
-                          </Input>
-                        )}
-                      />
-                    </FormGroup>
-                  </Col>
-                  <Col md={6}>
-                    <FormGroup>
-                      <Label>Gender</Label>
-                      <Controller
-                        name="Gender"
-                        control={control}
-                        render={({ field }) => (
-                          <Input type="select" {...field}>
-                            <option value="">Select Gender</option>
-                            {(lookupData.gender || []).map((item) => (
-                              <option key={item.id} value={item.id}>
-                                {item.name}
-                              </option>
-                            ))}
-                          </Input>
-                        )}
-                      />
-                    </FormGroup>
-                  </Col>
-                  <Col md={6}>
-                    <FormGroup>
-                      <Label>Marital Status</Label>
-                      <Controller
-                        name="Marital_Status"
-                        control={control}
-                        render={({ field }) => (
-                          <Input type="select" {...field}>
+                            disabled={!isAppAdmin}
+                            className={!isAppAdmin ? "mb-2" : ""}
+                          >
                             <option value="">Select Status</option>
-                            {(lookupData.maritalStatus || []).map((item) => (
+                            {(lookupData.status || []).map((item) => (
                               <option key={item.id} value={item.id}>
                                 {item.name}
                               </option>
                             ))}
                           </Input>
-                        )}
-                      />
-                    </FormGroup>
-                  </Col>
-                </Row>
-              </TabPane>
-
-              <TabPane tabId="2">
-                <Row>
-                  <Col md={6}>
-                    <FormGroup>
-                      <Label>Madhab</Label>
-                      <Controller
-                        name="Madhab"
-                        control={control}
-                        render={({ field }) => (
-                          <Input type="select" {...field}>
-                            <option value="">Select Madhab</option>
-                            {(lookupData.madhab || []).map((item) => (
-                              <option key={item.id} value={item.id}>
-                                {item.name}
-                              </option>
-                            ))}
-                          </Input>
-                        )}
-                      />
-                    </FormGroup>
-                  </Col>
-                  <Col md={6}>
-                    <FormGroup>
-                      <Label>Province</Label>
-                      <Controller
-                        name="province_id"
-                        control={control}
-                        render={({ field }) => (
-                          <Input type="select" {...field}>
-                            <option value="">Select Province</option>
-                            {(lookupData.province || []).map((item) => (
-                              <option key={item.id} value={item.id}>
-                                {item.name}
-                              </option>
-                            ))}
-                          </Input>
-                        )}
-                      />
-                    </FormGroup>
-                  </Col>
-                  <Col md={6}>
-                    <FormGroup>
-                      <Label>Suburb</Label>
-                      <Controller
-                        name="suburb_id"
-                        control={control}
-                        render={({ field }) => (
-                          <Input type="select" {...field}>
-                            <option value="">Select Suburb</option>
-                            {(lookupData.suburb || []).map((item) => (
-                              <option key={item.id} value={item.id}>
-                                {item.name}
-                              </option>
-                            ))}
-                          </Input>
-                        )}
-                      />
-                    </FormGroup>
-                  </Col>
-                  <Col md={6}>
-                    <FormGroup>
-                      <Label>Nationality ID</Label>
-                      <Controller
-                        name="nationality_id"
-                        control={control}
-                        render={({ field }) => (
-                          <Input type="select" {...field}>
-                            <option value="">Select Nationality ID</option>
-                            {(lookupData.nationality || []).map((item) => (
-                              <option key={item.id} value={item.id}>
-                                {item.name}
-                              </option>
-                            ))}
-                          </Input>
-                        )}
-                      />
-                    </FormGroup>
-                  </Col>
-                </Row>
-              </TabPane>
-            </TabContent>
+                          {!isAppAdmin && field.value && (
+                            <span className={`badge ${statusColor} mt-2 d-inline-block`}>
+                              {(lookupData.status || []).find(s => s.id === statusId)?.name || ""}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    }}
+                  />
+                </FormGroup>
+              </Col>
+            </Row>
           </ModalBody>
 
           <ModalFooter className="d-flex justify-content-between">
@@ -568,6 +965,137 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
             </div>
           </ModalFooter>
         </Form>
+      </Modal>
+
+      {/* Add New Country Modal */}
+      <Modal isOpen={addCountryModal} toggle={() => setAddCountryModal(false)} centered>
+        <ModalHeader toggle={() => setAddCountryModal(false)}>Add New Country</ModalHeader>
+        <ModalBody>
+          <FormGroup>
+            <Label for="newCountryName">Country Name</Label>
+            <Input
+              id="newCountryName"
+              type="text"
+              value={newCountryName}
+              onChange={(e) => setNewCountryName(e.target.value)}
+              placeholder="Enter country name"
+              onKeyPress={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleAddCountry();
+                }
+              }}
+            />
+          </FormGroup>
+        </ModalBody>
+        <ModalFooter>
+          <Button color="secondary" onClick={() => {
+            setAddCountryModal(false);
+            setNewCountryName("");
+          }}>
+            Cancel
+          </Button>
+          <Button color="primary" onClick={handleAddCountry} disabled={addingCountry || !newCountryName.trim()}>
+            {addingCountry ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2" role="status" />
+                Adding...
+              </>
+            ) : (
+              "Add Country"
+            )}
+          </Button>
+        </ModalFooter>
+      </Modal>
+
+      {/* Add New Province Modal */}
+      <Modal isOpen={addProvinceModal} toggle={() => setAddProvinceModal(false)} centered>
+        <ModalHeader toggle={() => setAddProvinceModal(false)}>Add New Province</ModalHeader>
+        <ModalBody>
+          <FormGroup>
+            <Label>Country</Label>
+            <Input type="text" value={(lookupData.country || []).find(c => String(c.id) === selectedCountryId)?.name || ""} disabled />
+          </FormGroup>
+          <FormGroup>
+            <Label for="newProvinceName">Province Name</Label>
+            <Input
+              id="newProvinceName"
+              type="text"
+              value={newProvinceName}
+              onChange={(e) => setNewProvinceName(e.target.value)}
+              placeholder="Enter province name"
+              onKeyPress={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleAddProvince();
+                }
+              }}
+            />
+          </FormGroup>
+        </ModalBody>
+        <ModalFooter>
+          <Button color="secondary" onClick={() => {
+            setAddProvinceModal(false);
+            setNewProvinceName("");
+          }}>
+            Cancel
+          </Button>
+          <Button color="primary" onClick={handleAddProvince} disabled={addingProvince || !newProvinceName.trim() || !selectedCountryId}>
+            {addingProvince ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2" role="status" />
+                Adding...
+              </>
+            ) : (
+              "Add Province"
+            )}
+          </Button>
+        </ModalFooter>
+      </Modal>
+
+      {/* Add New Suburb Modal */}
+      <Modal isOpen={addSuburbModal} toggle={() => setAddSuburbModal(false)} centered>
+        <ModalHeader toggle={() => setAddSuburbModal(false)}>Add New Suburb</ModalHeader>
+        <ModalBody>
+          <FormGroup>
+            <Label>Province</Label>
+            <Input type="text" value={(filteredProvinces || []).find(p => String(p.id) === selectedProvinceId)?.name || ""} disabled />
+          </FormGroup>
+          <FormGroup>
+            <Label for="newSuburbName">Suburb Name</Label>
+            <Input
+              id="newSuburbName"
+              type="text"
+              value={newSuburbName}
+              onChange={(e) => setNewSuburbName(e.target.value)}
+              placeholder="Enter suburb name"
+              onKeyPress={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleAddSuburb();
+                }
+              }}
+            />
+          </FormGroup>
+        </ModalBody>
+        <ModalFooter>
+          <Button color="secondary" onClick={() => {
+            setAddSuburbModal(false);
+            setNewSuburbName("");
+          }}>
+            Cancel
+          </Button>
+          <Button color="primary" onClick={handleAddSuburb} disabled={addingSuburb || !newSuburbName.trim() || !selectedProvinceId}>
+            {addingSuburb ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2" role="status" />
+                Adding...
+              </>
+            ) : (
+              "Add Suburb"
+            )}
+          </Button>
+        </ModalFooter>
       </Modal>
 
       {/* Delete Confirmation Modal */}

@@ -26,7 +26,6 @@ import { useRole } from "../../../../helpers/useRole";
 const TasksTab = ({ meetingId, tasks, lookupData, onUpdate, showAlert, employees = [] }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
-  const { centerId } = useRole();
 
   // Delete confirmation hook
   const {
@@ -119,7 +118,6 @@ const TasksTab = ({ meetingId, tasks, lookupData, onUpdate, showAlert, employees
         responsible: responsibleName,
         status: data.Status || null,
         notes: data.Notes,
-        center_id: centerId ?? null,
       };
 
       if (editItem) {

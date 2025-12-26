@@ -26,7 +26,7 @@ const Chat = () => {
   // Alert state
   const [alert, setAlert] = useState(null);
 
-  const { user: currentUser, centerId, isGlobalAdmin } = useRole();
+  const { user: currentUser, isGlobalAdmin } = useRole();
 
   // Meta title
   document.title = "Chat | IDP";
@@ -69,15 +69,8 @@ const Chat = () => {
     try {
       const response = await axiosApi.get(`${API_BASE_URL}/employee`);
 
-      const centerEmployees =
-        isGlobalAdmin || centerId === null || centerId === undefined
-          ? response.data
-          : response.data.filter(
-              (employee) =>
-                String(employee.center_id ?? "") === String(centerId ?? "")
-            );
-
-      setEmployees(centerEmployees);
+      // All employees are available (center_id removed)
+      setEmployees(response.data);
     } catch (error) {
       console.error("Error fetching employees:", error);
     }
@@ -170,7 +163,6 @@ const Chat = () => {
         sender_id: currentUser?.id,
         message_text: messageData.message_text,
         read_status: "Unread",
-        center_id: centerId ?? null, // Backend will handle App Admin (null center_id)
         created_by: getAuditName(),
       };
 
@@ -190,10 +182,6 @@ const Chat = () => {
         formData.append("sender_id", payload.sender_id);
         formData.append("message_text", payload.message_text);
         formData.append("read_status", payload.read_status);
-        // Only append center_id if it's not null (App Admin has null center_id)
-        if (centerId !== null && centerId !== undefined) {
-          formData.append("center_id", centerId);
-        }
         formData.append("created_by", payload.created_by);
         formData.append("attachment", messageData.file);
 
@@ -217,7 +205,6 @@ const Chat = () => {
       const payload = {
         title: conversationData.title,
         type: conversationData.type,
-        center_id: centerId ?? null,
         created_by: getAuditName(),
       };
 
@@ -231,7 +218,6 @@ const Chat = () => {
             conversation_id: newConversation.id,
             employee_id: employeeId,
             joined_date: new Date().toISOString().split('T')[0],
-            center_id: centerId ?? null,
             created_by: getAuditName(),
           });
         }

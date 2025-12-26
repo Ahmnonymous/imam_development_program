@@ -58,6 +58,8 @@ import ApplicantManagement from "../pages/Applicants/ApplicantManagement";
 import CreateApplicant from "../pages/Applicants/CreateApplicant";
 import ImamProfilesManagement from "../pages/ImamProfiles/ImamProfilesManagement";
 import CreateImamProfile from "../pages/ImamProfiles/CreateImamProfile";
+import ImamProfileRouteGuard from "./ImamProfileRouteGuard";
+import CreateImamProfileRouteGuard from "./CreateImamProfileRouteGuard";
 import SupplierManagement from "../pages/Suppliers/SupplierManagement";
 
 // Inventory
@@ -223,8 +225,8 @@ import UiProgressbar from "../pages/Ui/UiProgressbar";
 // import UiProgressbar from "../../src/pages/Ui/UiProgressbar"
 
 const authProtectedRoutes = [
-  // ✅ Dashboard - All staff roles (1,2,3,4,5)
-  { path: "/dashboard", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><ApplicantStatistics /></ProtectedRoute> },
+  // ✅ Dashboard - All staff roles (1,2,3,4,5) and Imam User (6)
+  { path: "/dashboard", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5, 6]}><ApplicantStatistics /></ProtectedRoute> },
   { path: "/dashboard-saas", component: <DashboardSaas /> },
   { path: "/dashboard-crypto", component: <DashboardCrypto /> },
   { path: "/blog", component: <Blog /> },
@@ -381,10 +383,10 @@ const authProtectedRoutes = [
   // ✅ Create Applicant - All except Org Executive (role 4) can create applicants
   { path: "/applicants/create", component: <ProtectedRoute allowedRoles={[1, 2, 3, 5]}><CreateApplicant /></ProtectedRoute> },
 
-  // ✅ Imam Profiles - All staff roles (1,2,3,4,5) can view
-  { path: "/imam-profiles", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><ImamProfilesManagement /></ProtectedRoute> },
-  // ✅ Create Imam Profile - All except Org Executive (role 4) can create imam profiles
-  { path: "/imam-profiles/create", component: <ProtectedRoute allowedRoles={[1, 2, 3, 5]}><CreateImamProfile /></ProtectedRoute> },
+  // ✅ Imam Profiles - All staff roles (1,2,3,4,5) can view, Imam User (6) only if approved
+  { path: "/imam-profiles", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5, 6]}><ImamProfileRouteGuard><ImamProfilesManagement /></ImamProfileRouteGuard></ProtectedRoute> },
+  // ✅ Create Imam Profile - All except Org Executive (role 4) can create, INCLUDING Imam User (6) but only if not approved
+  { path: "/imam-profiles/create", component: <ProtectedRoute allowedRoles={[1, 2, 3, 5, 6]}><CreateImamProfileRouteGuard><CreateImamProfile /></CreateImamProfileRouteGuard></ProtectedRoute> },
 
   // ✅ Suppliers - App Admin only
   { path: "/suppliers", component: <ProtectedRoute allowedRoles={[1]}><SupplierManagement /></ProtectedRoute> },

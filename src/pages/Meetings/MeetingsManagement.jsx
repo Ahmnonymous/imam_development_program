@@ -39,7 +39,7 @@ const MeetingsManagement = () => {
   const [alert, setAlert] = useState(null);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [employees, setEmployees] = useState([]);
-  const { centerId, isGlobalAdmin } = useRole();
+  const { isGlobalAdmin } = useRole();
 
   // Detail data states
   const [tasks, setTasks] = useState([]);
@@ -106,16 +106,8 @@ const MeetingsManagement = () => {
     try {
       const response = await axiosApi.get(`${API_BASE_URL}/employee`);
       
-      // Filter employees by center if not global admin
-      const centerEmployees =
-        isGlobalAdmin || centerId === null || centerId === undefined
-          ? response.data
-          : response.data.filter(
-              (employee) =>
-                String(employee.center_id ?? "") === String(centerId ?? "")
-            );
-
-      setEmployees(centerEmployees);
+      // All employees are available (center_id removed)
+      setEmployees(response.data);
     } catch (error) {
       console.error("Error fetching employees:", error);
       showAlert("Failed to fetch employees", "warning");
@@ -268,7 +260,6 @@ const MeetingsManagement = () => {
         environment_discussions: data.Environment_Discussions,
         general_discussion: data.General_Discussion,
         feedback: data.Feedback,
-        center_id: centerId ?? null,
         created_by: getAuditName(),
       };
 

@@ -90,58 +90,17 @@ const appendCenterClause = (sql, columnRef, placeholder) => {
 };
 
 /**
- * Injects center-based filtering into an SQL query when the current user's
- * role requires tenant isolation.
+ * Legacy function - center_id has been removed from the system.
+ * Returns query unchanged (no-op).
  *
  * @param {string|object} query - raw SQL string or { text, values } object
- * @param {object} user - decoded JWT user payload
- * @param {object} [options]
- * @param {string} [options.alias] - optional table alias to prefix column
- * @param {string} [options.column="center_id"] - column name to use
- * @param {number} [options.centerId] - override center_id value
+ * @param {object} user - decoded JWT user payload (unused)
+ * @param {object} [options] - unused
  * @returns {{ text: string, values: any[] }}
  */
 const applyCenterFilter = (query, user = {}, options = {}) => {
-  const {
-    alias,
-    column = "center_id",
-    centerId: overrideCenter,
-    enforce,
-    skip,
-  } = options;
-
-  const roleId = parseRoleId(user);
-  if (skip) {
-    const normalized = normalizeQuery(query);
-    return normalized;
-  }
-
-  const requireFilter =
-    enforce !== undefined ? Boolean(enforce) : needsCenterRestriction(roleId);
-
-  const { text, values } = normalizeQuery(query);
-
-  if (!requireFilter) {
-    return { text, values };
-  }
-
-  const centerId = ensureInteger(
-    overrideCenter !== undefined ? overrideCenter : user.center_id,
-  );
-
-  if (centerId === null) {
-    // No center info available; return original query to avoid throwing
-    return { text, values };
-  }
-
-  const columnRef = alias ? `${alias}.${column}` : column;
-  const placeholder = `$${values.length + 1}`;
-  const filteredSql = appendCenterClause(text, columnRef, placeholder);
-
-  return {
-    text: filteredSql,
-    values: [...values, centerId],
-  };
+  // center_id has been completely removed - return query as-is
+  return normalizeQuery(query);
 };
 
 module.exports = {

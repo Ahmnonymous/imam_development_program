@@ -47,7 +47,7 @@ const FolderModal = ({
     }
   }, [editItem, currentFolder, isOpen, reset]);
 
-  const { user, centerId } = useRole();
+  const { user } = useRole();
 
   const onSubmit = async (data) => {
     try {
@@ -60,7 +60,6 @@ const FolderModal = ({
         name: data.name,
         parent_id: data.parent_id && data.parent_id !== "" ? parseInt(data.parent_id) : null,
         employee_id: user?.id ?? null,
-        center_id: centerId ?? null,
       };
 
       if (editItem) {

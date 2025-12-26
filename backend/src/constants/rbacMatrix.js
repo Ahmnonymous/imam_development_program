@@ -14,6 +14,7 @@ const ROLES = {
   ORG_ADMIN: 3,
   ORG_EXECUTIVE: 4,
   ORG_CASEWORKER: 5,
+  IMAM_USER: 6,
 };
 
 const ROLE_KEY_BY_ID = {
@@ -22,6 +23,7 @@ const ROLE_KEY_BY_ID = {
   [ROLES.ORG_ADMIN]: "OrgAdmin",
   [ROLES.ORG_EXECUTIVE]: "OrgExecutive",
   [ROLES.ORG_CASEWORKER]: "OrgCaseworker",
+  [ROLES.IMAM_USER]: "ImamUser",
 };
 
 const MODULES = {
@@ -53,6 +55,7 @@ const MODULES = {
   FILE_MANAGER: "fileManager",
   CHAT: "chat",
   PERSONAL_FILES: "personalFiles",
+  IMAM_PROFILES: "imamProfiles",
 };
 
 const MODULE_ROUTE_MAP = [
@@ -100,6 +103,20 @@ const MODULE_ROUTE_MAP = [
   { module: MODULES.FILE_MANAGER, prefixes: ["/api/folders", "/api/personalfiles"] },
   { module: MODULES.PERSONAL_FILES, prefixes: ["/api/personalfiles"] },
   { module: MODULES.CHAT, prefixes: ["/api/messages", "/api/conversations", "/api/conversationparticipants"] },
+  { 
+    module: MODULES.IMAM_PROFILES, 
+    prefixes: [
+      "/api/imamprofiles",
+      "/api/pearlsofwisdom",
+      "/api/jumuahkhutbahtopicsubmission",
+      "/api/medicalreimbursement",
+      "/api/communityengagement",
+      "/api/nikahbonus",
+      "/api/jumuahaudiokhutbah",
+      "/api/newmuslimbonus",
+      "/api/newbabybonus"
+    ] 
+  },
 ];
 
 const ROLE_RULES = {
@@ -213,6 +230,47 @@ const ROLE_RULES = {
         [MODULES.LOOKUP]: METHODS.READ_ONLY,
       [MODULES.TRAINING]: METHODS.READ_ONLY,
       [MODULES.EMPLOYEE]: METHODS.READ_ONLY,
+      },
+    },
+  },
+  ImamUser: {
+    id: ROLES.IMAM_USER,
+    label: "Imam User",
+    centerScoped: false,
+    reportScope: "own",
+    moduleAccess: {
+      allow: [MODULES.DASHBOARD, MODULES.IMAM_PROFILES, MODULES.AUTH, MODULES.EMPLOYEE],
+      deny: [
+        MODULES.SUPPLIER,
+        MODULES.INVENTORY,
+        MODULES.CENTERS,
+        MODULES.MEETINGS,
+        MODULES.APPLICANTS,
+        MODULES.TASKS,
+        MODULES.COMMENTS,
+        MODULES.RELATIONSHIPS,
+        MODULES.HOME_VISITS,
+        MODULES.FINANCIAL_ASSISTANCE,
+        MODULES.FOOD_ASSISTANCE,
+        MODULES.ATTACHMENTS,
+        MODULES.PROGRAMS,
+        MODULES.FINANCIAL_ASSESSMENT,
+        MODULES.APPLICANT_INCOME,
+        MODULES.APPLICANT_EXPENSE,
+        MODULES.FILE_MANAGER,
+        MODULES.CHAT,
+        MODULES.POLICY,
+        MODULES.REPORTS,
+        MODULES.PERSONAL_FILES,
+        MODULES.TRAINING,
+        MODULES.LOOKUP,
+      ],
+    },
+    methodAccess: {
+      default: METHODS.FULL,
+      overrides: {
+        [MODULES.IMAM_PROFILES]: METHODS.FULL,
+        [MODULES.EMPLOYEE]: METHODS.READ_ONLY, // ImamUser can only read their own employee data
       },
     },
   },

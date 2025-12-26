@@ -10,6 +10,7 @@ router.use(roleMiddleware()); // All staff can access imam profiles
 router.use(filterMiddleware);
 
 router.get('/', imamProfilesController.getAll);
+router.get('/my-profile', imamProfilesController.getByUsername);
 router.get('/:id', imamProfilesController.getById);
 router.post('/', imamProfilesController.create);
 router.put('/:id', imamProfilesController.update);

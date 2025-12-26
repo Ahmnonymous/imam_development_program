@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Row, Col, CardBody, Card, Alert, Container, Input, Label, Form, FormFeedback } from "reactstrap";
 
 // Formik Validation
@@ -23,20 +24,29 @@ const Register = () => {
   document.title = "Register | IDP - Admin & Dashboard";
 
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const validation = useFormik({
     // enableReinitialize : use this flag when initial values needs to be changed
     enableReinitialize: true,
 
     initialValues: {
-      email: '',
+      name: '',
+      surname: '',
       username: '',
       password: '',
+      confirmPassword: '',
     },
     validationSchema: Yup.object({
-      email: Yup.string().required("Please Enter Your Email"),
+      name: Yup.string().required("Please Enter Your Name"),
+      surname: Yup.string().required("Please Enter Your Surname"),
       username: Yup.string().required("Please Enter Your Username"),
-      password: Yup.string().required("Please Enter Your Password"),
+      password: Yup.string()
+        .required("Please Enter Your Password")
+        .min(6, "Password must be at least 6 characters"),
+      confirmPassword: Yup.string()
+        .required("Please Confirm Your Password")
+        .oneOf([Yup.ref('password')], "Passwords must match"),
     }),
     onSubmit: (values) => {
       dispatch(registerUser(values));
@@ -61,6 +71,15 @@ const Register = () => {
   useEffect(() => {
     dispatch(apiError(""));
   }, []);
+
+  // Redirect to login on successful registration
+  useEffect(() => {
+    if (user) {
+      setTimeout(() => {
+        navigate("/login");
+      }, 2000);
+    }
+  }, [user, navigate]);
 
   return (
     <React.Fragment>
@@ -126,31 +145,55 @@ const Register = () => {
                     >
                       {user && user ? (
                         <Alert color="success">
-                          Register User Successfully
+                          Registration successful! Redirecting to login...
                         </Alert>
                       ) : null}
 
                       {registrationError && registrationError ? (
-                        <Alert color="danger">{registrationError}</Alert>
+                        <Alert color="danger">
+                          {typeof registrationError === 'string' 
+                            ? registrationError 
+                            : registrationError.msg || 'Registration failed'}
+                        </Alert>
                       ) : null}
 
                       <div className="mb-3">
-                        <Label className="form-label">Email</Label>
+                        <Label className="form-label">Name</Label>
                         <Input
-                          id="email"
-                          name="email"
+                          id="name"
+                          name="name"
                           className="form-control"
-                          placeholder="Enter email"
-                          type="email"
+                          placeholder="Enter your name"
+                          type="text"
                           onChange={validation.handleChange}
                           onBlur={validation.handleBlur}
-                          value={validation.values.email || ""}
+                          value={validation.values.name || ""}
                           invalid={
-                            validation.touched.email && validation.errors.email ? true : false
+                            validation.touched.name && validation.errors.name ? true : false
                           }
                         />
-                        {validation.touched.email && validation.errors.email ? (
-                          <FormFeedback type="invalid">{validation.errors.email}</FormFeedback>
+                        {validation.touched.name && validation.errors.name ? (
+                          <FormFeedback type="invalid">{validation.errors.name}</FormFeedback>
+                        ) : null}
+                      </div>
+
+                      <div className="mb-3">
+                        <Label className="form-label">Surname</Label>
+                        <Input
+                          id="surname"
+                          name="surname"
+                          className="form-control"
+                          placeholder="Enter your surname"
+                          type="text"
+                          onChange={validation.handleChange}
+                          onBlur={validation.handleBlur}
+                          value={validation.values.surname || ""}
+                          invalid={
+                            validation.touched.surname && validation.errors.surname ? true : false
+                          }
+                        />
+                        {validation.touched.surname && validation.errors.surname ? (
+                          <FormFeedback type="invalid">{validation.errors.surname}</FormFeedback>
                         ) : null}
                       </div>
 
@@ -186,6 +229,24 @@ const Register = () => {
                         />
                         {validation.touched.password && validation.errors.password ? (
                           <FormFeedback type="invalid">{validation.errors.password}</FormFeedback>
+                        ) : null}
+                      </div>
+
+                      <div className="mb-3">
+                        <Label className="form-label">Confirm Password</Label>
+                        <Input
+                          name="confirmPassword"
+                          type="password"
+                          placeholder="Confirm Password"
+                          onChange={validation.handleChange}
+                          onBlur={validation.handleBlur}
+                          value={validation.values.confirmPassword || ""}
+                          invalid={
+                            validation.touched.confirmPassword && validation.errors.confirmPassword ? true : false
+                          }
+                        />
+                        {validation.touched.confirmPassword && validation.errors.confirmPassword ? (
+                          <FormFeedback type="invalid">{validation.errors.confirmPassword}</FormFeedback>
                         ) : null}
                       </div>
 

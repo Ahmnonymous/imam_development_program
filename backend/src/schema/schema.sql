@@ -421,9 +421,7 @@ CREATE TABLE Center_Audits (
     Created_By VARCHAR(255),
     Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     Updated_By VARCHAR(255),
-    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    center_id BIGINT,
-    CONSTRAINT fk_center_id FOREIGN KEY (center_id) REFERENCES Center_Detail(ID)
+    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE TABLE Training_Institutions (
@@ -475,9 +473,6 @@ CREATE TABLE Employee (
     ID SERIAL PRIMARY KEY,
     Name VARCHAR(255),
     Surname VARCHAR(255),
-    -- ✅ Center_ID can be NULL for App Admin users (User_Type = 1)
-    -- All other user types must have a valid center_id
-    Center_ID BIGINT,
     ID_Number VARCHAR(255),
     Date_of_Birth DATE,
     Nationality BIGINT,
@@ -500,7 +495,6 @@ CREATE TABLE Employee (
     Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     Updated_By VARCHAR(255),
     Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CONSTRAINT fk_center_id FOREIGN KEY (Center_ID) REFERENCES Center_Detail(ID),
     CONSTRAINT fk_nationality FOREIGN KEY (Nationality) REFERENCES Nationality(ID),
     CONSTRAINT fk_race FOREIGN KEY (Race) REFERENCES Race(ID),
     CONSTRAINT fk_highest_education_level FOREIGN KEY (Highest_Education_Level) REFERENCES Education_Level(ID),
@@ -508,12 +502,7 @@ CREATE TABLE Employee (
     CONSTRAINT fk_suburb FOREIGN KEY (Suburb) REFERENCES Suburb(ID),
     CONSTRAINT fk_blood_type FOREIGN KEY (Blood_Type) REFERENCES Blood_Type(ID),
     CONSTRAINT fk_user_type FOREIGN KEY (User_Type) REFERENCES User_Types(ID),
-    CONSTRAINT fk_department FOREIGN KEY (Department) REFERENCES Departments(ID),
-    -- ✅ CONSTRAINT: App Admin (User_Type = 1) must have NULL center_id
-    CONSTRAINT chk_app_admin_no_center CHECK (
-        (User_Type = 1 AND Center_ID IS NULL) OR
-        (User_Type != 1)
-    )
+    CONSTRAINT fk_department FOREIGN KEY (Department) REFERENCES Departments(ID)
 );
 
 CREATE TRIGGER Employee_password_hash
@@ -538,9 +527,7 @@ CREATE TABLE Employee_Appraisal (
     Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     Updated_By VARCHAR(255),
     Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    center_id BIGINT,
-    CONSTRAINT fk_employee_id_app FOREIGN KEY (Employee_ID) REFERENCES Employee(ID),
-    CONSTRAINT fk_center_id_app FOREIGN KEY (center_id) REFERENCES Center_Detail(ID)
+    CONSTRAINT fk_employee_id_app FOREIGN KEY (Employee_ID) REFERENCES Employee(ID)
 );
 
 CREATE TABLE Employee_Initiative (
@@ -554,9 +541,7 @@ CREATE TABLE Employee_Initiative (
     Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     Updated_By VARCHAR(255),
     Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    center_id BIGINT,
-    CONSTRAINT fk_employee_id_init FOREIGN KEY (Employee_ID) REFERENCES Employee(ID),
-    CONSTRAINT fk_center_id_init FOREIGN KEY (center_id) REFERENCES Center_Detail(ID)
+    CONSTRAINT fk_employee_id_init FOREIGN KEY (Employee_ID) REFERENCES Employee(ID)
 );
 
 CREATE TABLE Employee_Skills (
@@ -575,12 +560,10 @@ CREATE TABLE Employee_Skills (
     Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     Updated_By VARCHAR(255),
     Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    center_id BIGINT,
     CONSTRAINT fk_employee_id_skills FOREIGN KEY (Employee_ID) REFERENCES Employee(ID),
     CONSTRAINT fk_course FOREIGN KEY (Course) REFERENCES Training_Courses(ID),
     CONSTRAINT fk_institution FOREIGN KEY (Institution) REFERENCES Training_Institutions(ID),
-    CONSTRAINT fk_training_outcome FOREIGN KEY (Training_Outcome) REFERENCES Training_Outcome(ID),
-    CONSTRAINT fk_center_id_skills FOREIGN KEY (center_id) REFERENCES Center_Detail(ID)
+    CONSTRAINT fk_training_outcome FOREIGN KEY (Training_Outcome) REFERENCES Training_Outcome(ID)
 );
 
 CREATE TABLE HSEQ_Toolbox_Meeting (
@@ -599,9 +582,7 @@ CREATE TABLE HSEQ_Toolbox_Meeting (
     Created_By VARCHAR(255),
     Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     Updated_By VARCHAR(255),
-    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    center_id BIGINT,
-    CONSTRAINT fk_center_id_hseq FOREIGN KEY (center_id) REFERENCES Center_Detail(ID)
+    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE TABLE HSEQ_Toolbox_Meeting_Tasks (
@@ -616,10 +597,8 @@ CREATE TABLE HSEQ_Toolbox_Meeting_Tasks (
     Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     Updated_By VARCHAR(255),
     Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    center_id BIGINT,
     CONSTRAINT fk_hseq_toolbox_meeting_id FOREIGN KEY (HSEQ_Toolbox_Meeting_ID) REFERENCES HSEQ_Toolbox_Meeting(ID),
-    CONSTRAINT fk_status FOREIGN KEY (Status) REFERENCES Tasks_Status(ID),
-    CONSTRAINT fk_center_id_hseq_tasks FOREIGN KEY (center_id) REFERENCES Center_Detail(ID)
+    CONSTRAINT fk_status FOREIGN KEY (Status) REFERENCES Tasks_Status(ID)
 );
 
 CREATE TABLE Applicant_Details (
@@ -660,7 +639,6 @@ CREATE TABLE Applicant_Details (
     Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     Updated_By VARCHAR(255),
     Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    center_id BIGINT,
     CONSTRAINT fk_race FOREIGN KEY (Race) REFERENCES Race(ID),
     CONSTRAINT fk_nationality FOREIGN KEY (Nationality) REFERENCES Nationality(ID),
     CONSTRAINT fk_gender_app FOREIGN KEY (Gender) REFERENCES Gender(ID),
@@ -674,7 +652,6 @@ CREATE TABLE Applicant_Details (
     CONSTRAINT fk_dwelling_status FOREIGN KEY (Dwelling_Status) REFERENCES Dwelling_Status(ID),
     CONSTRAINT fk_health FOREIGN KEY (Health) REFERENCES Health_Conditions(ID),
     CONSTRAINT fk_skills FOREIGN KEY (Skills) REFERENCES Skills(ID),
-    CONSTRAINT fk_center_id_app FOREIGN KEY (center_id) REFERENCES Center_Detail(ID),
     CONSTRAINT fk_born_religion FOREIGN KEY (Born_Religion_ID) REFERENCES Born_Religion(ID),
     CONSTRAINT fk_period_as_muslim FOREIGN KEY (Period_As_Muslim_ID) REFERENCES Period_As_Muslim(ID)
 );
@@ -688,9 +665,7 @@ CREATE TABLE Comments (
     Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     Updated_By VARCHAR(255),
     Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    center_id BIGINT,
-    CONSTRAINT fk_file_id FOREIGN KEY (File_ID) REFERENCES Applicant_Details(ID),
-    CONSTRAINT fk_center_id_com FOREIGN KEY (center_id) REFERENCES Center_Detail(ID)
+    CONSTRAINT fk_file_id FOREIGN KEY (File_ID) REFERENCES Applicant_Details(ID)
 );
 
 CREATE TABLE Tasks (
@@ -703,9 +678,7 @@ CREATE TABLE Tasks (
     Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     Updated_By VARCHAR(255),
     Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    center_id BIGINT,
-    CONSTRAINT fk_file_id_task FOREIGN KEY (File_ID) REFERENCES Applicant_Details(ID),
-    CONSTRAINT fk_center_id_task FOREIGN KEY (center_id) REFERENCES Center_Detail(ID)
+    CONSTRAINT fk_file_id_task FOREIGN KEY (File_ID) REFERENCES Applicant_Details(ID)
 );
 
 CREATE TABLE Relationships (
@@ -724,14 +697,12 @@ CREATE TABLE Relationships (
     Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     Updated_By VARCHAR(255),
     Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    center_id BIGINT,
     CONSTRAINT fk_file_id_rel FOREIGN KEY (File_ID) REFERENCES Applicant_Details(ID),
     CONSTRAINT fk_relationship_type FOREIGN KEY (Relationship_Type) REFERENCES Relationship_Types(ID),
     CONSTRAINT fk_employment_status_rel FOREIGN KEY (Employment_Status) REFERENCES Employment_Status(ID),
     CONSTRAINT fk_gender_rel FOREIGN KEY (Gender) REFERENCES Gender(ID),
     CONSTRAINT fk_highest_education_rel FOREIGN KEY (Highest_Education) REFERENCES Education_Level(ID),
-    CONSTRAINT fk_health_condition FOREIGN KEY (Health_Condition) REFERENCES Health_Conditions(ID),
-    CONSTRAINT fk_center_id_rel FOREIGN KEY (center_id) REFERENCES Center_Detail(ID)
+    CONSTRAINT fk_health_condition FOREIGN KEY (Health_Condition) REFERENCES Health_Conditions(ID)
 );
 
 CREATE TABLE Home_Visit (
@@ -752,9 +723,7 @@ CREATE TABLE Home_Visit (
     Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     Updated_By VARCHAR(255),
     Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    center_id BIGINT,
-    CONSTRAINT fk_file_id_vis FOREIGN KEY (File_ID) REFERENCES Applicant_Details(ID),
-    CONSTRAINT fk_center_id_vis FOREIGN KEY (center_id) REFERENCES Center_Detail(ID)
+    CONSTRAINT fk_file_id_vis FOREIGN KEY (File_ID) REFERENCES Applicant_Details(ID)
 );
 
 CREATE TABLE Financial_Assistance (
@@ -778,12 +747,10 @@ CREATE TABLE Financial_Assistance (
     Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     Updated_By VARCHAR(255),
     Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    center_id BIGINT,
     CONSTRAINT fk_file_id_fin FOREIGN KEY (File_ID) REFERENCES Applicant_Details(ID),
     CONSTRAINT fk_assistance_type FOREIGN KEY (Assistance_Type) REFERENCES Assistance_Types(ID),
     CONSTRAINT fk_financial_assistance_assisted_by FOREIGN KEY (Assisted_By) REFERENCES Employee(ID),
-    CONSTRAINT fk_recurring_source_id FOREIGN KEY (Recurring_Source_ID) REFERENCES Financial_Assistance(ID) ON DELETE CASCADE,
-    CONSTRAINT fk_center_id_fin FOREIGN KEY (center_id) REFERENCES Center_Detail(ID)
+    CONSTRAINT fk_recurring_source_id FOREIGN KEY (Recurring_Source_ID) REFERENCES Financial_Assistance(ID) ON DELETE CASCADE
 );
 
 CREATE TABLE Recurring_Invoice_Log (
@@ -798,8 +765,7 @@ CREATE TABLE Recurring_Invoice_Log (
     Created_By VARCHAR(255),
     Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     Updated_By VARCHAR(255),
-    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    center_id BIGINT REFERENCES Center_Detail(ID)
+    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE TABLE Food_Assistance (
@@ -813,11 +779,9 @@ CREATE TABLE Food_Assistance (
     Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     Updated_By VARCHAR(255),
     Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    center_id BIGINT,
     CONSTRAINT fk_file_id_food FOREIGN KEY (File_ID) REFERENCES Applicant_Details(ID),
     CONSTRAINT fk_hamper_type FOREIGN KEY (Hamper_Type) REFERENCES Hampers(ID),
-    CONSTRAINT fk_food_assistance_assisted_by FOREIGN KEY (Assisted_By) REFERENCES Employee(ID),
-    CONSTRAINT fk_center_id_food FOREIGN KEY (center_id) REFERENCES Center_Detail(ID)
+    CONSTRAINT fk_food_assistance_assisted_by FOREIGN KEY (Assisted_By) REFERENCES Employee(ID)
 );
 
 CREATE TABLE Attachments (
@@ -833,9 +797,7 @@ CREATE TABLE Attachments (
     Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     Updated_By VARCHAR(255),
     Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    center_id BIGINT,
-    CONSTRAINT fk_file_id_att FOREIGN KEY (File_ID) REFERENCES Applicant_Details(ID),
-    CONSTRAINT fk_center_id_att FOREIGN KEY (center_id) REFERENCES Center_Detail(ID)
+    CONSTRAINT fk_file_id_att FOREIGN KEY (File_ID) REFERENCES Applicant_Details(ID)
 );
 
 CREATE TABLE Programs (
@@ -856,14 +818,12 @@ CREATE TABLE Programs (
     Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     Updated_By VARCHAR(255),
     Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    center_id BIGINT,
     CONSTRAINT fk_program_name FOREIGN KEY (Program_Name) REFERENCES Training_Courses(ID),
     CONSTRAINT fk_communicated_by FOREIGN KEY (Communicated_by) REFERENCES Employee(ID),
     CONSTRAINT fk_training_level FOREIGN KEY (Training_Level) REFERENCES Training_Level(ID),
     CONSTRAINT fk_training_provider FOREIGN KEY (Training_Provider) REFERENCES Training_Institutions(ID),
     CONSTRAINT fk_program_outcome FOREIGN KEY (Program_Outcome) REFERENCES Training_Outcome(ID),
     CONSTRAINT fk_person_trained FOREIGN KEY (Person_Trained_ID) REFERENCES Applicant_Details(ID),
-    CONSTRAINT fk_center_id_prog FOREIGN KEY (center_id) REFERENCES Center_Detail(ID),
     CONSTRAINT fk_means_of_communication FOREIGN KEY (Means_of_communication) REFERENCES Means_of_communication(ID)
 );
 
@@ -896,7 +856,6 @@ CREATE TABLE Applicant_Expense (
 CREATE TABLE Financial_Assessment (
     ID SERIAL PRIMARY KEY,
     File_ID BIGINT NOT NULL,
-    center_id BIGINT, -- ✅ Fix Issue #1: Allow NULL for App Admin-created records (removed NOT NULL)
     Total_Income DECIMAL(12,2),
     Total_Expenses DECIMAL(12,2),
     Disposable_Income DECIMAL(12,2),
@@ -904,8 +863,7 @@ CREATE TABLE Financial_Assessment (
     Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     Updated_By VARCHAR(255),
     Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CONSTRAINT fk_file_id FOREIGN KEY (File_ID) REFERENCES Applicant_Details(ID) ON DELETE CASCADE, -- ✅ Fix Issue #2: Add CASCADE to allow applicant deletion
-    CONSTRAINT fk_center_id_fin_ass FOREIGN KEY (center_id) REFERENCES Center_Detail(ID)
+    CONSTRAINT fk_file_id FOREIGN KEY (File_ID) REFERENCES Applicant_Details(ID) ON DELETE CASCADE
 );
 
 CREATE TRIGGER Financial_Assessment_update_totals
@@ -926,10 +884,9 @@ BEGIN
         SELECT 1 FROM Financial_Assessment WHERE File_ID = NEW.ID
     ) THEN
         INSERT INTO Financial_Assessment (
-            File_ID, center_id, Total_Income, Total_Expenses, Disposable_Income, Created_By
+            File_ID, Total_Income, Total_Expenses, Disposable_Income, Created_By
         ) VALUES (
             NEW.ID, 
-            NEW.center_id, -- ✅ Fix Issue #1: Preserve NULL if App Admin created with NULL center_id (no auto-assignment)
             0, 0, 0, 
             COALESCE(NEW.created_by, 'Admin')
         );
@@ -962,14 +919,11 @@ CREATE TABLE Service_Rating (
     Created_By VARCHAR(255),
     Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     Updated_By VARCHAR(255),
-    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    center_id BIGINT NOT NULL,
-    CONSTRAINT fk_center_id_service_rating FOREIGN KEY (center_id) REFERENCES Center_Detail(ID)
+    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE TABLE Supplier_Profile (
     ID UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    center_id BIGINT NOT NULL,
     Name VARCHAR(255) NOT NULL,
     Registration_No VARCHAR(100),
     Contact_Person VARCHAR(255),
@@ -982,13 +936,11 @@ CREATE TABLE Supplier_Profile (
     Datestamp DATE DEFAULT CURRENT_DATE,
     Updated_By VARCHAR(255),
     Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CONSTRAINT fk_center_id_supplier FOREIGN KEY (center_id) REFERENCES Center_Detail(ID),
     CONSTRAINT fk_category_id FOREIGN KEY (Category_ID) REFERENCES Supplier_Category(ID)
 );
 
 CREATE TABLE Supplier_Evaluation (
     ID UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    center_id BIGINT NOT NULL,
     Supplier_ID UUID NOT NULL,
     Eval_Date DATE NOT NULL,
     Quality_Score SMALLINT,
@@ -1009,13 +961,11 @@ CREATE TABLE Supplier_Evaluation (
     Datestamp DATE DEFAULT CURRENT_DATE,
     Updated_By VARCHAR(255),
     Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CONSTRAINT fk_center_id_sup_eval FOREIGN KEY (center_id) REFERENCES Center_Detail(ID),
     CONSTRAINT fk_supplier_id FOREIGN KEY (Supplier_ID) REFERENCES Supplier_Profile(ID) ON DELETE CASCADE
 );
 
 CREATE TABLE Supplier_Document (
     ID UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    center_id BIGINT NOT NULL,
     Supplier_ID UUID NOT NULL,
     Doc_Type VARCHAR(100) NOT NULL,
     Issued_At DATE,
@@ -1028,7 +978,6 @@ CREATE TABLE Supplier_Document (
     Datestamp DATE DEFAULT CURRENT_DATE,
     Updated_By VARCHAR(255),
     Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CONSTRAINT fk_center_id_sup_doc FOREIGN KEY (center_id) REFERENCES Center_Detail(ID),
     CONSTRAINT fk_supplier_id_doc FOREIGN KEY (Supplier_ID) REFERENCES Supplier_Profile(ID) ON DELETE CASCADE
 );
 
@@ -1042,13 +991,11 @@ CREATE TABLE Inventory_Items (
     Min_Stock DECIMAL(12,2),
     Cost_Per_Unit DECIMAL(12,2),
     Supplier_ID UUID,
-    center_id BIGINT,
     Created_By VARCHAR(255),
     Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     Updated_By VARCHAR(255),
     Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     CONSTRAINT fk_hamper_type_inv FOREIGN KEY (Hamper_Type) REFERENCES Hampers(ID),
-    CONSTRAINT fk_center_id_inv FOREIGN KEY (center_id) REFERENCES Center_Detail(ID),
     CONSTRAINT fk_supplier_id FOREIGN KEY (Supplier_ID) REFERENCES Supplier_Profile(ID)
 );
 
@@ -1060,14 +1007,12 @@ CREATE TABLE Inventory_Transactions (
     Transaction_Date DATE,
     Notes TEXT,
     Employee_ID BIGINT,
-    center_id BIGINT,
     Created_By VARCHAR(255),
     Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     Updated_By VARCHAR(255),
     Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     CONSTRAINT fk_item_id FOREIGN KEY (Item_ID) REFERENCES Inventory_Items(ID),
-    CONSTRAINT fk_employee_id_trans FOREIGN KEY (Employee_ID) REFERENCES Employee(ID),
-    CONSTRAINT fk_center_id_trans FOREIGN KEY (center_id) REFERENCES Center_Detail(ID)
+    CONSTRAINT fk_employee_id_trans FOREIGN KEY (Employee_ID) REFERENCES Employee(ID)
 );
 
 CREATE TRIGGER Inventory_Transactions_update_quantity
@@ -1083,12 +1028,10 @@ CREATE TABLE Conversations (
     ID SERIAL PRIMARY KEY,
     Title VARCHAR(255),
     Type VARCHAR(50),
-    center_id BIGINT,
     Created_By VARCHAR(255),
     Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     Updated_By VARCHAR(255),
-    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CONSTRAINT fk_center_id_conv FOREIGN KEY (center_id) REFERENCES Center_Detail(ID)
+    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE TABLE Conversation_Participants (
@@ -1096,14 +1039,12 @@ CREATE TABLE Conversation_Participants (
     Conversation_ID BIGINT,
     Employee_ID BIGINT,
     Joined_Date DATE,
-    center_id BIGINT,
     Created_By VARCHAR(255),
     Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     Updated_By VARCHAR(255),
     Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     CONSTRAINT fk_conversation_id FOREIGN KEY (Conversation_ID) REFERENCES Conversations(ID),
-    CONSTRAINT fk_employee_id FOREIGN KEY (Employee_ID) REFERENCES Employee(ID),
-    CONSTRAINT fk_center_id_part FOREIGN KEY (center_id) REFERENCES Center_Detail(ID)
+    CONSTRAINT fk_employee_id FOREIGN KEY (Employee_ID) REFERENCES Employee(ID)
 );
 
 CREATE TABLE Messages (
@@ -1116,14 +1057,12 @@ CREATE TABLE Messages (
     Attachment_Mime VARCHAR(255),
     Attachment_Size INT,
     Read_Status VARCHAR(50) DEFAULT 'Unread',
-    center_id BIGINT,
     Created_By VARCHAR(255),
     Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     Updated_By VARCHAR(255),
     Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     CONSTRAINT fk_conversation_id_msg FOREIGN KEY (Conversation_ID) REFERENCES Conversations(ID),
-    CONSTRAINT fk_sender_id FOREIGN KEY (Sender_ID) REFERENCES Employee(ID),
-    CONSTRAINT fk_center_id_msg FOREIGN KEY (center_id) REFERENCES Center_Detail(ID)
+    CONSTRAINT fk_sender_id FOREIGN KEY (Sender_ID) REFERENCES Employee(ID)
 );
 
 CREATE TABLE Folders (
@@ -1131,14 +1070,12 @@ CREATE TABLE Folders (
     Name VARCHAR(255),
     Parent_ID BIGINT,
     Employee_ID BIGINT,
-    center_id BIGINT,
     Created_By VARCHAR(255),
     Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     Updated_By VARCHAR(255),
     Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     CONSTRAINT fk_parent_id FOREIGN KEY (Parent_ID) REFERENCES Folders(ID),
-    CONSTRAINT fk_employee_id_fold FOREIGN KEY (Employee_ID) REFERENCES Employee(ID),
-    CONSTRAINT fk_center_id_fold FOREIGN KEY (center_id) REFERENCES Center_Detail(ID)
+    CONSTRAINT fk_employee_id_fold FOREIGN KEY (Employee_ID) REFERENCES Employee(ID)
 );
 
 CREATE TABLE Personal_Files (
@@ -1150,14 +1087,12 @@ CREATE TABLE Personal_Files (
     File_Mime VARCHAR(255),
     File_Size INT,
     Employee_ID BIGINT,
-    center_id BIGINT,
     Created_By VARCHAR(255),
     Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     Updated_By VARCHAR(255),
     Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     CONSTRAINT fk_folder_id FOREIGN KEY (Folder_ID) REFERENCES Folders(ID),
-    CONSTRAINT fk_employee_id_file FOREIGN KEY (Employee_ID) REFERENCES Employee(ID),
-    CONSTRAINT fk_center_id_file FOREIGN KEY (center_id) REFERENCES Center_Detail(ID)
+    CONSTRAINT fk_employee_id_file FOREIGN KEY (Employee_ID) REFERENCES Employee(ID)
 );
 
 -- ============================================================
@@ -1347,7 +1282,7 @@ CREATE TABLE IF NOT EXISTS Imam_Profiles (
     ID BIGSERIAL PRIMARY KEY,
     Name VARCHAR(255) NOT NULL,
     Surname VARCHAR(255) NOT NULL,
-    Nationality BIGINT,
+    Email VARCHAR(255),
     ID_Number VARCHAR(255),
     Title BIGINT,
     DOB DATE,
@@ -1358,16 +1293,20 @@ CREATE TABLE IF NOT EXISTS Imam_Profiles (
     nationality_id BIGINT,
     province_id BIGINT,
     suburb_id BIGINT,
+    status_id BIGINT NOT NULL DEFAULT 1,
+    employee_id BIGINT NOT NULL UNIQUE,
     Created_By VARCHAR(255),
     Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     Updated_By VARCHAR(255),
     Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CONSTRAINT fk_imam_nationality FOREIGN KEY (Nationality) REFERENCES Nationality(ID),
     CONSTRAINT fk_imam_title FOREIGN KEY (Title) REFERENCES Title_Lookup(ID),
     CONSTRAINT fk_imam_madhab FOREIGN KEY (Madhab) REFERENCES Madhab(ID),
     CONSTRAINT fk_imam_race FOREIGN KEY (Race) REFERENCES Race(ID),
     CONSTRAINT fk_imam_gender FOREIGN KEY (Gender) REFERENCES Gender(ID),
-    CONSTRAINT fk_imam_marital_status FOREIGN KEY (Marital_Status) REFERENCES Marital_Status(ID)
+    CONSTRAINT fk_imam_marital_status FOREIGN KEY (Marital_Status) REFERENCES Marital_Status(ID),
+    CONSTRAINT fk_imam_status FOREIGN KEY (status_id) REFERENCES Status(ID),
+    CONSTRAINT fk_imam_employee FOREIGN KEY (employee_id) REFERENCES Employee(ID),
+    CONSTRAINT uq_imam_employee UNIQUE (employee_id)
     -- Note: Foreign keys for nationality_id, province_id, suburb_id are added by migration block
     -- after Country, Province, and Suburb tables are created
 );
@@ -1799,15 +1738,10 @@ CREATE INDEX HSEQ_Toolbox_Meeting_Tasks_i1 ON HSEQ_Toolbox_Meeting_Tasks (HSEQ_T
 CREATE INDEX idx_service_rating_datestamp ON Service_Rating (Datestamp);
 CREATE INDEX idx_service_rating_recommend ON Service_Rating (Would_Recommend);
 CREATE INDEX idx_service_rating_positive ON Service_Rating (Positive_Impact);
-CREATE INDEX idx_supplier_profile_center ON Supplier_Profile (center_id);
-CREATE INDEX idx_supplier_evaluation_center ON Supplier_Evaluation (center_id);
-CREATE INDEX idx_supplier_document_center ON Supplier_Document (center_id);
 CREATE INDEX idx_supplier_evaluation_supplier ON Supplier_Evaluation (Supplier_ID);
 CREATE INDEX idx_supplier_document_supplier ON Supplier_Document (Supplier_ID);
 CREATE INDEX idx_applicant_details_file_number ON Applicant_Details (File_Number);
-CREATE INDEX idx_applicant_details_center_id ON Applicant_Details (center_id);
 CREATE INDEX idx_applicant_details_id_number ON Applicant_Details (ID_Number);
-CREATE INDEX idx_employee_center_id ON Employee (center_id);
 CREATE INDEX idx_employee_id_number ON Employee (ID_Number);
 CREATE INDEX idx_employee_username ON Employee (Username);
 CREATE INDEX idx_financial_assistance_file_type ON Financial_Assistance (File_ID, Assistance_Type);
@@ -1827,11 +1761,9 @@ CREATE INDEX idx_employee_skills_employee_id ON Employee_Skills (Employee_ID);
 CREATE INDEX idx_inventory_items_supplier_id ON Inventory_Items (Supplier_ID);
 CREATE INDEX idx_inventory_transactions_item_id ON Inventory_Transactions (Item_ID);
 CREATE INDEX idx_supplier_profile_category_id ON Supplier_Profile (Category_ID);
-CREATE INDEX idx_conversations_center_id ON Conversations (center_id);
 CREATE INDEX idx_conversation_participants_conversation_id ON Conversation_Participants (Conversation_ID);
 CREATE INDEX idx_messages_conversation_id ON Messages (Conversation_ID);
 CREATE INDEX idx_financial_assessment_file_id ON Financial_Assessment (File_ID);
-CREATE INDEX idx_financial_assessment_center_id ON Financial_Assessment (center_id);
 CREATE INDEX idx_applicant_expense_assessment_id ON Applicant_Expense (Financial_Assessment_ID);
 CREATE INDEX idx_applicant_expense_type_id ON Applicant_Expense (Expense_Type_ID);
 CREATE INDEX idx_applicant_income_assessment_id ON Applicant_Income (Financial_Assessment_ID);
@@ -1893,6 +1825,45 @@ BEGIN
     -- Only run if tables exist (for existing database migrations)
     IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'Imam_Profiles' AND table_schema = current_schema()) THEN
         RETURN;
+    END IF;
+
+    -- Remove Nationality column and its foreign key constraint if they exist
+    IF EXISTS (SELECT 1 FROM information_schema.table_constraints WHERE constraint_name = 'fk_imam_nationality' AND table_name = 'Imam_Profiles' AND table_schema = current_schema()) THEN
+        ALTER TABLE Imam_Profiles DROP CONSTRAINT fk_imam_nationality;
+        RAISE NOTICE 'Dropped fk_imam_nationality constraint';
+    END IF;
+
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Imam_Profiles' AND column_name = 'Nationality' AND table_schema = current_schema()) THEN
+        ALTER TABLE Imam_Profiles DROP COLUMN "Nationality";
+        RAISE NOTICE 'Dropped Nationality column from Imam_Profiles';
+    END IF;
+
+    -- Add employee_id column if it doesn't exist
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Imam_Profiles' AND column_name = 'employee_id' AND table_schema = current_schema()) THEN
+        ALTER TABLE Imam_Profiles ADD COLUMN employee_id BIGINT;
+        RAISE NOTICE 'Added employee_id column to Imam_Profiles';
+    END IF;
+
+    -- Add unique constraint on employee_id if it doesn't exist
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.table_constraints 
+        WHERE table_name = 'Imam_Profiles' 
+        AND constraint_name = 'uq_imam_employee' 
+        AND table_schema = current_schema()
+    ) THEN
+        ALTER TABLE Imam_Profiles ADD CONSTRAINT uq_imam_employee UNIQUE (employee_id);
+        RAISE NOTICE 'Added unique constraint uq_imam_employee';
+    END IF;
+
+    -- Add foreign key constraint on employee_id if it doesn't exist
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.table_constraints 
+        WHERE table_name = 'Imam_Profiles' 
+        AND constraint_name = 'fk_imam_employee' 
+        AND table_schema = current_schema()
+    ) THEN
+        ALTER TABLE Imam_Profiles ADD CONSTRAINT fk_imam_employee FOREIGN KEY (employee_id) REFERENCES Employee(ID);
+        RAISE NOTICE 'Added foreign key constraint fk_imam_employee';
     END IF;
 
     -- Remove center_id from Imam_Profiles and all child tables
@@ -2189,6 +2160,94 @@ BEGIN
     END IF;
 END $$;
 
+-- ============================================================
+-- PHASE 1: REMOVE ALL center_id REFERENCES (MANDATORY)
+-- Safe migration for existing databases
+-- ============================================================
+DO $$
+DECLARE
+    constraint_rec RECORD;
+    index_rec RECORD;
+    column_rec RECORD;
+BEGIN
+    -- Step 1: Drop all foreign key constraints related to center_id/Center_ID
+    FOR constraint_rec IN
+        SELECT tc.table_name, tc.constraint_name
+        FROM information_schema.table_constraints tc
+        WHERE tc.constraint_type = 'FOREIGN KEY'
+        AND tc.table_schema = current_schema()
+        AND (
+            tc.constraint_name LIKE '%center_id%' OR
+            tc.constraint_name LIKE '%Center_ID%' OR
+            tc.constraint_name LIKE '%center%'
+        )
+    LOOP
+        BEGIN
+            EXECUTE format('ALTER TABLE %I DROP CONSTRAINT IF EXISTS %I', 
+                constraint_rec.table_name, constraint_rec.constraint_name);
+            RAISE NOTICE 'Dropped constraint % from table %', 
+                constraint_rec.constraint_name, constraint_rec.table_name;
+        EXCEPTION WHEN OTHERS THEN
+            RAISE NOTICE 'Could not drop constraint % from table %: %', 
+                constraint_rec.constraint_name, constraint_rec.table_name, SQLERRM;
+        END;
+    END LOOP;
+
+    -- Step 2: Drop check constraint on Employee table
+    IF EXISTS (
+        SELECT 1 FROM information_schema.table_constraints 
+        WHERE table_name = 'Employee' 
+        AND constraint_name = 'chk_app_admin_no_center'
+        AND table_schema = current_schema()
+    ) THEN
+        ALTER TABLE Employee DROP CONSTRAINT IF EXISTS chk_app_admin_no_center;
+        RAISE NOTICE 'Dropped chk_app_admin_no_center constraint';
+    END IF;
+
+    -- Step 3: Drop all indexes on center_id/Center_ID
+    FOR index_rec IN
+        SELECT indexname, tablename
+        FROM pg_indexes
+        WHERE schemaname = current_schema()
+        AND (
+            indexname LIKE '%center_id%' OR
+            indexname LIKE '%Center_ID%' OR
+            indexname LIKE '%center%'
+        )
+    LOOP
+        BEGIN
+            EXECUTE format('DROP INDEX IF EXISTS %I', index_rec.indexname);
+            RAISE NOTICE 'Dropped index % from table %', 
+                index_rec.indexname, index_rec.tablename;
+        EXCEPTION WHEN OTHERS THEN
+            RAISE NOTICE 'Could not drop index %: %', index_rec.indexname, SQLERRM;
+        END;
+    END LOOP;
+
+    -- Step 4: Drop center_id/Center_ID columns from all tables
+    FOR column_rec IN
+        SELECT table_name, column_name
+        FROM information_schema.columns
+        WHERE table_schema = current_schema()
+        AND (
+            column_name = 'center_id' OR
+            column_name = 'Center_ID'
+        )
+    LOOP
+        BEGIN
+            EXECUTE format('ALTER TABLE %I DROP COLUMN IF EXISTS %I', 
+                column_rec.table_name, column_rec.column_name);
+            RAISE NOTICE 'Dropped column % from table %', 
+                column_rec.column_name, column_rec.table_name;
+        EXCEPTION WHEN OTHERS THEN
+            RAISE NOTICE 'Could not drop column % from table %: %', 
+                column_rec.column_name, column_rec.table_name, SQLERRM;
+        END;
+    END LOOP;
+
+    RAISE NOTICE 'Completed center_id removal migration';
+END $$;
+
 -- Views
 CREATE OR REPLACE VIEW Service_Rating_With_Score AS
 SELECT
@@ -2322,7 +2381,8 @@ INSERT INTO User_Types (Name) VALUES
     ('HQ'),
     ('Org. Admin'),
     ('Org. Executives'),
-    ('Org. Caseworkers');
+    ('Org. Caseworkers'),
+    ('Imam User');
 
 INSERT INTO Tasks_Status (Name) VALUES
     ('Complete'),
@@ -2524,9 +2584,9 @@ INSERT INTO Center_Detail (
 
 -- Insert into Center_Audits
 INSERT INTO Center_Audits (
-    audit_date, audit_type, findings, recommendations, conducted_by, center_id, Created_By
+    audit_date, audit_type, findings, recommendations, conducted_by, Created_By
 ) VALUES
-    ('2024-01-15', 'Financial Audit', 'Compliant with regulations', 'Improve record-keeping', 'Auditor Jane', 1, 'admin');
+    ('2024-01-15', 'Financial Audit', 'Compliant with regulations', 'Improve record-keeping', 'Auditor Jane', 'admin');
 
 -- Insert into Policy_and_Procedure
 INSERT INTO Policy_and_Procedure (
@@ -2540,126 +2600,126 @@ INSERT INTO Policy_and_Procedure (
      'admin');
 
 -- ✅ Seed Test Users with proper role assignments
--- User 1: App Admin (NO center_id - has access to all centers)
+-- User 1: App Admin
 INSERT INTO Employee (
-    Name, Surname, Username, Password_Hash, User_Type, Center_ID, Suburb, Nationality, Race, Gender, 
+    Name, Surname, Username, Password_Hash, User_Type, Suburb, Nationality, Race, Gender, 
     Highest_Education_Level, Contact_Number, Emergency_Contact, Blood_Type, Department, HSEQ_Related, Created_By, Updated_By
 ) VALUES (
     'Super', 'Admin', 'admin', '12345', 1,
-    NULL, 1, 14, 1, 1, 3,
+    1, 14, 1, 1, 3,
     '+27123456789', '+27123456789', 1, NULL, NULL, 'system', 'system'
 );
 
--- User 2: HQ User (Multi-center access, cannot manage centers)
+-- User 2: HQ User
 INSERT INTO Employee (
-    Name, Surname, Username, Password_Hash, User_Type, Center_ID, Suburb, Nationality, Race, Gender, 
+    Name, Surname, Username, Password_Hash, User_Type, Suburb, Nationality, Race, Gender, 
     Highest_Education_Level, Contact_Number, Emergency_Contact, Blood_Type, Department, HSEQ_Related, Created_By, Updated_By
 ) VALUES (
     'HQ', 'User', 'hquser', '12345', 2,
-    NULL, 1, 14, 1, 1, 3,
+    1, 14, 1, 1, 3,
     '+27123456780', '+27123456780', 1, NULL, NULL, 'system', 'system'
 );
 
--- User 3: Org Admin (Full CRUD within own center)
+-- User 3: Org Admin
 INSERT INTO Employee (
-    Name, Surname, Username, Password_Hash, User_Type, Center_ID, Suburb, Nationality, Race, Gender, 
+    Name, Surname, Username, Password_Hash, User_Type, Suburb, Nationality, Race, Gender, 
     Highest_Education_Level, Contact_Number, Emergency_Contact, Blood_Type, Department, HSEQ_Related, Created_By, Updated_By
 ) VALUES (
     'Org', 'Admin', 'orgadmin', '12345', 3,
-    1, 1, 14, 1, 1, 3,
+    1, 14, 1, 1, 3,
     '+27123456781', '+27123456781', 1, NULL, NULL, 'system', 'system'
 );
 
--- User 4: Org Executive (Read-only within own center)
+-- User 4: Org Executive
 INSERT INTO Employee (
-    Name, Surname, Username, Password_Hash, User_Type, Center_ID, Suburb, Nationality, Race, Gender, 
+    Name, Surname, Username, Password_Hash, User_Type, Suburb, Nationality, Race, Gender, 
     Highest_Education_Level, Contact_Number, Emergency_Contact, Blood_Type, Department, HSEQ_Related, Created_By, Updated_By
 ) VALUES (
     'Org', 'Executive', 'orgexeuser', '12345', 4,
-    1, 1, 14, 1, 1, 3,
+    1, 14, 1, 1, 3,
     '+27123456782', '+27123456782', 1, NULL, NULL, 'system', 'system'
 );
 
--- User 5: Org Caseworker (Limited access - Applicants & Tasks only)
+-- User 5: Org Caseworker
 INSERT INTO Employee (
-    Name, Surname, Username, Password_Hash, User_Type, Center_ID, Suburb, Nationality, Race, Gender, 
+    Name, Surname, Username, Password_Hash, User_Type, Suburb, Nationality, Race, Gender, 
     Highest_Education_Level, Contact_Number, Emergency_Contact, Blood_Type, Department, HSEQ_Related, Created_By, Updated_By
 ) VALUES (
     'Org', 'Caseworker', 'orgcaseuser', '12345', 5,
-    1, 1, 14, 1, 1, 3,
+    1, 14, 1, 1, 3,
     '+27123456783', '+27123456783', 1, NULL, NULL, 'system', 'system'
 );
 
 -- Insert into Employee_Appraisal (for orgadmin user)
 INSERT INTO Employee_Appraisal (
     Employee_ID, Positions, Attendance, Job_Knowledge_Skills, Quality_of_Work, Initiative_And_Motivation,
-    Teamwork, General_Conduct, Discipline, Special_Task, Overall_Comments, Room_for_Improvement, center_id, Created_By
+    Teamwork, General_Conduct, Discipline, Special_Task, Overall_Comments, Room_for_Improvement, Created_By
 ) VALUES
-    (3, 'Org Admin', 'Excellent', 'Proficient', 'High Quality', 'Proactive', 'Collaborative', 'Professional', 'Good', 'None', 'Excellent performance', 'Continue training', 1, 'system');
+    (3, 'Org Admin', 'Excellent', 'Proficient', 'High Quality', 'Proactive', 'Collaborative', 'Professional', 'Good', 'None', 'Excellent performance', 'Continue training', 'system');
 
 -- Insert into Employee_Initiative (for orgadmin user)
 INSERT INTO Employee_Initiative (
-    Employee_ID, Idea, Details, Idea_Date, Status, center_id, Created_By
+    Employee_ID, Idea, Details, Idea_Date, Status, Created_By
 ) VALUES
-    (3, 'Streamline Application Process', 'Automate data entry', '2024-02-01', 'Under Review', 1, 'system');
+    (3, 'Streamline Application Process', 'Automate data entry', '2024-02-01', 'Under Review', 'system');
 
 -- Insert into Employee_Skills (for orgadmin user)
 INSERT INTO Employee_Skills (
-    Employee_ID, Course, Institution, Date_Conducted, Date_Expired, Training_Outcome, center_id, Created_By
+    Employee_ID, Course, Institution, Date_Conducted, Date_Expired, Training_Outcome, Created_By
 ) VALUES
-    (3, 1, 1, '2023-03-01', '2026-03-01', 2, 1, 'system');
+    (3, 1, 1, '2023-03-01', '2026-03-01', 2, 'system');
 
 -- Insert into HSEQ_Toolbox_Meeting
 INSERT INTO HSEQ_Toolbox_Meeting (
-    Meeting_Date, Conducted_By, In_Attendance, Health_Discussions, Safety_Discussions, center_id, Created_By
+    Meeting_Date, Conducted_By, In_Attendance, Health_Discussions, Safety_Discussions, Created_By
 ) VALUES
-    ('2024-03-10', 'John Manager', 'Team Alpha, Team Beta', 'Hygiene protocols', 'Fire safety measures', 1, 'admin');
+    ('2024-03-10', 'John Manager', 'Team Alpha, Team Beta', 'Hygiene protocols', 'Fire safety measures', 'admin');
 
 -- Insert into HSEQ_Toolbox_Meeting_Tasks
 INSERT INTO HSEQ_Toolbox_Meeting_Tasks (
-    HSEQ_Toolbox_Meeting_ID, Task_Description, Completion_Date, Responsible, Status, Notes, center_id, Created_By
+    HSEQ_Toolbox_Meeting_ID, Task_Description, Completion_Date, Responsible, Status, Notes, Created_By
 ) VALUES
-    (1, 'Install fire extinguishers', '2024-04-01', 'Safety Officer', 3, 'Urgent task', 1, 'admin');
+    (1, 'Install fire extinguishers', '2024-04-01', 'Safety Officer', 3, 'Urgent task', 'admin');
 
 -- Insert into Applicant_Details
 INSERT INTO Applicant_Details (
     Name, Surname, ID_Number, Race, Nationality, Gender, Born_Religion_ID, Period_As_Muslim_ID, File_Number,
     File_Condition, File_Status, Date_Intake, Highest_Education_Level, Marital_Status, Employment_Status,
-    Cell_Number, Email_Address, Suburb, Street_Address, Dwelling_Type, Dwelling_Status, Health, Skills, center_id, Created_By
+    Cell_Number, Email_Address, Suburb, Street_Address, Dwelling_Type, Dwelling_Status, Health, Skills, Created_By
 ) VALUES
     ('Ahmed', 'raza', '8705051234081', 2, 14, 1, 4, 1, 'APP-2024-001', 1, 1, '2024-01-10', 3, 2, 1,
-     '+27812345678', 'ahmed.raza@example.com', 1, '456 Oak St, Soweto', 1, 3, 1, 2, 1, 'admin');
+     '+27812345678', 'ahmed.raza@example.com', 1, '456 Oak St, Soweto', 1, 3, 1, 2, 'admin');
 
 -- Insert into Comments
 INSERT INTO Comments (
-    File_ID, Comment, Comment_Date, center_id, Created_By
+    File_ID, Comment, Comment_Date, Created_By
 ) VALUES
-    (1, 'Initial assessment completed', '2024-01-11', 1, 'admin');
+    (1, 'Initial assessment completed', '2024-01-11', 'admin');
 
 -- Insert into Tasks
 INSERT INTO Tasks (
-    File_ID, Task_Description, Date_Required, Status, center_id, Created_By
+    File_ID, Task_Description, Date_Required, Status, Created_By
 ) VALUES
-    (1, 'Schedule home visit', '2024-02-15', 'In Progress', 1, 'admin');
+    (1, 'Schedule home visit', '2024-02-15', 'In Progress', 'admin');
 
 -- Insert into Relationships
 INSERT INTO Relationships (
     File_ID, Relationship_Type, Name, Surname, ID_Number, Date_of_Birth, Employment_Status, Gender,
-    Highest_Education, Health_Condition, center_id, Created_By
+    Highest_Education, Health_Condition, Created_By
 ) VALUES
-    (1, 2, 'Aisha', 'raza', '1505051234082', '2015-05-05', 2, 2, 1, 1, 1, 'admin');
+    (1, 2, 'Aisha', 'raza', '1505051234082', '2015-05-05', 2, 2, 1, 1, 'admin');
 
 -- Insert into Home_Visit
 INSERT INTO Home_Visit (
-    File_ID, Visit_Date, Representative, Comments, center_id, Created_By
+    File_ID, Visit_Date, Representative, Comments, Created_By
 ) VALUES
-    (1, '2024-02-20', 'Case Worker Jane', 'Stable living conditions', 1, 'admin');
+    (1, '2024-02-20', 'Case Worker Jane', 'Stable living conditions', 'admin');
 
 -- Insert into Financial_Assistance
 INSERT INTO Financial_Assistance (
-    File_ID, Assistance_Type, Financial_Amount, Date_of_Assistance, center_id, Created_By
+    File_ID, Assistance_Type, Financial_Amount, Date_of_Assistance, Created_By
 ) VALUES
-    (1, 1, 1000.00, '2024-02-25', 1, 'admin');
+    (1, 1, 1000.00, '2024-02-25', 'admin');
 
 -- Insert into Hampers
 INSERT INTO Hampers (Name, Created_By) VALUES
@@ -2669,103 +2729,103 @@ INSERT INTO Hampers (Name, Created_By) VALUES
 
 -- Insert into Food_Assistance
 INSERT INTO Food_Assistance (
-    File_ID, Distributed_Date, Hamper_Type, Financial_Cost, center_id, Created_By
+    File_ID, Distributed_Date, Hamper_Type, Financial_Cost, Created_By
 ) VALUES
     (1, '2024-02-28',
      (SELECT ID FROM Hampers WHERE Name = 'Basic Food Hamper'),
-     250.00, 1, 'admin');
+     250.00, 'admin');
 
 -- Insert into Attachments
 INSERT INTO Attachments (
-    File_ID, Attachment_Name, Attachment_Details, center_id, Created_By
+    File_ID, Attachment_Name, Attachment_Details, Created_By
 ) VALUES
-    (1, 'ID Document Scan', 'Applicant ID copy', 1, 'admin');
+    (1, 'ID Document Scan', 'Applicant ID copy', 'admin');
 
 -- Insert into Programs
 INSERT INTO Programs (
     Person_Trained_ID, Program_Name, Means_of_communication, Date_of_program, Communicated_by,
-    Training_Level, Training_Provider, Program_Outcome, center_id, Created_By
+    Training_Level, Training_Provider, Program_Outcome, Created_By
 ) VALUES
-    (1, 1, 1, '2024-03-01', 1, 1, 1, 2, 1, 'admin');
+    (1, 1, 1, '2024-03-01', 1, 1, 1, 2, 'admin');
 
 -- Insert into Service_Rating
 INSERT INTO Service_Rating (
     Overall_Experience, Respect_And_Dignity, Communication_And_Clarity, Timeliness_Of_Support, 
     Fairness_And_Equality, Usefulness_Of_Service, Friendliness_Of_Staff, Positive_Impact, 
-    Access_Ease, Would_Recommend, Appreciate_Most, How_To_Improve, Other_Comments, center_id, Created_By
+    Access_Ease, Would_Recommend, Appreciate_Most, How_To_Improve, Other_Comments, Created_By
 ) VALUES
     (4, 5, 4, 3, 4, 5, 4, TRUE, 4, TRUE, 'Friendly staff', 'Faster response times', 
-     'Great service overall', 1, 'admin');
+     'Great service overall', 'admin');
 
 -- Insert into Supplier_Profile
 INSERT INTO Supplier_Profile (
-    center_id, Name, Registration_No, Contact_Person, Contact_Email, Contact_Phone, Address, 
+    Name, Registration_No, Contact_Person, Contact_Email, Contact_Phone, Address, 
     Category_ID, Status, Created_By
 ) VALUES
-    (1, 'Fresh Foods Ltd', 'REG-2023-001', 'John Supplier', 'john@freshfoods.com', '+27123456780', 
+    ('Fresh Foods Ltd', 'REG-2023-001', 'John Supplier', 'john@freshfoods.com', '+27123456780', 
      '789 Market St, Sandton',
      (SELECT ID FROM Supplier_Category WHERE Name = 'Food Supplier'), 'Active', 'admin');
 
 -- Insert into Supplier_Evaluation
 INSERT INTO Supplier_Evaluation (
-    center_id, Supplier_ID, Eval_Date, Quality_Score, Delivery_Score, Cost_Score, OHS_Score, Env_Score,
+    Supplier_ID, Eval_Date, Quality_Score, Delivery_Score, Cost_Score, OHS_Score, Env_Score,
     Quality_Wt, Delivery_Wt, Cost_Wt, OHS_Wt, Env_Wt, Overall_Score, Status, Notes, Expiry_Date, Created_By
 ) VALUES
-    (1, (SELECT ID FROM Supplier_Profile WHERE Name = 'Fresh Foods Ltd'), '2024-03-15', 4, 5, 3, 4, 4,
+    ((SELECT ID FROM Supplier_Profile WHERE Name = 'Fresh Foods Ltd'), '2024-03-15', 4, 5, 3, 4, 4,
      0.30, 0.25, 0.20, 0.15, 0.10, 4.10, 'Approved', 'Reliable supplier', '2025-03-15', 'admin');
 
 -- Insert into Supplier_Document
 INSERT INTO Supplier_Document (
-    center_id, Supplier_ID, Doc_Type, Issued_At, Description, Created_By
+    Supplier_ID, Doc_Type, Issued_At, Description, Created_By
 ) VALUES
-    (1, (SELECT ID FROM Supplier_Profile WHERE Name = 'Fresh Foods Ltd'), 'Tax Clearance', 
+    ((SELECT ID FROM Supplier_Profile WHERE Name = 'Fresh Foods Ltd'), 'Tax Clearance', 
      '2024-01-01', 'Tax clearance certificate', 'admin');
 
 -- Insert into Inventory_Items
 INSERT INTO Inventory_Items (
-    Item_Name, Description, Hamper_Type, Quantity, Unit, Min_Stock, Cost_Per_Unit, Supplier_ID, center_id, Created_By
+    Item_Name, Description, Hamper_Type, Quantity, Unit, Min_Stock, Cost_Per_Unit, Supplier_ID, Created_By
 ) VALUES
     ('Rice 5kg', 'Long-grain white rice', 
      (SELECT ID FROM Hampers WHERE Name = 'Basic Food Hamper'), 100.00, 'kg', 20.00, 15.00,
-     (SELECT ID FROM Supplier_Profile WHERE Name = 'Fresh Foods Ltd'), 1, 'admin');
+     (SELECT ID FROM Supplier_Profile WHERE Name = 'Fresh Foods Ltd'), 'admin');
 
 -- Insert into Inventory_Transactions
 INSERT INTO Inventory_Transactions (
-    Item_ID, Transaction_Type, Quantity, Transaction_Date, Notes, Employee_ID, center_id, Created_By
+    Item_ID, Transaction_Type, Quantity, Transaction_Date, Notes, Employee_ID, Created_By
 ) VALUES
     ((SELECT ID FROM Inventory_Items WHERE Item_Name = 'Rice 5kg'), 'IN', 50.00, '2024-03-20', 
-     'Restock from supplier', 1, 1, 'admin');
+     'Restock from supplier', 1, 'admin');
 
 -- Insert into Conversations
 INSERT INTO Conversations (
-    Title, Type, center_id, Created_By
+    Title, Type, Created_By
 ) VALUES
-    ('Team Coordination', 'Group', 1, 'admin');
+    ('Team Coordination', 'Group', 'admin');
 
 -- Insert into Conversation_Participants
 INSERT INTO Conversation_Participants (
-    Conversation_ID, Employee_ID, Joined_Date, center_id, Created_By
+    Conversation_ID, Employee_ID, Joined_Date, Created_By
 ) VALUES
-    ((SELECT ID FROM Conversations WHERE Title = 'Team Coordination'), 1, '2024-03-21', 1, 'admin');
+    ((SELECT ID FROM Conversations WHERE Title = 'Team Coordination'), 1, '2024-03-21', 'admin');
 
 -- Insert into Messages
 INSERT INTO Messages (
-    Conversation_ID, Sender_ID, Message_Text, Read_Status, center_id, Created_By
+    Conversation_ID, Sender_ID, Message_Text, Read_Status, Created_By
 ) VALUES
     ((SELECT ID FROM Conversations WHERE Title = 'Team Coordination'), 1, 
-     'Please review the new applicant process.', 'Unread', 1, 'admin');
+     'Please review the new applicant process.', 'Unread', 'admin');
 
 -- Insert into Folders
 INSERT INTO Folders (
-    Name, Employee_ID, center_id, Created_By
+    Name, Employee_ID, Created_By
 ) VALUES
-    ('Case Files 2024', 1, 1, 'admin');
+    ('Case Files 2024', 1, 'admin');
 
 -- Insert into Personal_Files
 INSERT INTO Personal_Files (
-    Name, Folder_ID, Employee_ID, center_id, Created_By
+    Name, Folder_ID, Employee_ID, Created_By
 ) VALUES
-    ('Performance Review Q1', (SELECT ID FROM Folders WHERE Name = 'Case Files 2024'), 1, 1, 'admin');
+    ('Performance Review Q1', (SELECT ID FROM Folders WHERE Name = 'Case Files 2024'), 1, 'admin');
 
 -- ============================================================
 -- COUNTRY DATA INSERT SCRIPT

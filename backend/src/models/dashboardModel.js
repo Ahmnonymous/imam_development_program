@@ -43,7 +43,8 @@ function getDurationConfig(duration) {
 }
 
 function buildCenterCondition(alias, paramIndex) {
-  return `($${paramIndex}::int IS NULL OR ${alias}.center_id = $${paramIndex})`;
+  // center_id has been removed - return always-true condition
+  return '1=1';
 }
 
 function buildTimeSeriesQuery({ table, alias }, config, centerParamIndex) {
@@ -420,10 +421,8 @@ const dashboardModel = {
   getStatisticsApplications: async (duration, centerId, hasGlobalAccess) => {
     try {
       const config = getDurationConfig(duration);
-      const parsedCenterId = Number(centerId);
-      const normalizedCenterId = Number.isFinite(parsedCenterId) ? parsedCenterId : null;
-      const centerParam = hasGlobalAccess ? null : normalizedCenterId;
-      const params = [centerParam];
+      // center_id has been removed, so no parameters are needed
+      const params = [];
       const centerParamIndex = 1;
 
       const timeSeriesQueries = METRIC_DEFINITIONS.map((metric) =>

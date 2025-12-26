@@ -18,14 +18,17 @@ const ROLE_LABELS = {
   OrgAdmin: "Org Admin",
   OrgExecutive: "Org Executive",
   OrgCaseworker: "Caseworker",
+  ImamUser: "Imam User",
 };
 
 export const useRole = () => {
   const context = useMemo(() => getRoleContext(), []);
-  const { roleKey, roleId, centerId, username, user } = context;
+  const { roleKey, roleId, username, user } = context || {};
 
   const helpers = useMemo(() => {
     const numericRole = roleId ?? null;
+    const safeRoleKey = roleKey || null;
+    const safeUser = user || {};
     const hasRole = (roles) => {
       if (!numericRole) return false;
       const roleArray = Array.isArray(roles) ? roles : [roles];
@@ -34,33 +37,33 @@ export const useRole = () => {
 
     return {
       userType: numericRole,
-      centerId,
-      username,
-      user,
-      roleKey,
-      roleName: ROLE_LABELS[roleKey] || getRoleName(roleKey),
-      isAppAdmin: roleKey === "AppAdmin",
-      isHQ: roleKey === "HQ",
-      isOrgAdmin: roleKey === "OrgAdmin",
-      isOrgExecutive: roleKey === "OrgExecutive",
-      isCaseworker: roleKey === "OrgCaseworker",
-      isGlobalAdmin: ["AppAdmin", "HQ"].includes(roleKey),
+      username: username || null,
+      user: safeUser,
+      roleKey: safeRoleKey,
+      roleName: safeRoleKey ? (ROLE_LABELS[safeRoleKey] || getRoleName(safeRoleKey)) : "Guest",
+      isAppAdmin: safeRoleKey === "AppAdmin",
+      isHQ: safeRoleKey === "HQ",
+      isOrgAdmin: safeRoleKey === "OrgAdmin",
+      isOrgExecutive: safeRoleKey === "OrgExecutive",
+      isCaseworker: safeRoleKey === "OrgCaseworker",
+      isImamUser: safeRoleKey === "ImamUser",
+      isGlobalAdmin: ["AppAdmin", "HQ"].includes(safeRoleKey),
       hasRole,
-      isAdmin: () => ["AppAdmin", "HQ", "OrgAdmin"].includes(roleKey),
-      canManageEmployees: () => ["AppAdmin", "HQ", "OrgAdmin"].includes(roleKey),
-      canManageCenters: () => canManageCentersUtil(roleKey),
-      canViewAllCenters: () => ["AppAdmin", "HQ"].includes(roleKey),
-      canWrite: () => !isReadOnlyRole(roleKey),
-      canAccessModule: (module) => canViewModule(module, roleKey),
-      canEditModule: (module) => canEditModule(module, roleKey),
-      canAccessNav: (navItem) => canAccessNavUtil(navItem, roleKey),
-      canManagePolicy: () => canManagePolicyUtil(roleKey),
-      canViewReports: () => canSeeReports(roleKey),
-      getRoleName: () => ROLE_LABELS[roleKey] || getRoleName(roleKey),
-      getReportScope: () => getReportScopeUtil(roleKey),
-      isReadOnly: isReadOnlyRole(roleKey),
+      isAdmin: () => ["AppAdmin", "HQ", "OrgAdmin"].includes(safeRoleKey),
+      canManageEmployees: () => ["AppAdmin", "HQ", "OrgAdmin"].includes(safeRoleKey),
+      canManageCenters: () => canManageCentersUtil(safeRoleKey),
+      canViewAllCenters: () => ["AppAdmin", "HQ"].includes(safeRoleKey),
+      canWrite: () => !isReadOnlyRole(safeRoleKey),
+      canAccessModule: (module) => canViewModule(module, safeRoleKey),
+      canEditModule: (module) => canEditModule(module, safeRoleKey),
+      canAccessNav: (navItem) => canAccessNavUtil(navItem, safeRoleKey),
+      canManagePolicy: () => canManagePolicyUtil(safeRoleKey),
+      canViewReports: () => canSeeReports(safeRoleKey),
+      getRoleName: () => safeRoleKey ? (ROLE_LABELS[safeRoleKey] || getRoleName(safeRoleKey)) : "Guest",
+      getReportScope: () => getReportScopeUtil(safeRoleKey),
+      isReadOnly: isReadOnlyRole(safeRoleKey),
     };
-  }, [roleId, centerId, username, user, roleKey]);
+  }, [roleId, username, user, roleKey]);
 
   return helpers;
 };
@@ -77,8 +80,8 @@ export const hasRole = (roles) => {
   return roleArray.includes(currentRole);
 };
 
+// center_id has been removed - this function is deprecated
 export const getCurrentCenterId = () => {
-  const roleContext = getRoleContext();
-  return roleContext.centerId || null;
+  return null;
 };
 

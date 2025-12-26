@@ -24,7 +24,7 @@ import { API_BASE_URL } from "../../../../helpers/url_helper";
 import { getAuditName } from "../../../../helpers/userStorage";
 
 const TransactionsTab = ({ itemId, transactions, lookupData, onUpdate, showAlert }) => {
-  const { isOrgExecutive, centerId } = useRole(); // Read-only check
+  const { isOrgExecutive } = useRole(); // Read-only check
   const [modalOpen, setModalOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
 
@@ -100,7 +100,6 @@ const TransactionsTab = ({ itemId, transactions, lookupData, onUpdate, showAlert
         transaction_date: data.Transaction_Date,
         notes: data.Notes,
         employee_id: data.Employee_ID || null,
-        center_id: centerId ?? null,
       };
 
       if (editItem) {

@@ -53,10 +53,11 @@ export const getAuditName = () => {
 
 /**
  * Get user's center ID from localStorage
- * @returns {number|null} Center ID or null if not found
+ * @deprecated center_id has been removed from the system
+ * @returns {null} Always returns null
  */
 export const getUserCenterId = () => {
-  return getUserProperty("center_id");
+  return null;
 };
 
 /**

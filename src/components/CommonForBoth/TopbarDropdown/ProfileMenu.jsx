@@ -43,8 +43,13 @@ const ProfileMenu = (props) => {
         setUserFullName(`${employee.name} ${employee.surname}`);
       }
     } catch (error) {
+      // Silently handle 403/401 errors (RBAC denied) - don't log to console
+      if (error.response?.status === 403 || error.response?.status === 401) {
+        // User doesn't have permission to access employee data - use default avatar
+        return;
+      }
+      // Only log other errors
       console.error("Error fetching employee avatar:", error);
-      // Don't show error to user, just use default avatar
     }
   }, []);
 

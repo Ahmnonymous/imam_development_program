@@ -6,6 +6,7 @@ const ROLE_IDS = {
   OrgAdmin: 3,
   OrgExecutive: 4,
   OrgCaseworker: 5,
+  ImamUser: 6,
 };
 
 const ROLE_BY_ID = Object.entries(ROLE_IDS).reduce((acc, [key, id]) => {
@@ -178,6 +179,18 @@ const ROLE_RULES = {
     navHide: createSet(["centers", "inventory", "supplier", "meetings", "lookup", "employee"]),
     readOnly: false,
   },
+  ImamUser: {
+    id: ROLE_IDS.ImamUser,
+    reportScope: "own",
+    modules: {
+      view: createSet(["dashboard", "imam-profiles"]),
+      edit: createSet(["imam-profiles"]),
+      denyView: createSet(["inventory", "supplier", "centers", "meetings", "applicants", "tasks", "comments", "relationships", "homevisits", "financialassistance", "foodassistance", "attachments", "programs", "financialassessment", "applicantincome", "applicantexpense", "filemanager", "chat", "policy", "reports", "training", "employee", "lookup"]),
+      denyEdit: createSet(["inventory", "supplier", "centers", "meetings", "applicants", "tasks", "comments", "relationships", "homevisits", "financialassistance", "foodassistance", "attachments", "programs", "financialassessment", "applicantincome", "applicantexpense", "filemanager", "chat", "policy", "reports", "training", "employee", "lookup"]),
+    },
+    navHide: createSet(["centers", "inventory", "supplier", "meetings", "applicants", "tasks", "comments", "relationships", "homevisits", "financialassistance", "foodassistance", "attachments", "programs", "financialassessment", "applicantincome", "applicantexpense", "filemanager", "chat", "policy", "reports", "training", "employee", "lookup"]),
+    readOnly: false,
+  },
 };
 
 const resolveRoleKey = (roleInput) => {
@@ -239,15 +252,13 @@ export const getRoleContext = () => {
   const stored = getStoredUser() || {};
   const roleKey = resolveRoleFromUser(stored);
   const roleId = roleKey ? ROLE_RULES[roleKey]?.id || null : null;
-  const centerId = stored.center_id ?? stored.centerId ?? null;
   const username = stored.username || stored.name || stored.email || null;
 
   return {
-    user: stored,
-    roleKey,
-    roleId,
-    centerId,
-    username,
+    user: stored || {},
+    roleKey: roleKey || null,
+    roleId: roleId || null,
+    username: username || null,
     isAuthenticated: Boolean(roleKey),
   };
 };

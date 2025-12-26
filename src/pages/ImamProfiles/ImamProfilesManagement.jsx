@@ -3,6 +3,7 @@ import { Container, Row, Col, Alert } from "reactstrap";
 import Breadcrumbs from "../../components/Common/Breadcrumb";
 import axiosApi from "../../helpers/api_helper";
 import { API_BASE_URL } from "../../helpers/url_helper";
+import { useRole } from "../../helpers/useRole";
 import ImamProfileListPanel from "./components/ImamProfileListPanel";
 import ImamProfileSummary from "./components/ImamProfileSummary";
 import SummaryMetrics from "./components/SummaryMetrics";
@@ -11,6 +12,10 @@ import DetailTabs from "./components/DetailTabs";
 const ImamProfilesManagement = () => {
   // Meta title
   document.title = "Imam Profile Management | Welfare App";
+
+  // Get user role
+  const { userType, isAppAdmin } = useRole();
+  const isImamUser = userType === 6;
 
   // State management
   const [imamProfiles, setImamProfiles] = useState([]);
@@ -39,13 +44,20 @@ const ImamProfilesManagement = () => {
     title: [],
     madhab: [],
     province: [],
+    status: [],
   });
 
   // Fetch all imam profiles on mount
   useEffect(() => {
-    fetchImamProfiles();
     fetchLookupData();
-  }, []);
+    if (isImamUser) {
+      // For Imam User, fetch only their own profile
+      fetchMyProfile();
+    } else {
+      // For Admin and others, fetch all profiles
+      fetchImamProfiles();
+    }
+  }, [isImamUser]);
 
   // Fetch detail data when an imam profile is selected
   useEffect(() => {
@@ -70,6 +82,30 @@ const ImamProfilesManagement = () => {
     }
   };
 
+  const fetchMyProfile = async () => {
+    try {
+      setLoading(true);
+      const response = await axiosApi.get(`${API_BASE_URL}/imamProfiles/my-profile`);
+      if (response.data) {
+        setImamProfiles([response.data]);
+        setSelectedImamProfile(response.data);
+      } else {
+        // No profile exists - redirect to create page
+        window.location.href = "/imam-profiles/create";
+      }
+    } catch (error) {
+      if (error.response?.status === 404) {
+        // No profile exists - redirect to create page
+        window.location.href = "/imam-profiles/create";
+      } else {
+        console.error("Error fetching my imam profile:", error);
+        showAlert("Failed to fetch imam profile", "danger");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const fetchLookupData = async () => {
     try {
       const [
@@ -81,6 +117,8 @@ const ImamProfilesManagement = () => {
         titleRes,
         madhabRes,
         provinceRes,
+        countryRes,
+        statusRes,
       ] = await Promise.all([
         axiosApi.get(`${API_BASE_URL}/lookup/Race`),
         axiosApi.get(`${API_BASE_URL}/lookup/Nationality`),
@@ -90,6 +128,8 @@ const ImamProfilesManagement = () => {
         axiosApi.get(`${API_BASE_URL}/lookup/Title_Lookup`),
         axiosApi.get(`${API_BASE_URL}/lookup/Madhab`),
         axiosApi.get(`${API_BASE_URL}/lookup/Province`),
+        axiosApi.get(`${API_BASE_URL}/lookup/Country`),
+        axiosApi.get(`${API_BASE_URL}/lookup/Status`),
       ]);
 
       setLookupData({
@@ -101,6 +141,8 @@ const ImamProfilesManagement = () => {
         title: titleRes.data || [],
         madhab: madhabRes.data || [],
         province: provinceRes.data || [],
+        country: countryRes.data || [],
+        status: statusRes.data || [],
       });
     } catch (error) {
       console.error("Error fetching lookup data:", error);
@@ -211,12 +253,19 @@ const ImamProfilesManagement = () => {
     }
   };
 
-  const handleImamProfileUpdate = useCallback(() => {
-    fetchImamProfiles();
+  const handleImamProfileUpdate = useCallback(async () => {
+    if (isImamUser) {
+      // For Imam User, refresh their own profile
+      await fetchMyProfile();
+    } else {
+      // For Admin and others, refresh all profiles
+      fetchImamProfiles();
+    }
+    // Refresh detail data if profile is selected
     if (selectedImamProfile) {
       fetchImamProfileDetails(selectedImamProfile.id);
     }
-  }, [selectedImamProfile]);
+  }, [selectedImamProfile, isImamUser]);
 
   const handleDetailUpdate = useCallback(() => {
     if (selectedImamProfile) {
@@ -265,33 +314,37 @@ const ImamProfilesManagement = () => {
         <Breadcrumbs title="Imam Profiles" breadcrumbItem="Imam Profile Management" />
 
         <Row>
-          {/* Left Panel - Imam Profile List */}
-          <Col lg={3}>
-            <ImamProfileListPanel
-              imamProfiles={filteredImamProfiles}
-              selectedImamProfile={selectedImamProfile}
-              onSelectImamProfile={handleImamProfileSelect}
-              searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
-              loading={loading}
-              onRefresh={fetchImamProfiles}
-            />
-          </Col>
+          {/* Left Panel - Imam Profile List (Only for Admin) */}
+          {!isImamUser && (
+            <Col lg={3}>
+              <ImamProfileListPanel
+                imamProfiles={filteredImamProfiles}
+                selectedImamProfile={selectedImamProfile}
+                onSelectImamProfile={handleImamProfileSelect}
+                searchTerm={searchTerm}
+                onSearchChange={setSearchTerm}
+                loading={loading}
+                onRefresh={fetchImamProfiles}
+              />
+            </Col>
+          )}
 
           {/* Main Panel - Imam Profile Details */}
-          <Col lg={9}>
+          <Col lg={isImamUser ? 12 : 9}>
             {selectedImamProfile ? (
               <>
-                {/* Summary Metrics */}
-                <SummaryMetrics
-                  imamProfileId={selectedImamProfile.id}
-                  medicalReimbursement={medicalReimbursement}
-                  communityEngagement={communityEngagement}
-                  jumuahKhutbahTopicSubmission={jumuahKhutbahTopicSubmission}
-                  jumuahAudioKhutbah={jumuahAudioKhutbah}
-                />
+                {/* Summary Metrics - Hide for Imam User if status is pending (1), show if approved (2) */}
+                {(!isImamUser || Number(selectedImamProfile.status_id) === 2) && (
+                  <SummaryMetrics
+                    imamProfileId={selectedImamProfile.id}
+                    medicalReimbursement={medicalReimbursement}
+                    communityEngagement={communityEngagement}
+                    jumuahKhutbahTopicSubmission={jumuahKhutbahTopicSubmission}
+                    jumuahAudioKhutbah={jumuahAudioKhutbah}
+                  />
+                )}
 
-                {/* Imam Profile Summary */}
+                {/* Imam Profile Summary - Always show */}
                 <ImamProfileSummary
                   imamProfile={selectedImamProfile}
                   lookupData={lookupData}
@@ -299,23 +352,25 @@ const ImamProfilesManagement = () => {
                   showAlert={showAlert}
                 />
 
-                {/* Detail Tabs */}
-                <DetailTabs
-                  key={selectedImamProfile.id}
-                  imamProfileId={selectedImamProfile.id}
-                  imamProfile={selectedImamProfile}
-                  pearlsOfWisdom={pearlsOfWisdom}
-                  jumuahKhutbahTopicSubmission={jumuahKhutbahTopicSubmission}
-                  jumuahAudioKhutbah={jumuahAudioKhutbah}
-                  medicalReimbursement={medicalReimbursement}
-                  communityEngagement={communityEngagement}
-                  nikahBonus={nikahBonus}
-                  newMuslimBonus={newMuslimBonus}
-                  newBabyBonus={newBabyBonus}
-                  lookupData={lookupData}
-                  onUpdate={handleDetailUpdate}
-                  showAlert={showAlert}
-                />
+                {/* Detail Tabs - Hide for Imam User if status is pending (1), show if approved (2) */}
+                {(!isImamUser || Number(selectedImamProfile.status_id) === 2) && (
+                  <DetailTabs
+                    key={selectedImamProfile.id}
+                    imamProfileId={selectedImamProfile.id}
+                    imamProfile={selectedImamProfile}
+                    pearlsOfWisdom={pearlsOfWisdom}
+                    jumuahKhutbahTopicSubmission={jumuahKhutbahTopicSubmission}
+                    jumuahAudioKhutbah={jumuahAudioKhutbah}
+                    medicalReimbursement={medicalReimbursement}
+                    communityEngagement={communityEngagement}
+                    nikahBonus={nikahBonus}
+                    newMuslimBonus={newMuslimBonus}
+                    newBabyBonus={newBabyBonus}
+                    lookupData={lookupData}
+                    onUpdate={handleDetailUpdate}
+                    showAlert={showAlert}
+                  />
+                )}
               </>
             ) : (
               <div className="text-center mt-5 pt-5">

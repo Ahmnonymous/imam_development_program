@@ -22,21 +22,10 @@ const buildUpdateFragments = (fields = {}, { quote = true } = {}) => {
 
 const scopeQuery = (
   query,
-  { centerId, isSuperAdmin, column = '"center_id"', alias, enforce } = {},
+  { centerId, isSuperAdmin, column, alias, enforce } = {},
 ) => {
-  const shouldEnforce =
-    enforce !== undefined ? enforce : Boolean(centerId && !isSuperAdmin);
-
-  return applyCenterFilter(
-    query,
-    { center_id: centerId },
-    {
-      centerId,
-      column,
-      alias,
-      enforce: shouldEnforce,
-    },
-  );
+  // center_id has been removed - return query unchanged
+  return applyCenterFilter(query, {}, { skip: true });
 };
 
 module.exports = {

@@ -217,10 +217,18 @@ const Login = (props) => {
                       </div>
 
                       <div className="mt-4 text-center">
-                        <Link to="/forgot-password" className="text-muted">
-                          <i className="mdi mdi-lock me-1" />
-                          Forgot your password?
-                        </Link>
+                        <p className="mb-2">
+                          <Link to="/forgot-password" className="text-muted">
+                            <i className="mdi mdi-lock me-1" />
+                            Forgot your password?
+                          </Link>
+                        </p>
+                        <p className="mb-0">
+                          Don't have an account?{" "}
+                          <Link to="/register" className="text-primary fw-medium">
+                            Register
+                          </Link>
+                        </p>
                       </div>
                     </Form>
                   </div>

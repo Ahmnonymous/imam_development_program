@@ -29,7 +29,7 @@ const FileModal = ({
 }) => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [selectedFile, setSelectedFile] = useState(null);
-  const { user, centerId } = useRole();
+  const { user } = useRole();
 
   const {
     control,
@@ -80,10 +80,6 @@ const FileModal = ({
         formData.append("employee_id", user.id);
       }
       
-      // Backend will handle App Admin (null center_id)
-      if (centerId !== null && centerId !== undefined) {
-        formData.append("center_id", centerId);
-      }
 
       if (editItem) {
         formData.append("updated_by", getAuditName());

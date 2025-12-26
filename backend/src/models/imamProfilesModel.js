@@ -33,6 +33,36 @@ const imamProfilesModel = {
     }
   },
 
+  getByUsername: async (username) => {
+    try {
+      const query = `SELECT ip.* FROM ${tableName} ip 
+                     INNER JOIN Employee e ON ip.employee_id = e.ID 
+                     WHERE e.Username = $1 
+                     ORDER BY ip.id DESC 
+                     LIMIT 1`;
+      const res = await pool.query(query, [username]);
+      if (!res.rows[0]) return null;
+      return res.rows[0];
+    } catch (err) {
+      throw new Error(
+        `Error fetching record by username from ${tableName}: ${err.message}`,
+      );
+    }
+  },
+
+  getByEmployeeId: async (employeeId) => {
+    try {
+      const query = `SELECT * FROM ${tableName} WHERE employee_id = $1 LIMIT 1`;
+      const res = await pool.query(query, [employeeId]);
+      if (!res.rows[0]) return null;
+      return res.rows[0];
+    } catch (err) {
+      throw new Error(
+        `Error fetching record by employee_id from ${tableName}: ${err.message}`,
+      );
+    }
+  },
+
   create: async (fields) => {
     try {
       const { columns, values, placeholders } = buildInsertFragments(fields, {

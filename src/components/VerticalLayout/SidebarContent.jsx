@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 // //Import Scrollbar
 import SimpleBar from "simplebar-react";
@@ -15,13 +15,16 @@ import { useCallback } from "react";
 
 // ✅ Import role-based access control helper
 import { useRole } from "../../helpers/useRole";
+import axiosApi from "../../helpers/api_helper";
+import { API_BASE_URL } from "../../helpers/url_helper";
 
 const SidebarContent = (props) => {
   const ref = useRef();
   const path = useLocation();
   
   // ✅ Get user role information
-  const { canAccessNav, canEditModule } = useRole();
+  const { canAccessNav, canEditModule, userType } = useRole();
+  const [imamProfileStatus, setImamProfileStatus] = useState(null);
 
   const activateParentDropdown = useCallback((item) => {
     item.classList.add("active");
@@ -112,7 +115,14 @@ const SidebarContent = (props) => {
     removeActivation(items);
 
     for (let i = 0; i < items.length; ++i) {
-      if (pathName === items[i].pathname) {
+      const itemPath = items[i].pathname;
+      // Exact match
+      if (pathName === itemPath) {
+        matchingMenuItem = items[i];
+        break;
+      }
+      // Handle /imam-profiles routes - match if path starts with the menu item path
+      if (itemPath === "/imam-profiles" && pathName.startsWith("/imam-profiles")) {
         matchingMenuItem = items[i];
         break;
       }
@@ -144,7 +154,23 @@ const SidebarContent = (props) => {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
     activeMenu();
-  }, [activeMenu]);
+  }, [activeMenu, path.pathname]);
+
+  // Check Imam User profile status
+  useEffect(() => {
+    const checkImamProfileStatus = async () => {
+      if (userType === 6) {
+        try {
+          const response = await axiosApi.get(`${API_BASE_URL}/imamProfiles/my-profile`);
+          setImamProfileStatus(response.data?.status_id || null);
+        } catch (error) {
+          // No profile exists yet
+          setImamProfileStatus(null);
+        }
+      }
+    };
+    checkImamProfileStatus();
+  }, [userType, path.pathname]); // Re-check when path changes
 
   function scrollElement(item) {
     if (item) {
@@ -160,7 +186,7 @@ const SidebarContent = (props) => {
       <SimpleBar className="h-100 mt-2"  ref={ref}>
         <div id="sidebar-menu">
           <ul className="metismenu list-unstyled" id="side-menu">
-            {/* ✅ Dashboard - All roles */}
+            {/* ✅ Dashboard - All roles (Imam User sees only welcome card) */}
             <li>
               <Link to="/dashboard">
                 <i className="bx bx-bar-chart-alt-2"></i>
@@ -226,21 +252,25 @@ const SidebarContent = (props) => {
               </Link>
             </li> */}
 
-            {/* ✅ Create Imam Profile - All except Org Executives (read-only) */}
-            <li>
-              <Link to="/imam-profiles/create">
-                <i className="bx bx-user-plus"></i>
-                <span>{props.t("Create Imam Profile")}</span>
-              </Link>
-            </li>
+            {/* ✅ Create Imam Profile - Hide if Imam User has a profile (pending or approved) */}
+            {userType !== 6 || imamProfileStatus === null ? (
+              <li>
+                <Link to="/imam-profiles/create">
+                  <i className="bx bx-user-plus"></i>
+                  <span>{props.t("Create Imam Profile")}</span>
+                </Link>
+              </li>
+            ) : null}
 
-            {/* ✅ Imam Profile Details - All roles (1,2,3,4,5) */}
-            <li>
-              <Link to="/imam-profiles">
-                <i className="bx bx-user-circle"></i>
-                <span>{props.t("Imam Profiles")}</span>
-              </Link>
-            </li>
+            {/* ✅ Imam Profile Details - All roles (1,2,3,4,5), Imam User (6) if profile exists (pending or approved) */}
+            {userType !== 6 || imamProfileStatus !== null ? (
+              <li>
+                <Link to="/imam-profiles">
+                  <i className="bx bx-user-circle"></i>
+                  <span>{props.t("Imam Profiles")}</span>
+                </Link>
+              </li>
+            ) : null}
 
             {/* TEMPORARILY HIDDEN - Reports */}
             {/* {canAccessNav("reports") && (
@@ -302,37 +332,45 @@ const SidebarContent = (props) => {
               </li>
             )} */}
 
-            {/* ✅ Lookup Setup - Always visible */}
-            <li>
-              <Link to="/lookups">
-                <i className="bx bx-list-ul"></i>
-                <span>{props.t("Lookup Setup")}</span>
-              </Link>
-            </li>
+            {/* ✅ Lookup Setup - Not for Imam User */}
+            {userType !== 6 && (
+              <li>
+                <Link to="/lookups">
+                  <i className="bx bx-list-ul"></i>
+                  <span>{props.t("Lookup Setup")}</span>
+                </Link>
+              </li>
+            )}
 
-            {/* ✅ File Manager - Always visible */}
-            <li>
-              <Link to="/FileManager">
-                <i className="bx bx-folder"></i>
-                <span>{props.t("File Manager")}</span>
-              </Link>
-            </li>
+            {/* ✅ File Manager - Not for Imam User */}
+            {userType !== 6 && (
+              <li>
+                <Link to="/FileManager">
+                  <i className="bx bx-folder"></i>
+                  <span>{props.t("File Manager")}</span>
+                </Link>
+              </li>
+            )}
 
-            {/* ✅ Chat - Always visible */}
-            <li>
-              <Link to="/chat">
-                <i className="bx bx-chat"></i>
-                <span>{props.t("Chat")}</span>
-              </Link>
-            </li>
+            {/* ✅ Chat - Not for Imam User */}
+            {userType !== 6 && (
+              <li>
+                <Link to="/chat">
+                  <i className="bx bx-chat"></i>
+                  <span>{props.t("Chat")}</span>
+                </Link>
+              </li>
+            )}
 
-            {/* ✅ Policy & Procedure - Always visible */}
-            <li>
-              <Link to="/policy-library">
-                <i className="bx bx-file-blank"></i>
-                <span>{props.t("Policy & Procedure")}</span>
-              </Link>
-            </li>
+            {/* ✅ Policy & Procedure - Not for Imam User */}
+            {userType !== 6 && (
+              <li>
+                <Link to="/policy-library">
+                  <i className="bx bx-file-blank"></i>
+                  <span>{props.t("Policy & Procedure")}</span>
+                </Link>
+              </li>
+            )}
           </ul>
         </div>
       </SimpleBar>

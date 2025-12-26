@@ -33,7 +33,6 @@ import SummaryMetrics from "./components/SummaryMetrics";
 import DetailTabs from "./components/DetailTabs";
 
 const InventoryManagement = () => {
-  const { centerId } = useRole();
   // Meta title
   document.title = "Inventory Management | Welfare App";
 
@@ -242,7 +241,6 @@ const InventoryManagement = () => {
         min_stock: data.Min_Stock ? parseFloat(data.Min_Stock) : null,
         cost_per_unit: data.Cost_Per_Unit ? parseFloat(data.Cost_Per_Unit) : null,
         supplier_id: data.Supplier_ID || null,
-        center_id: centerId ?? null,
         created_by: getAuditName(),
       };
 

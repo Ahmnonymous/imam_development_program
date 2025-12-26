@@ -25,8 +25,7 @@ class ReportsModel {
                     ca.created_by,
                     ca.created_at,
                     ca.updated_by,
-                    ca.updated_at,
-                    ca.center_id
+                    ca.updated_at
                 FROM center_audits ca
             `;
             const params = [];
@@ -69,8 +68,6 @@ class ReportsModel {
                     ad.skills,
                     ad.created_by,
                     ad.created_at,
-                    ad.center_id,
-                    cd.organisation_name AS center_name,
                     -- Join with lookup tables for readable names
                     r.name AS race_name,
                     n.name AS nationality_name,
@@ -99,7 +96,6 @@ class ReportsModel {
                 LEFT JOIN dwelling_status ds ON ad.dwelling_status = ds.id
                 LEFT JOIN health_conditions hc ON ad.health = hc.id
                 LEFT JOIN skills sk ON ad.skills = sk.id
-                LEFT JOIN center_detail cd ON ad.center_id = cd.id
             `;
             
             const params = [];
@@ -128,7 +124,6 @@ class ReportsModel {
                     COALESCE(SUM(fa.financial_cost), 0) AS financial_food_assistance,
                     COALESCE(SUM(fin.financial_amount), 0) AS financial_transactions,
                     COALESCE(SUM(fa.financial_cost), 0) + COALESCE(SUM(fin.financial_amount), 0) AS total_financial,
-                    cd.organisation_name AS center_name,
                     -- Join with lookup tables for readable names
                     fc.name AS file_condition_name,
                     fs.name AS file_status_name,
@@ -141,7 +136,6 @@ class ReportsModel {
                 LEFT JOIN file_status fs ON ad.file_status = fs.id
                 LEFT JOIN employment_status es ON ad.employment_status = es.id
                 LEFT JOIN health_conditions hc ON ad.health = hc.id
-                LEFT JOIN center_detail cd ON ad.center_id = cd.id
             `;
             
             const params = [];
@@ -152,8 +146,7 @@ class ReportsModel {
                 GROUP BY
                     ad.name, ad.surname, ad.file_number, ad.cell_number,
                     ad.file_condition, ad.file_status, ad.employment_status, ad.health,
-                    fc.name, fs.name, es.name, hc.name,
-                    cd.organisation_name
+                    fc.name, fs.name, es.name, hc.name
                 ORDER BY total_financial DESC
             `;
             
@@ -179,13 +172,11 @@ class ReportsModel {
                     fin.date_of_assistance,
                     fin.created_by,
                     fin.created_at,
-                    cd.organisation_name AS center_name,
                     -- Join with lookup tables for readable names
                     at.name AS assistance_type_name
                 FROM financial_assistance fin
                 INNER JOIN applicant_details ad ON fin.file_id = ad.id
                 LEFT JOIN assistance_types at ON fin.assistance_type = at.id
-                LEFT JOIN center_detail cd ON ad.center_id = cd.id
             `;
             
             const params = [];
@@ -213,13 +204,11 @@ class ReportsModel {
                     fa.distributed_date,
                     fa.created_by,
                     fa.created_at,
-                    cd.organisation_name AS center_name,
                     -- Join with lookup tables for readable names
                     h.name AS hamper_type_name
                 FROM food_assistance fa
                 INNER JOIN applicant_details ad ON fa.file_id = ad.id
                 LEFT JOIN hampers h ON fa.hamper_type = h.id
-                LEFT JOIN center_detail cd ON ad.center_id = cd.id
             `;
             
             const params = [];
@@ -247,11 +236,9 @@ class ReportsModel {
                     hv.attachment_1,
                     hv.attachment_2,
                     hv.created_by,
-                    hv.created_at,
-                    cd.organisation_name AS center_name
+                    hv.created_at
                 FROM home_visit hv
                 INNER JOIN applicant_details ad ON hv.file_id = ad.id
-                LEFT JOIN center_detail cd ON hv.center_id = cd.id
             `;
             
             const params = [];
@@ -281,7 +268,6 @@ class ReportsModel {
                     EXTRACT(YEAR FROM AGE(CURRENT_DATE, rel.date_of_birth)) AS age,
                     rel.highest_education,
                     rel.health_condition,
-                    cd.organisation_name AS center_name,
                     -- Join with lookup tables for readable names
                     rt.name AS relationship_type_name,
                     es.name AS employment_status_name,
@@ -295,7 +281,6 @@ class ReportsModel {
                 LEFT JOIN gender g ON rel.gender = g.id
                 LEFT JOIN education_level el ON rel.highest_education = el.id
                 LEFT JOIN health_conditions hc ON rel.health_condition = hc.id
-                LEFT JOIN center_detail cd ON rel.center_id = cd.id
             `;
             
             const params = [];
@@ -325,7 +310,6 @@ class ReportsModel {
                     p.program_outcome,
                     p.created_by,
                     p.created_at,
-                    cd.organisation_name AS center_name,
                     -- Join with lookup tables for readable names
                     tc.name AS program_name_name,
                     moc.name AS communication_method_name,
@@ -339,7 +323,6 @@ class ReportsModel {
                 LEFT JOIN training_level tl ON p.training_level = tl.id
                 LEFT JOIN training_institutions ti ON p.training_provider = ti.id
                 LEFT JOIN training_outcome tout ON p.program_outcome = tout.id
-                LEFT JOIN center_detail cd ON p.center_id = cd.id
             `;
             
             const params = [];
@@ -369,7 +352,6 @@ class ReportsModel {
                     fa.disposable_income,
                     fa.created_by,
                     fa.created_at,
-                    cd.organisation_name AS center_name,
                     -- Income details (up to 9 items)
                     ARRAY_AGG(DISTINCT jsonb_build_object(
                         'income_type', it.name,
@@ -390,7 +372,6 @@ class ReportsModel {
                 LEFT JOIN income_type it ON ai.income_type_id = it.id
                 LEFT JOIN applicant_expense ae ON ae.financial_assessment_id = fa.id
                 LEFT JOIN expense_type et ON ae.expense_type_id = et.id
-                LEFT JOIN center_detail cd ON fa.center_id = cd.id
             `;
             
             const params = [];
@@ -401,8 +382,7 @@ class ReportsModel {
                 GROUP BY
                     ad.name, ad.surname, ad.file_number, ad.cell_number,
                     fs.name, es.name, fa.id, fa.total_income, fa.total_expenses, 
-                    fa.disposable_income, fa.created_by, fa.created_at,
-                    cd.organisation_name
+                    fa.disposable_income, fa.created_by, fa.created_at
                 ORDER BY fa.created_at DESC
             `;
             
@@ -431,7 +411,6 @@ class ReportsModel {
                     es.training_outcome,
                     es.created_by,
                     es.created_at,
-                    cd.organisation_name AS center_name,
                     -- Join with lookup tables for readable names
                     tc.name AS course_name,
                     ti.institute_name AS institution_name,
@@ -449,7 +428,6 @@ class ReportsModel {
                 LEFT JOIN training_courses tc ON es.course = tc.id
                 LEFT JOIN training_institutions ti ON es.institution = ti.id
                 LEFT JOIN training_outcome tout ON es.training_outcome = tout.id
-                LEFT JOIN center_detail cd ON es.center_id = cd.id
             `;
             
             const params = [];
