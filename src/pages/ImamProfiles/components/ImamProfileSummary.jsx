@@ -144,6 +144,17 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
 
   useEffect(() => {
     if (imamProfile && modalOpen) {
+      // Derive country_id from province_id if available
+      let derivedCountryId = "";
+      if (imamProfile.province_id && lookupData.province) {
+        const province = lookupData.province.find(
+          (p) => Number(p.id) === Number(imamProfile.province_id)
+        );
+        if (province && province.country_id) {
+          derivedCountryId = String(province.country_id);
+        }
+      }
+
       const formData = {
         Name: imamProfile.name || "",
         Surname: imamProfile.surname || "",
@@ -156,7 +167,7 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
         Marital_Status: imamProfile.marital_status || "",
         Madhab: imamProfile.madhab || "",
         nationality_id: imamProfile.nationality_id || "",
-        country_id: imamProfile.country_id || "",
+        country_id: derivedCountryId,
         province_id: imamProfile.province_id || "",
         suburb_id: imamProfile.suburb_id || "",
         status_id: imamProfile.status_id || "1",
@@ -171,7 +182,7 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
         setSelectedProvinceId(String(formData.province_id));
       }
     }
-  }, [imamProfile, modalOpen, reset]);
+  }, [imamProfile, modalOpen, reset, lookupData.province]);
 
   const toggleModal = () => {
     setModalOpen(!modalOpen);
@@ -191,7 +202,7 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
         marital_status: data.Marital_Status && data.Marital_Status !== "" ? parseInt(data.Marital_Status) : null,
         madhab: data.Madhab && data.Madhab !== "" ? parseInt(data.Madhab) : null,
         nationality_id: data.nationality_id && data.nationality_id !== "" ? parseInt(data.nationality_id) : null,
-        country_id: data.country_id && data.country_id !== "" ? parseInt(data.country_id) : null,
+        // country_id is not stored in Imam_Profiles table - it's derived from province
         province_id: data.province_id && data.province_id !== "" ? parseInt(data.province_id) : null,
         suburb_id: data.suburb_id && data.suburb_id !== "" ? parseInt(data.suburb_id) : null,
         status_id: data.status_id && data.status_id !== "" ? parseInt(data.status_id) : 1,
