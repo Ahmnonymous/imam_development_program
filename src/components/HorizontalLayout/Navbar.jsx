@@ -12,17 +12,40 @@ import { connect } from "react-redux";
 
 // ✅ Import role-based access control helper
 import { useRole } from "../../helpers/useRole";
+import axiosApi from "../../helpers/api_helper";
+import { API_BASE_URL } from "../../helpers/url_helper";
 
 const Navbar = (props) => {
   const [management, setManagement] = useState(false);
   const [reports, setReports] = useState(false);
+  const [personal, setPersonal] = useState(false);
+  const [admin, setAdmin] = useState(false);
+  const [pages, setPages] = useState(false);
   
   // ✅ Get user role information
   const {
     canAccessNav,
     canEditModule,
     isOrgExecutive,
+    userType,
   } = useRole();
+  
+  const [imamProfileStatus, setImamProfileStatus] = useState(null);
+
+  // Check Imam User profile status
+  useEffect(() => {
+    const checkImamProfileStatus = async () => {
+      if (userType === 6) {
+        try {
+          const response = await axiosApi.get(`${API_BASE_URL}/imamProfiles/my-profile`);
+          setImamProfileStatus(response.data?.status_id || null);
+        } catch (error) {
+          setImamProfileStatus(null);
+        }
+      }
+    };
+    checkImamProfileStatus();
+  }, [userType]);
 
   useEffect(() => {
     var matchingMenuItem = null;

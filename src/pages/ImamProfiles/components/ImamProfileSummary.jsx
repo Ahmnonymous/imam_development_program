@@ -26,7 +26,8 @@ import { API_BASE_URL } from "../../../helpers/url_helper";
 import { getAuditName } from "../../../helpers/userStorage";
 
 const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) => {
-  const { isOrgExecutive, isAppAdmin } = useRole();
+  const { isOrgExecutive, isAppAdmin, isGlobalAdmin } = useRole();
+  const isAdmin = isAppAdmin || isGlobalAdmin;
   const [modalOpen, setModalOpen] = useState(false);
 
   // Delete confirmation hook
@@ -466,6 +467,32 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
     });
   };
 
+  const handleApprove = async () => {
+    try {
+      await axiosApi.put(`${API_BASE_URL}/imamProfiles/${imamProfile.id}`, {
+        status_id: 2,
+        updated_by: getAuditName()
+      });
+      showAlert("Imam profile approved successfully", "success");
+      onUpdate();
+    } catch (error) {
+      showAlert(error?.response?.data?.error || "Failed to approve imam profile", "danger");
+    }
+  };
+
+  const handleDecline = async () => {
+    try {
+      await axiosApi.put(`${API_BASE_URL}/imamProfiles/${imamProfile.id}`, {
+        status_id: 3,
+        updated_by: getAuditName()
+      });
+      showAlert("Imam profile declined successfully", "success");
+      onUpdate();
+    } catch (error) {
+      showAlert(error?.response?.data?.error || "Failed to decline imam profile", "danger");
+    }
+  };
+
   const getLookupName = (lookupArray, id) => {
     if (!id) return "-";
     const item = lookupArray.find((l) => l.id == id);
@@ -487,11 +514,23 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
               Imam Profile Summary
               {isOrgExecutive && <span className="ms-2 badge bg-info">Read Only</span>}
             </h5>
-            {!isOrgExecutive && (
-              <Button color="primary" size="sm" onClick={toggleModal} className="btn-sm">
-                <i className="bx bx-edit-alt me-1"></i> Edit
-              </Button>
-            )}
+            <div className="d-flex gap-2">
+              {isAdmin && Number(imamProfile.status_id) === 1 && (
+                <>
+                  <Button color="success" size="sm" onClick={handleApprove} className="btn-sm">
+                    <i className="bx bx-check me-1"></i> Approve
+                  </Button>
+                  <Button color="danger" size="sm" onClick={handleDecline} className="btn-sm">
+                    <i className="bx bx-x me-1"></i> Decline
+                  </Button>
+                </>
+              )}
+              {!isOrgExecutive && (
+                <Button color="primary" size="sm" onClick={toggleModal} className="btn-sm">
+                  <i className="bx bx-edit-alt me-1"></i> Edit
+                </Button>
+              )}
+            </div>
           </div>
         </div>
 

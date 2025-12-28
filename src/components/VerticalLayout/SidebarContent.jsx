@@ -186,6 +186,11 @@ const SidebarContent = (props) => {
       <SimpleBar className="h-100 mt-2"  ref={ref}>
         <div id="sidebar-menu">
           <ul className="metismenu list-unstyled" id="side-menu">
+            {/* ✅ Pages Group - Dashboard and other pages (First) */}
+            <li className="menu-title">
+              <i className="bx bx-file"></i>
+              <span>{props.t("Pages")}</span>
+            </li>
             {/* ✅ Dashboard - All roles (Imam User sees only welcome card) */}
             <li>
               <Link to="/dashboard">
@@ -193,6 +198,70 @@ const SidebarContent = (props) => {
                 <span>{props.t("Dashboard")}</span>
               </Link>
             </li>
+
+            {/* ✅ Create Imam Profile - Hide if Imam User has a profile (pending or approved) */}
+            {userType !== 6 || imamProfileStatus === null ? (
+              <li>
+                <Link to="/imam-profiles/create">
+                  <i className="bx bx-user-plus"></i>
+                  <span>{props.t("Create Imam Profile")}</span>
+                </Link>
+              </li>
+            ) : null}
+
+            {/* ✅ Imam Profile Details - All roles (1,2,3,4,5), Imam User (6) if profile exists (pending or approved) */}
+            {userType !== 6 || imamProfileStatus !== null ? (
+              <li>
+                <Link to="/imam-profiles">
+                  <i className="bx bx-user-circle"></i>
+                  <span>{props.t("Imam Profiles")}</span>
+                </Link>
+              </li>
+            ) : null}
+
+            {/* ✅ Admin Group - Lookup Setup (Second) */}
+            {userType !== 6 && (
+              <>
+                <li className="menu-title">
+                  <i className="bx bx-cog"></i>
+                  <span>{props.t("Admin")}</span>
+                </li>
+                <li>
+                  <Link to="/lookups">
+                    <i className="bx bx-list-ul"></i>
+                    <span>{props.t("Lookup Setup")}</span>
+                  </Link>
+                </li>
+              </>
+            )}
+
+            {/* ✅ Personal Group - File Management, Chat, Policy & Procedure (Third) */}
+            {userType !== 6 && (
+              <>
+                <li className="menu-title">
+                  <i className="bx bx-user"></i>
+                  <span>{props.t("Personal")}</span>
+                </li>
+                <li>
+                  <Link to="/FileManager">
+                    <i className="bx bx-folder"></i>
+                    <span>{props.t("File Manager")}</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/chat">
+                    <i className="bx bx-chat"></i>
+                    <span>{props.t("Chat")}</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/policy-library">
+                    <i className="bx bx-file-blank"></i>
+                    <span>{props.t("Policy & Procedure")}</span>
+                  </Link>
+                </li>
+              </>
+            )}
 
             {/* TEMPORARILY HIDDEN - Centers */}
             {/* {canAccessNav("centers") && (
@@ -251,26 +320,6 @@ const SidebarContent = (props) => {
                 <span>{props.t("Applicant Details")}</span>
               </Link>
             </li> */}
-
-            {/* ✅ Create Imam Profile - Hide if Imam User has a profile (pending or approved) */}
-            {userType !== 6 || imamProfileStatus === null ? (
-              <li>
-                <Link to="/imam-profiles/create">
-                  <i className="bx bx-user-plus"></i>
-                  <span>{props.t("Create Imam Profile")}</span>
-                </Link>
-              </li>
-            ) : null}
-
-            {/* ✅ Imam Profile Details - All roles (1,2,3,4,5), Imam User (6) if profile exists (pending or approved) */}
-            {userType !== 6 || imamProfileStatus !== null ? (
-              <li>
-                <Link to="/imam-profiles">
-                  <i className="bx bx-user-circle"></i>
-                  <span>{props.t("Imam Profiles")}</span>
-                </Link>
-              </li>
-            ) : null}
 
             {/* TEMPORARILY HIDDEN - Reports */}
             {/* {canAccessNav("reports") && (
@@ -331,46 +380,6 @@ const SidebarContent = (props) => {
               </ul>
               </li>
             )} */}
-
-            {/* ✅ Lookup Setup - Not for Imam User */}
-            {userType !== 6 && (
-              <li>
-                <Link to="/lookups">
-                  <i className="bx bx-list-ul"></i>
-                  <span>{props.t("Lookup Setup")}</span>
-                </Link>
-              </li>
-            )}
-
-            {/* ✅ File Manager - Not for Imam User */}
-            {userType !== 6 && (
-              <li>
-                <Link to="/FileManager">
-                  <i className="bx bx-folder"></i>
-                  <span>{props.t("File Manager")}</span>
-                </Link>
-              </li>
-            )}
-
-            {/* ✅ Chat - Not for Imam User */}
-            {userType !== 6 && (
-              <li>
-                <Link to="/chat">
-                  <i className="bx bx-chat"></i>
-                  <span>{props.t("Chat")}</span>
-                </Link>
-              </li>
-            )}
-
-            {/* ✅ Policy & Procedure - Not for Imam User */}
-            {userType !== 6 && (
-              <li>
-                <Link to="/policy-library">
-                  <i className="bx bx-file-blank"></i>
-                  <span>{props.t("Policy & Procedure")}</span>
-                </Link>
-              </li>
-            )}
           </ul>
         </div>
       </SimpleBar>

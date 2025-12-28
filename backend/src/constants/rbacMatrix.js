@@ -114,7 +114,9 @@ const MODULE_ROUTE_MAP = [
       "/api/nikahbonus",
       "/api/jumuahaudiokhutbah",
       "/api/newmuslimbonus",
-      "/api/newbabybonus"
+      "/api/newbabybonus",
+      "/api/imamrelationships",
+      "/api/borehole"
     ] 
   },
 ];

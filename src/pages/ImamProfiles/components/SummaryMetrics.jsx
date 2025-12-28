@@ -47,13 +47,13 @@ const SummaryMetrics = ({
       color: "success",
     },
     {
-      title: "Topics",
+      title: "Jumah Topic",
       value: totalTopics,
       icon: "bx-book",
       color: "info",
     },
     {
-      title: "Audio",
+      title: "Jumah Audio",
       value: totalAudio,
       icon: "bx-music",
       color: "warning",

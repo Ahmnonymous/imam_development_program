@@ -1274,6 +1274,69 @@ CREATE TABLE IF NOT EXISTS Currency (
     Updated_At TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Borehole Location Lookup (Where is the borehole required?)
+CREATE TABLE IF NOT EXISTS Borehole_Location (
+    ID BIGSERIAL PRIMARY KEY,
+    Name VARCHAR(255) UNIQUE NOT NULL,
+    Created_By VARCHAR(255),
+    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    Updated_By VARCHAR(255),
+    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Insert default borehole locations
+INSERT INTO Borehole_Location (Name, Created_By, Updated_By)
+VALUES 
+    ('Masjid', 'system', 'system'),
+    ('Madrasah', 'system', 'system'),
+    ('Community Centre', 'system', 'system'),
+    ('School', 'system', 'system'),
+    ('Residential Area', 'system', 'system'),
+    ('Other', 'system', 'system')
+ON CONFLICT (Name) DO NOTHING;
+
+-- Water Source Lookup (What is the current source of water in your area?)
+CREATE TABLE IF NOT EXISTS Water_Source (
+    ID BIGSERIAL PRIMARY KEY,
+    Name VARCHAR(255) UNIQUE NOT NULL,
+    Created_By VARCHAR(255),
+    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    Updated_By VARCHAR(255),
+    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Insert default water sources
+INSERT INTO Water_Source (Name, Created_By, Updated_By)
+VALUES 
+    ('Municipal Water', 'system', 'system'),
+    ('Borehole', 'system', 'system'),
+    ('Well', 'system', 'system'),
+    ('River/Stream', 'system', 'system'),
+    ('Rainwater Collection', 'system', 'system'),
+    ('Water Tanker/Truck', 'system', 'system'),
+    ('Other', 'system', 'system')
+ON CONFLICT (Name) DO NOTHING;
+
+-- Water Usage Purpose Lookup (What will the water be used for?)
+CREATE TABLE IF NOT EXISTS Water_Usage_Purpose (
+    ID BIGSERIAL PRIMARY KEY,
+    Name VARCHAR(255) UNIQUE NOT NULL,
+    Created_By VARCHAR(255),
+    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    Updated_By VARCHAR(255),
+    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Insert default water usage purposes
+INSERT INTO Water_Usage_Purpose (Name, Created_By, Updated_By)
+VALUES 
+    ('Domestic (Cooking, Bathing and washing)', 'system', 'system'),
+    ('Agricultural', 'system', 'system'),
+    ('Community (Schools, community centres)', 'system', 'system'),
+    ('Masjid (Wudhu, maintenace etc)', 'system', 'system'),
+    ('Sanitation (Toilets)', 'system', 'system')
+ON CONFLICT (Name) DO NOTHING;
+
 -- ============================================================
 -- PHASE 2: MASTER TABLE - Imam Profiles
 -- ============================================================
@@ -1546,6 +1609,95 @@ CREATE TABLE IF NOT EXISTS New_Baby_Bonus (
     CONSTRAINT fk_baby_status FOREIGN KEY (status_id) REFERENCES Status(ID)
 );
 
+-- Imam Relationships
+CREATE TABLE IF NOT EXISTS Imam_Relationships (
+    ID BIGSERIAL PRIMARY KEY,
+    imam_profile_id BIGINT NOT NULL,
+    Relationship_Type BIGINT,
+    Name VARCHAR(255),
+    Surname VARCHAR(255),
+    ID_Number VARCHAR(255),
+    Date_of_Birth DATE,
+    Employment_Status BIGINT,
+    Gender BIGINT,
+    Highest_Education BIGINT,
+    Health_Condition BIGINT,
+    status_id BIGINT NOT NULL DEFAULT 1,
+    Created_By VARCHAR(255),
+    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    Updated_By VARCHAR(255),
+    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT fk_imam_rel_imam FOREIGN KEY (imam_profile_id) REFERENCES Imam_Profiles(ID) ON DELETE CASCADE,
+    CONSTRAINT fk_imam_rel_type FOREIGN KEY (Relationship_Type) REFERENCES Relationship_Types(ID),
+    CONSTRAINT fk_imam_rel_employment FOREIGN KEY (Employment_Status) REFERENCES Employment_Status(ID),
+    CONSTRAINT fk_imam_rel_gender FOREIGN KEY (Gender) REFERENCES Gender(ID),
+    CONSTRAINT fk_imam_rel_education FOREIGN KEY (Highest_Education) REFERENCES Education_Level(ID),
+    CONSTRAINT fk_imam_rel_health FOREIGN KEY (Health_Condition) REFERENCES Health_Conditions(ID),
+    CONSTRAINT fk_relationships_status FOREIGN KEY (status_id) REFERENCES Status(ID)
+);
+
+-- Borehole
+CREATE TABLE IF NOT EXISTS borehole (
+    ID BIGSERIAL PRIMARY KEY,
+    imam_profile_id BIGINT NOT NULL,
+    where_required BIGINT,
+    has_electricity BIGINT,
+    received_borehole_before BIGINT,
+    current_water_source BIGINT,
+    distance_to_water_source NUMERIC(10, 2),
+    beneficiaries_count INT,
+    challenges_due_to_lack_of_water TEXT,
+    motivation TEXT,
+    current_water_source_image BYTEA,
+    current_water_source_image_filename VARCHAR(255),
+    current_water_source_image_mime VARCHAR(255),
+    current_water_source_image_size INT,
+    current_water_source_image_updated_at TIMESTAMPTZ,
+    current_water_source_image_show_link TEXT,
+    masjid_area_image BYTEA,
+    masjid_area_image_filename VARCHAR(255),
+    masjid_area_image_mime VARCHAR(255),
+    masjid_area_image_size INT,
+    masjid_area_image_updated_at TIMESTAMPTZ,
+    masjid_area_image_show_link TEXT,
+    longitude NUMERIC(10, 8),
+    latitude NUMERIC(10, 8),
+    acknowledge BOOLEAN NOT NULL DEFAULT false,
+    status_id BIGINT NOT NULL DEFAULT 1,
+    comment TEXT,
+    datestamp TIMESTAMPTZ NOT NULL DEFAULT now(),
+    center_id BIGINT,
+    Created_By VARCHAR(255),
+    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    Updated_By VARCHAR(255),
+    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT fk_borehole_imam FOREIGN KEY (imam_profile_id) REFERENCES Imam_Profiles(ID) ON DELETE CASCADE,
+    CONSTRAINT fk_borehole_location FOREIGN KEY (where_required) REFERENCES Borehole_Location(ID),
+    CONSTRAINT fk_borehole_electricity FOREIGN KEY (has_electricity) REFERENCES Yes_No(ID),
+    CONSTRAINT fk_borehole_received_before FOREIGN KEY (received_borehole_before) REFERENCES Yes_No(ID),
+    CONSTRAINT fk_borehole_water_source FOREIGN KEY (current_water_source) REFERENCES Water_Source(ID),
+    CONSTRAINT fk_borehole_status FOREIGN KEY (status_id) REFERENCES Status(ID),
+    CONSTRAINT fk_borehole_center_id FOREIGN KEY (center_id) REFERENCES Center_Detail(ID)
+);
+
+-- Junction table for many-to-many relationship: Borehole to Water Usage Purposes
+CREATE TABLE IF NOT EXISTS Borehole_Water_Usage_Purpose (
+    ID BIGSERIAL PRIMARY KEY,
+    borehole_id BIGINT NOT NULL,
+    water_usage_purpose_id BIGINT NOT NULL,
+    Created_By VARCHAR(255),
+    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    Updated_By VARCHAR(255),
+    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT fk_borehole_water_usage_borehole FOREIGN KEY (borehole_id) REFERENCES borehole(ID) ON DELETE CASCADE,
+    CONSTRAINT fk_borehole_water_usage_purpose FOREIGN KEY (water_usage_purpose_id) REFERENCES Water_Usage_Purpose(ID) ON DELETE CASCADE,
+    CONSTRAINT uq_borehole_water_usage UNIQUE (borehole_id, water_usage_purpose_id)
+);
+
+-- Create indexes
+CREATE INDEX IF NOT EXISTS idx_borehole_imam ON borehole(imam_profile_id);
+CREATE INDEX IF NOT EXISTS idx_borehole_water_usage_borehole ON Borehole_Water_Usage_Purpose(borehole_id);
+CREATE INDEX IF NOT EXISTS idx_borehole_water_usage_purpose ON Borehole_Water_Usage_Purpose(water_usage_purpose_id);
 -- ============================================================
 -- PHASE 4: BUG #9 - COUNTRY → PROVINCE → SUBURB HIERARCHY
 -- ============================================================

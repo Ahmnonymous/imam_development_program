@@ -33,6 +33,8 @@ const ImamProfilesManagement = () => {
   const [jumuahAudioKhutbah, setJumuahAudioKhutbah] = useState([]);
   const [newMuslimBonus, setNewMuslimBonus] = useState([]);
   const [newBabyBonus, setNewBabyBonus] = useState([]);
+  const [relationships, setRelationships] = useState([]);
+  const [borehole, setBorehole] = useState([]);
 
   // Lookup data states
   const [lookupData, setLookupData] = useState({
@@ -45,6 +47,14 @@ const ImamProfilesManagement = () => {
     madhab: [],
     province: [],
     status: [],
+    relationshipTypes: [],
+    employmentStatus: [],
+    educationLevel: [],
+    healthConditions: [],
+    yesNo: [],
+    boreholeLocation: [],
+    waterSource: [],
+    waterUsagePurpose: [],
   });
 
   // Fetch all imam profiles on mount
@@ -119,6 +129,14 @@ const ImamProfilesManagement = () => {
         provinceRes,
         countryRes,
         statusRes,
+        relationshipTypesRes,
+        employmentStatusRes,
+        educationLevelRes,
+        healthConditionsRes,
+        yesNoRes,
+        boreholeLocationRes,
+        waterSourceRes,
+        waterUsagePurposeRes,
       ] = await Promise.all([
         axiosApi.get(`${API_BASE_URL}/lookup/Race`),
         axiosApi.get(`${API_BASE_URL}/lookup/Nationality`),
@@ -130,6 +148,14 @@ const ImamProfilesManagement = () => {
         axiosApi.get(`${API_BASE_URL}/lookup/Province`),
         axiosApi.get(`${API_BASE_URL}/lookup/Country`),
         axiosApi.get(`${API_BASE_URL}/lookup/Status`),
+        axiosApi.get(`${API_BASE_URL}/lookup/Relationship_Types`),
+        axiosApi.get(`${API_BASE_URL}/lookup/Employment_Status`),
+        axiosApi.get(`${API_BASE_URL}/lookup/Education_Level`),
+        axiosApi.get(`${API_BASE_URL}/lookup/Health_Conditions`),
+        axiosApi.get(`${API_BASE_URL}/lookup/Yes_No`),
+        axiosApi.get(`${API_BASE_URL}/lookup/Borehole_Location`),
+        axiosApi.get(`${API_BASE_URL}/lookup/Water_Source`),
+        axiosApi.get(`${API_BASE_URL}/lookup/Water_Usage_Purpose`),
       ]);
 
       setLookupData({
@@ -143,6 +169,14 @@ const ImamProfilesManagement = () => {
         province: provinceRes.data || [],
         country: countryRes.data || [],
         status: statusRes.data || [],
+        relationshipTypes: relationshipTypesRes.data || [],
+        employmentStatus: employmentStatusRes.data || [],
+        educationLevel: educationLevelRes.data || [],
+        healthConditions: healthConditionsRes.data || [],
+        yesNo: yesNoRes.data || [],
+        boreholeLocation: boreholeLocationRes.data || [],
+        waterSource: waterSourceRes.data || [],
+        waterUsagePurpose: waterUsagePurposeRes.data || [],
       });
     } catch (error) {
       console.error("Error fetching lookup data:", error);
@@ -161,6 +195,8 @@ const ImamProfilesManagement = () => {
         jumuahAudioKhutbahsRes,
         newMuslimBonusesRes,
         newBabyBonusesRes,
+        relationshipsRes,
+        boreholeRes,
       ] = await Promise.all([
         axiosApi.get(`${API_BASE_URL}/pearlsOfWisdom?imam_profile_id=${imamProfileId}`),
         axiosApi.get(`${API_BASE_URL}/jumuahKhutbahTopicSubmission?imam_profile_id=${imamProfileId}`),
@@ -170,6 +206,8 @@ const ImamProfilesManagement = () => {
         axiosApi.get(`${API_BASE_URL}/jumuahAudioKhutbah?imam_profile_id=${imamProfileId}`),
         axiosApi.get(`${API_BASE_URL}/newMuslimBonus?imam_profile_id=${imamProfileId}`),
         axiosApi.get(`${API_BASE_URL}/newBabyBonus?imam_profile_id=${imamProfileId}`),
+        axiosApi.get(`${API_BASE_URL}/imamRelationships?imam_profile_id=${imamProfileId}`),
+        axiosApi.get(`${API_BASE_URL}/borehole?imam_profile_id=${imamProfileId}`),
       ]);
 
       setPearlsOfWisdom(pearlsOfWisdomRes.data || []);
@@ -180,6 +218,8 @@ const ImamProfilesManagement = () => {
       setJumuahAudioKhutbah(jumuahAudioKhutbahsRes.data || []);
       setNewMuslimBonus(newMuslimBonusesRes.data || []);
       setNewBabyBonus(newBabyBonusesRes.data || []);
+      setRelationships(relationshipsRes.data || []);
+      setBorehole(boreholeRes.data || []);
     } catch (error) {
       console.error("Error fetching imam profile details:", error);
       showAlert("Failed to fetch imam profile details", "warning");
@@ -245,8 +285,10 @@ const ImamProfilesManagement = () => {
     setCommunityEngagement([]);
     setMedicalReimbursement([]);
     setJumuahAudioKhutbah([]);
-    setNewMuslimBonus([]);
-    setNewBabyBonus([]);
+      setNewMuslimBonus([]);
+      setNewBabyBonus([]);
+      setRelationships([]);
+      setBorehole([]);
     // Fetch fresh detail data immediately for better UX
     if (imamProfile?.id) {
       fetchImamProfileDetails(imamProfile.id);
@@ -366,6 +408,8 @@ const ImamProfilesManagement = () => {
                     nikahBonus={nikahBonus}
                     newMuslimBonus={newMuslimBonus}
                     newBabyBonus={newBabyBonus}
+                    relationships={relationships}
+                    borehole={borehole}
                     lookupData={lookupData}
                     onUpdate={handleDetailUpdate}
                     showAlert={showAlert}

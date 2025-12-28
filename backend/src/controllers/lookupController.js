@@ -48,6 +48,10 @@ const lookupTables = {
   Currency: { orderByName: true },
   Country: { orderByName: true },
   Province: { orderByName: true },
+  // Borehole Lookup Tables
+  Borehole_Location: { orderByName: true },
+  Water_Source: { orderByName: true },
+  Water_Usage_Purpose: { orderByName: true },
 };
 
 const getLookupConfig = (table = "") => lookupTables[table] || null;

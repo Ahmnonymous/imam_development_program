@@ -20,10 +20,10 @@ import axiosApi from "../../../../helpers/api_helper";
 import { API_BASE_URL } from "../../../../helpers/url_helper";
 import { getAuditName } from "../../../../helpers/userStorage";
 
-const PearlsOfWisdomTab = ({ imamProfileId, pearlsOfWisdom, onUpdate, showAlert }) => {
+const PearlsOfWisdomTab = ({ imamProfileId, pearlsOfWisdom, lookupData, onUpdate, showAlert }) => {
   if (!imamProfileId) return null;
-
-  const { isOrgExecutive } = useRole();
+  const { isOrgExecutive, isAppAdmin, isGlobalAdmin } = useRole();
+  const isAdmin = isAppAdmin || isGlobalAdmin;
   const [modalOpen, setModalOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
 
@@ -125,6 +125,38 @@ const PearlsOfWisdomTab = ({ imamProfileId, pearlsOfWisdom, onUpdate, showAlert 
     });
   };
 
+  const handleApprove = async (item) => {
+    try {
+      await axiosApi.put(`${API_BASE_URL}/pearlsOfWisdom/${item.id}`, {
+        status_id: 2,
+        updated_by: getAuditName()
+      });
+      showAlert("Pearl of Wisdom approved successfully", "success");
+      onUpdate();
+    } catch (error) {
+      showAlert(error?.response?.data?.error || "Failed to approve pearl of wisdom", "danger");
+    }
+  };
+
+  const handleDecline = async (item) => {
+    try {
+      await axiosApi.put(`${API_BASE_URL}/pearlsOfWisdom/${item.id}`, {
+        status_id: 3,
+        updated_by: getAuditName()
+      });
+      showAlert("Pearl of Wisdom declined successfully", "success");
+      onUpdate();
+    } catch (error) {
+      showAlert(error?.response?.data?.error || "Failed to decline pearl of wisdom", "danger");
+    }
+  };
+
+  const getLookupValue = (lookupArray, id) => {
+    if (!id || !lookupArray) return "-";
+    const item = lookupArray.find(x => Number(x.id) === Number(id));
+    return item ? item.name : "-";
+  };
+
   const columns = useMemo(
     () => [
       {
@@ -165,6 +197,52 @@ const PearlsOfWisdomTab = ({ imamProfileId, pearlsOfWisdom, onUpdate, showAlert 
         },
       },
       {
+        header: "Status",
+        accessorKey: "status_id",
+        enableSorting: true,
+        enableColumnFilter: false,
+        cell: (cell) => {
+          const status = getLookupValue(lookupData?.status, cell.getValue());
+          const statusId = Number(cell.getValue());
+          let badgeClass = "badge bg-warning text-dark";
+          if (statusId === 2) badgeClass = "badge bg-success";
+          else if (statusId === 3) badgeClass = "badge bg-danger";
+          return <span className={badgeClass}>{status}</span>;
+        },
+      },
+      ...(isAdmin ? [{
+        header: "Action",
+        accessorKey: "action",
+        enableSorting: false,
+        enableColumnFilter: false,
+        cell: (cell) => {
+          const statusId = Number(cell.row.original.status_id);
+          if (statusId === 1) {
+            return (
+              <div className="d-flex gap-1">
+                <Button
+                  color="success"
+                  size="sm"
+                  onClick={() => handleApprove(cell.row.original)}
+                  className="btn-sm"
+                >
+                  <i className="bx bx-check me-1"></i> Approve
+                </Button>
+                <Button
+                  color="danger"
+                  size="sm"
+                  onClick={() => handleDecline(cell.row.original)}
+                  className="btn-sm"
+                >
+                  <i className="bx bx-x me-1"></i> Decline
+                </Button>
+              </div>
+            );
+          }
+          return "-";
+        },
+      }] : []),
+      {
         header: "Created By",
         accessorKey: "created_by",
         enableSorting: true,
@@ -199,7 +277,7 @@ const PearlsOfWisdomTab = ({ imamProfileId, pearlsOfWisdom, onUpdate, showAlert 
         },
       },
     ],
-    []
+    [lookupData, isAdmin]
   );
 
   return (

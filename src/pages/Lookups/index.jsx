@@ -86,6 +86,9 @@ const Lookups = () => {
         { name: "Currency", table: "Currency", icon: "bxs-wallet" },
         { name: "Country", table: "Country", icon: "bxs-flag-alt" },
         { name: "Province", table: "Province", icon: "bxs-map-alt" },
+        { name: "Borehole Location", table: "Borehole_Location", icon: "bxs-map" },
+        { name: "Water Source", table: "Water_Source", icon: "bxs-droplet" },
+        { name: "Water Usage Purpose", table: "Water_Usage_Purpose", icon: "bxs-water" },
       ],
     },
   ];

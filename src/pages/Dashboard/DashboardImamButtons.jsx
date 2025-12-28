@@ -3,6 +3,7 @@ import { Row, Col, Button } from "reactstrap";
 import { useRole } from "../../helpers/useRole";
 import axiosApi from "../../helpers/api_helper";
 import { API_BASE_URL } from "../../helpers/url_helper";
+import { IMAM_TABS } from "../../constants/imamTabs";
 import TopicsModal from "./modals/TopicsModal";
 import AudioModal from "./modals/AudioModal";
 import WisdomPearlsModal from "./modals/WisdomPearlsModal";
@@ -11,6 +12,8 @@ import CommunityModal from "./modals/CommunityModal";
 import NikahBonusModal from "./modals/NikahBonusModal";
 import MuslimBonusModal from "./modals/MuslimBonusModal";
 import BabyBonusModal from "./modals/BabyBonusModal";
+import RelationshipsModal from "./modals/RelationshipsModal";
+import BoreholeModal from "./modals/BoreholeModal";
 
 const DashboardImamButtons = () => {
   const { userType } = useRole();
@@ -25,6 +28,8 @@ const DashboardImamButtons = () => {
     nikahBonus: false,
     muslimBonus: false,
     babyBonus: false,
+    relationships: false,
+    borehole: false,
   });
 
   useEffect(() => {
@@ -85,16 +90,8 @@ const DashboardImamButtons = () => {
   
   console.log("Showing buttons: All conditions met");
 
-  const buttons = [
-    { id: "topics", label: "Topics", icon: "bx-book", gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" },
-    { id: "audio", label: "Audio", icon: "bx-music", gradient: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)" },
-    { id: "wisdomPearls", label: "Wisdom Pearls", icon: "bx-diamond", gradient: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)" },
-    { id: "medical", label: "Medical", icon: "bx-plus-medical", gradient: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)" },
-    { id: "community", label: "Community", icon: "bx-group", gradient: "linear-gradient(135deg, #fa709a 0%, #fee140 100%)" },
-    { id: "nikahBonus", label: "Nikah Bonus", icon: "bx-heart", gradient: "linear-gradient(135deg, #30cfd0 0%, #330867 100%)" },
-    { id: "muslimBonus", label: "Muslim Bonus", icon: "bx-star", gradient: "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)" },
-    { id: "babyBonus", label: "Baby Bonus", icon: "bx-baby-carriage", gradient: "linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)" },
-  ];
+  // Use shared constant to ensure consistency with DetailTabs
+  const buttons = IMAM_TABS;
 
   return (
     <>
@@ -165,6 +162,16 @@ const DashboardImamButtons = () => {
       <BabyBonusModal
         isOpen={modals.babyBonus}
         toggle={() => closeModal("babyBonus")}
+        imamProfileId={imamProfile.id}
+      />
+      <RelationshipsModal
+        isOpen={modals.relationships}
+        toggle={() => closeModal("relationships")}
+        imamProfileId={imamProfile.id}
+      />
+      <BoreholeModal
+        isOpen={modals.borehole}
+        toggle={() => closeModal("borehole")}
         imamProfileId={imamProfile.id}
       />
     </>

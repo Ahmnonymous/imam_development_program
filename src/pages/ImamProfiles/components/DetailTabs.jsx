@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Card, CardBody, Nav, NavItem, NavLink, TabContent, TabPane } from "reactstrap";
 import classnames from "classnames";
 import { useRole } from "../../../helpers/useRole";
+import { IMAM_TABS, TAB_ID_MAPPING } from "../../../constants/imamTabs";
 import PearlsOfWisdomTab from "./tabs/PearlsOfWisdomTab";
 import JumuahKhutbahTopicSubmissionTab from "./tabs/JumuahKhutbahTopicSubmissionTab";
 import JumuahAudioKhutbahTab from "./tabs/JumuahAudioKhutbahTab";
@@ -10,6 +11,8 @@ import CommunityEngagementTab from "./tabs/CommunityEngagementTab";
 import NikahBonusTab from "./tabs/NikahBonusTab";
 import NewMuslimBonusTab from "./tabs/NewMuslimBonusTab";
 import NewBabyBonusTab from "./tabs/NewBabyBonusTab";
+import ImamRelationshipsTab from "./tabs/ImamRelationshipsTab";
+import BoreholeTab from "./tabs/BoreholeTab";
 
 const DetailTabs = ({
   imamProfileId,
@@ -22,6 +25,8 @@ const DetailTabs = ({
   nikahBonus,
   newMuslimBonus,
   newBabyBonus,
+  relationships,
+  borehole,
   lookupData,
   onUpdate,
   showAlert,
@@ -50,17 +55,23 @@ const DetailTabs = ({
   const nikahForImam = (nikahBonus || []).filter((x) => safeNum(x.imam_profile_id) === currentId);
   const newMuslimForImam = (newMuslimBonus || []).filter((x) => safeNum(x.imam_profile_id) === currentId);
   const newBabyForImam = (newBabyBonus || []).filter((x) => safeNum(x.imam_profile_id) === currentId);
+  const relationshipsForImam = (relationships || []).filter((x) => safeNum(x.imam_profile_id) === currentId);
+  const boreholeForImam = (borehole || []).filter((x) => safeNum(x.imam_profile_id) === currentId);
 
+  // Use shared constant to ensure consistency with Dashboard buttons
+  // DetailTabs uses different IDs for TabPane compatibility, but labels match IMAM_TABS
   const tabs = [
     { id: "all", label: "Show All" },
-    { id: "khutbahTopics", label: "Topics" },
-    { id: "audioKhutbah", label: "Audio" },
-    { id: "pearls", label: "Wisdom Pearls" },
-    { id: "medical", label: "Medical" },
-    { id: "engagement", label: "Community" },
-    { id: "nikah", label: "Nikah Bonus" },
-    { id: "newMuslim", label: "Muslim Bonus" },
-    { id: "newBaby", label: "Baby Bonus" },
+    { id: "khutbahTopics", label: IMAM_TABS[0].label }, // Jumah Topic
+    { id: "audioKhutbah", label: IMAM_TABS[1].label }, // Jumah Audio
+    { id: "pearls", label: IMAM_TABS[2].label }, // Wisdom Pearls
+    { id: "medical", label: IMAM_TABS[3].label }, // Medical
+    { id: "engagement", label: IMAM_TABS[4].label }, // Community
+    { id: "nikah", label: IMAM_TABS[5].label }, // Nikah Bonus
+    { id: "newMuslim", label: IMAM_TABS[6].label }, // Muslim Bonus
+    { id: "newBaby", label: IMAM_TABS[7].label }, // Baby Bonus
+    { id: "relationships", label: IMAM_TABS[8].label }, // Relationships
+    { id: "borehole", label: IMAM_TABS[9].label }, // Borehole
   ];
 
   return (
@@ -112,6 +123,14 @@ const DetailTabs = ({
             
             <div className="border rounded p-3 mb-3">
               <NewBabyBonusTab imamProfileId={imamProfileId} newBabyBonus={newBabyForImam} lookupData={lookupData} onUpdate={onUpdate} showAlert={showAlert} />
+            </div>
+            
+            <div className="border rounded p-3 mb-3">
+              <ImamRelationshipsTab imamProfileId={imamProfileId} relationships={relationshipsForImam} lookupData={lookupData} onUpdate={onUpdate} showAlert={showAlert} />
+            </div>
+            
+            <div className="border rounded p-3 mb-3">
+              <BoreholeTab imamProfileId={imamProfileId} borehole={boreholeForImam} lookupData={lookupData} onUpdate={onUpdate} showAlert={showAlert} />
             </div>
           </TabPane>
 
@@ -187,6 +206,26 @@ const DetailTabs = ({
             <NewBabyBonusTab
               imamProfileId={imamProfileId}
               newBabyBonus={newBabyForImam}
+              lookupData={lookupData}
+              onUpdate={onUpdate}
+              showAlert={showAlert}
+            />
+          </TabPane>
+
+          <TabPane tabId="relationships">
+            <ImamRelationshipsTab
+              imamProfileId={imamProfileId}
+              relationships={relationshipsForImam}
+              lookupData={lookupData}
+              onUpdate={onUpdate}
+              showAlert={showAlert}
+            />
+          </TabPane>
+
+          <TabPane tabId="borehole">
+            <BoreholeTab
+              imamProfileId={imamProfileId}
+              borehole={boreholeForImam}
               lookupData={lookupData}
               onUpdate={onUpdate}
               showAlert={showAlert}

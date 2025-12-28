@@ -76,6 +76,8 @@ const communityEngagementRoutes = require("./routes/communityEngagementRoutes");
 const nikahBonusRoutes = require("./routes/nikahBonusRoutes");
 const newMuslimBonusRoutes = require("./routes/newMuslimBonusRoutes");
 const newBabyBonusRoutes = require("./routes/newBabyBonusRoutes");
+const imamRelationshipsRoutes = require("./routes/imamRelationshipsRoutes");
+const boreholeRoutes = require("./routes/boreholeRoutes");
 
 // ===========================
 // 📦 ROUTE REGISTRATION
@@ -149,6 +151,8 @@ app.use("/api/communityEngagement", communityEngagementRoutes);
 app.use("/api/nikahBonus", nikahBonusRoutes);
 app.use("/api/newMuslimBonus", newMuslimBonusRoutes);
 app.use("/api/newBabyBonus", newBabyBonusRoutes);
+app.use("/api/imamRelationships", imamRelationshipsRoutes);
+app.use("/api/borehole", boreholeRoutes);
 
 // ✅ Export app for testing
 module.exports = app;
