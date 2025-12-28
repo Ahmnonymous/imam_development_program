@@ -30,6 +30,7 @@ import { JobWidgetCharts } from "../DashboardJob/JobCharts";
 
 // Import Breadcrumb
 import Breadcrumbs from "../../components/Common/Breadcrumb";
+import DashboardImamButtons from "../Dashboard/DashboardImamButtons";
 
 // i18n
 import { withTranslation } from "react-i18next";
@@ -264,6 +265,9 @@ const ApplicantStatistics = (props) => {
               <StatsCards data={statsData} loading={loading} />
             </Col> */}
           </Row>
+
+          {/* Imam Profile Buttons - Only shown when profile is approved, below welcome card */}
+          <DashboardImamButtons />
 
           {/* For Imam User, show only welcome card - hide all other content */}
           {isImamUser ? null : (

@@ -167,6 +167,17 @@ const CreateImamProfile = () => {
       
       setIsUpdating(true);
       
+      // Derive country_id from province_id if available
+      let derivedCountryId = "";
+      if (existingProfile.province_id && lookupData.province) {
+        const province = lookupData.province.find(
+          (p) => Number(p.id) === Number(existingProfile.province_id)
+        );
+        if (province && province.country_id) {
+          derivedCountryId = String(province.country_id);
+        }
+      }
+
       // Convert all IDs to strings for select fields - ensure they match option values
       const formData = {
         Name: existingProfile.name || "",
@@ -180,7 +191,7 @@ const CreateImamProfile = () => {
         Marital_Status: existingProfile.marital_status ? String(existingProfile.marital_status) : "",
         Madhab: existingProfile.madhab ? String(existingProfile.madhab) : "",
         nationality_id: existingProfile.nationality_id ? String(existingProfile.nationality_id) : "",
-        country_id: existingProfile.country_id ? String(existingProfile.country_id) : "",
+        country_id: derivedCountryId,
         province_id: existingProfile.province_id ? String(existingProfile.province_id) : "",
         suburb_id: existingProfile.suburb_id ? String(existingProfile.suburb_id) : "",
         status_id: existingProfile.status_id ? String(existingProfile.status_id) : "1",
@@ -553,7 +564,6 @@ const CreateImamProfile = () => {
         marital_status: data.Marital_Status && data.Marital_Status !== "" ? parseInt(data.Marital_Status) : null,
         madhab: data.Madhab && data.Madhab !== "" ? parseInt(data.Madhab) : null,
         nationality_id: data.nationality_id && data.nationality_id !== "" ? parseInt(data.nationality_id) : null,
-        country_id: data.country_id && data.country_id !== "" ? parseInt(data.country_id) : null,
         province_id: data.province_id && data.province_id !== "" ? parseInt(data.province_id) : null,
         suburb_id: data.suburb_id && data.suburb_id !== "" ? parseInt(data.suburb_id) : null,
         status_id: isUpdating && existingProfile ? (existingProfile.status_id || 1) : 1, // Preserve existing status when updating, default to "Pending" when creating

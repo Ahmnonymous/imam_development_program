@@ -33,6 +33,7 @@ import MonthlyEarning from "./MonthlyEarning";
 import SocialSource from "./SocialSource";
 import ActivityComp from "./ActivityComp";
 import TopCities from "./TopCities";
+import DashboardImamButtons from "./DashboardImamButtons";
 
 //Import Breadcrumb
 import Breadcrumbs from "../../components/Common/Breadcrumb";
@@ -99,6 +100,9 @@ const Dashboard = (props) => {
         <Container fluid>
           {/* Render Breadcrumb */}
           <Breadcrumbs title={props.t("Dashboards")} breadcrumbItem={props.t("Dashboard")} />
+
+          {/* Imam Profile Buttons - Only shown when profile is approved */}
+          <DashboardImamButtons />
 
           <Row>
             <Col xl="4">
