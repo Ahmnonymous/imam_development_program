@@ -52,6 +52,16 @@ const lookupTables = {
   Borehole_Location: { orderByName: true },
   Water_Source: { orderByName: true },
   Water_Usage_Purpose: { orderByName: true },
+  // Additional Imam Management Lookup Tables
+  Request_For_Lookup: { orderByName: true },
+  Classification_Lookup: { orderByName: true },
+  Course_Type_Lookup: { orderByName: true },
+  Course_Duration_Lookup: { orderByName: true },
+  Study_Method_Lookup: { orderByName: true },
+  Attendance_Frequency_Lookup: { orderByName: true },
+  Semesters_Per_Year_Lookup: { orderByName: true },
+  Borehole_Construction_Tasks_Lookup: { orderByName: true },
+  Supplier_Lookup: { orderByName: true },
 };
 
 const getLookupConfig = (table = "") => lookupTables[table] || null;

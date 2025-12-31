@@ -13,6 +13,15 @@ import NewMuslimBonusTab from "./tabs/NewMuslimBonusTab";
 import NewBabyBonusTab from "./tabs/NewBabyBonusTab";
 import ImamRelationshipsTab from "./tabs/ImamRelationshipsTab";
 import BoreholeTab from "./tabs/BoreholeTab";
+import ImamFinancialAssistanceTab from "./tabs/ImamFinancialAssistanceTab";
+import EducationalDevelopmentTab from "./tabs/EducationalDevelopmentTab";
+import TreePlantingTab from "./tabs/TreePlantingTab";
+import WAQFLoanTab from "./tabs/WAQFLoanTab";
+import HardshipReliefTab from "./tabs/HardshipReliefTab";
+import HigherEducationRequestTab from "./tabs/HigherEducationRequestTab";
+import BoreholeConstructionTasksTab from "./tabs/BoreholeConstructionTasksTab";
+import BoreholeRepairsMatrixTab from "./tabs/BoreholeRepairsMatrixTab";
+import TicketsTab from "./tabs/TicketsTab";
 
 const DetailTabs = ({
   imamProfileId,
@@ -27,6 +36,15 @@ const DetailTabs = ({
   newBabyBonus,
   relationships,
   borehole,
+  imamFinancialAssistance,
+  educationalDevelopment,
+  treePlanting,
+  waqfLoan,
+  hardshipRelief,
+  higherEducationRequest,
+  boreholeConstructionTasks,
+  boreholeRepairsMatrix,
+  tickets,
   lookupData,
   onUpdate,
   showAlert,
@@ -57,6 +75,12 @@ const DetailTabs = ({
   const newBabyForImam = (newBabyBonus || []).filter((x) => safeNum(x.imam_profile_id) === currentId);
   const relationshipsForImam = (relationships || []).filter((x) => safeNum(x.imam_profile_id) === currentId);
   const boreholeForImam = (borehole || []).filter((x) => safeNum(x.imam_profile_id) === currentId);
+  const financialAssistanceForImam = (imamFinancialAssistance || []).filter((x) => safeNum(x.imam_profile_id) === currentId);
+  const educationalDevelopmentForImam = (educationalDevelopment || []).filter((x) => safeNum(x.imam_profile_id) === currentId);
+  const treePlantingForImam = (treePlanting || []).filter((x) => safeNum(x.imam_profile_id) === currentId);
+  const waqfLoanForImam = (waqfLoan || []).filter((x) => safeNum(x.imam_profile_id) === currentId);
+  const hardshipReliefForImam = (hardshipRelief || []).filter((x) => safeNum(x.imam_profile_id) === currentId);
+  const higherEducationRequestForImam = (higherEducationRequest || []).filter((x) => safeNum(x.imam_profile_id) === currentId);
 
   // Use shared constant to ensure consistency with Dashboard buttons
   // DetailTabs uses different IDs for TabPane compatibility, but labels match IMAM_TABS
@@ -72,6 +96,13 @@ const DetailTabs = ({
     { id: "newBaby", label: IMAM_TABS[7].label }, // Baby Bonus
     { id: "relationships", label: IMAM_TABS[8].label }, // Relationships
     { id: "borehole", label: IMAM_TABS[9].label }, // Borehole
+    { id: "financialAssistance", label: "Financial Assistance" },
+    { id: "educationalDevelopment", label: "Educational Development" },
+    { id: "treePlanting", label: "Tree Planting" },
+    { id: "waqfLoan", label: "WAQF Loan" },
+    { id: "hardshipRelief", label: "Hardship Relief" },
+    { id: "higherEducationRequest", label: "Higher Education Request" },
+    { id: "tickets", label: "Tickets" },
   ];
 
   return (
@@ -131,6 +162,34 @@ const DetailTabs = ({
             
             <div className="border rounded p-3 mb-3">
               <BoreholeTab imamProfileId={imamProfileId} borehole={boreholeForImam} lookupData={lookupData} onUpdate={onUpdate} showAlert={showAlert} />
+            </div>
+            
+            <div className="border rounded p-3 mb-3">
+              <ImamFinancialAssistanceTab imamProfileId={imamProfileId} imamFinancialAssistance={financialAssistanceForImam} lookupData={lookupData} onUpdate={onUpdate} showAlert={showAlert} />
+            </div>
+            
+            <div className="border rounded p-3 mb-3">
+              <EducationalDevelopmentTab imamProfileId={imamProfileId} educationalDevelopment={educationalDevelopmentForImam} lookupData={lookupData} onUpdate={onUpdate} showAlert={showAlert} />
+            </div>
+            
+            <div className="border rounded p-3 mb-3">
+              <TreePlantingTab imamProfileId={imamProfileId} treePlanting={treePlantingForImam} lookupData={lookupData} onUpdate={onUpdate} showAlert={showAlert} />
+            </div>
+            
+            <div className="border rounded p-3 mb-3">
+              <WAQFLoanTab imamProfileId={imamProfileId} waqfLoan={waqfLoanForImam} lookupData={lookupData} onUpdate={onUpdate} showAlert={showAlert} />
+            </div>
+            
+            <div className="border rounded p-3 mb-3">
+              <HardshipReliefTab imamProfileId={imamProfileId} hardshipRelief={hardshipReliefForImam} lookupData={lookupData} onUpdate={onUpdate} showAlert={showAlert} />
+            </div>
+            
+            <div className="border rounded p-3 mb-3">
+              <HigherEducationRequestTab imamProfileId={imamProfileId} higherEducationRequest={higherEducationRequestForImam} lookupData={lookupData} onUpdate={onUpdate} showAlert={showAlert} />
+            </div>
+            
+            <div className="border rounded p-3 mb-3">
+              <TicketsTab tickets={tickets} lookupData={lookupData} onUpdate={onUpdate} showAlert={showAlert} />
             </div>
           </TabPane>
 
@@ -226,6 +285,75 @@ const DetailTabs = ({
             <BoreholeTab
               imamProfileId={imamProfileId}
               borehole={boreholeForImam}
+              lookupData={lookupData}
+              onUpdate={onUpdate}
+              showAlert={showAlert}
+            />
+          </TabPane>
+
+          <TabPane tabId="financialAssistance">
+            <ImamFinancialAssistanceTab
+              imamProfileId={imamProfileId}
+              imamFinancialAssistance={financialAssistanceForImam}
+              lookupData={lookupData}
+              onUpdate={onUpdate}
+              showAlert={showAlert}
+            />
+          </TabPane>
+
+          <TabPane tabId="educationalDevelopment">
+            <EducationalDevelopmentTab
+              imamProfileId={imamProfileId}
+              educationalDevelopment={educationalDevelopmentForImam}
+              lookupData={lookupData}
+              onUpdate={onUpdate}
+              showAlert={showAlert}
+            />
+          </TabPane>
+
+          <TabPane tabId="treePlanting">
+            <TreePlantingTab
+              imamProfileId={imamProfileId}
+              treePlanting={treePlantingForImam}
+              lookupData={lookupData}
+              onUpdate={onUpdate}
+              showAlert={showAlert}
+            />
+          </TabPane>
+
+          <TabPane tabId="waqfLoan">
+            <WAQFLoanTab
+              imamProfileId={imamProfileId}
+              waqfLoan={waqfLoanForImam}
+              lookupData={lookupData}
+              onUpdate={onUpdate}
+              showAlert={showAlert}
+            />
+          </TabPane>
+
+          <TabPane tabId="hardshipRelief">
+            <HardshipReliefTab
+              imamProfileId={imamProfileId}
+              hardshipRelief={hardshipReliefForImam}
+              lookupData={lookupData}
+              onUpdate={onUpdate}
+              showAlert={showAlert}
+            />
+          </TabPane>
+
+          <TabPane tabId="higherEducationRequest">
+            <HigherEducationRequestTab
+              imamProfileId={imamProfileId}
+              higherEducationRequest={higherEducationRequestForImam}
+              lookupData={lookupData}
+              onUpdate={onUpdate}
+              showAlert={showAlert}
+            />
+          </TabPane>
+
+          <TabPane tabId="tickets">
+            <TicketsTab
+              tickets={tickets}
               lookupData={lookupData}
               onUpdate={onUpdate}
               showAlert={showAlert}

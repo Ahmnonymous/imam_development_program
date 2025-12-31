@@ -2,11 +2,22 @@ import React from "react"
 
 import { Row, Col, Card, CardBody } from "reactstrap"
 import { Link } from "react-router-dom"
+import { useRole } from "../../helpers/useRole"
 
 import avatar1 from "../../assets/images/users/avatar-1.jpg"
 import profileImg from "../../assets/images/profile-img.png"
 
 const WelcomeComp = () => {
+  const { user, username } = useRole();
+
+  const getUserName = () => {
+    const displayName = [user?.name, user?.surname].filter(Boolean).join(" ").trim();
+    if (displayName) return displayName;
+    if (username) return username;
+    if (user?.username) return user.username;
+    return "User";
+  };
+
   return (
     <React.Fragment>
       <Card className="overflow-hidden">
@@ -14,8 +25,8 @@ const WelcomeComp = () => {
           <Row>
             <Col xs="7">
               <div className="text-primary p-3">
-                <h5 className="text-primary">Welcome Back !</h5>
-                <p>Skote Dashboard</p>
+                <h5 className="text-primary">Assalamualaikum Warahmatullahi Wabarakatuh {getUserName()}</h5>
+                <p>InshaAllah you are in great health and spirituality</p>
               </div>
             </Col>
             <Col xs="5" className="align-self-end">

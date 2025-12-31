@@ -161,6 +161,9 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
         Surname: imamProfile.surname || "",
         Email: imamProfile.email || "",
         ID_Number: imamProfile.id_number || "",
+        File_Number: imamProfile.file_number || "",
+        Cell_Number: imamProfile.cell_number || "",
+        Contact_Number: imamProfile.contact_number || "",
         Title: imamProfile.title || "",
         DOB: formatDateForInput(imamProfile.dob),
         Race: imamProfile.race || "",
@@ -196,6 +199,9 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
         surname: data.Surname,
         email: data.Email || null,
         id_number: data.ID_Number || null,
+        file_number: data.File_Number || null,
+        cell_number: data.Cell_Number || null,
+        contact_number: data.Contact_Number || null,
         title: data.Title && data.Title !== "" ? parseInt(data.Title) : null,
         dob: data.DOB || null,
         race: data.Race && data.Race !== "" ? parseInt(data.Race) : null,
@@ -555,12 +561,28 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
             </Col>
           </Row>
 
-          {/* Row 2: Date of Birth, Title, Race, Gender */}
+          {/* Row 1.5: File Number, Cell Number, Contact Number, Date of Birth */}
           <Row className="mb-2">
+            <Col md={3}>
+              <p className="text-muted mb-1 font-size-11 text-uppercase">File Number</p>
+              <p className="mb-2 fw-medium font-size-12">{imamProfile.file_number || "-"}</p>
+            </Col>
+            <Col md={3}>
+              <p className="text-muted mb-1 font-size-11 text-uppercase">Cell Number</p>
+              <p className="mb-2 fw-medium font-size-12">{imamProfile.cell_number || "-"}</p>
+            </Col>
+            <Col md={3}>
+              <p className="text-muted mb-1 font-size-11 text-uppercase">Contact Number</p>
+              <p className="mb-2 fw-medium font-size-12">{imamProfile.contact_number || "-"}</p>
+            </Col>
             <Col md={3}>
               <p className="text-muted mb-1 font-size-11 text-uppercase">Date of Birth</p>
               <p className="mb-2 fw-medium font-size-12">{formatDate(imamProfile.dob)}</p>
             </Col>
+          </Row>
+
+          {/* Row 2: Title, Race, Gender, Marital Status */}
+          <Row className="mb-2">
             <Col md={3}>
               <p className="text-muted mb-1 font-size-11 text-uppercase">Title</p>
               <p className="mb-2 fw-medium font-size-12">{getLookupName(lookupData.title, imamProfile.title)}</p>
@@ -573,14 +595,14 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
               <p className="text-muted mb-1 font-size-11 text-uppercase">Gender</p>
               <p className="mb-2 fw-medium font-size-12">{getLookupName(lookupData.gender, imamProfile.gender)}</p>
             </Col>
-          </Row>
-
-          {/* Row 3: Marital Status, Madhab, Nationality, Province */}
-          <Row className="mb-2">
             <Col md={3}>
               <p className="text-muted mb-1 font-size-11 text-uppercase">Marital Status</p>
               <p className="mb-2 fw-medium font-size-12">{getLookupName(lookupData.maritalStatus, imamProfile.marital_status)}</p>
             </Col>
+          </Row>
+
+          {/* Row 3: Madhab, Nationality, Province, Suburb */}
+          <Row className="mb-2">
             <Col md={3}>
               <p className="text-muted mb-1 font-size-11 text-uppercase">Madhab</p>
               <p className="mb-2 fw-medium font-size-12">{getLookupName(lookupData.madhab, imamProfile.madhab)}</p>
@@ -593,14 +615,14 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
               <p className="text-muted mb-1 font-size-11 text-uppercase">Province</p>
               <p className="mb-2 fw-medium font-size-12">{getLookupName(lookupData.province, imamProfile.province_id)}</p>
             </Col>
-          </Row>
-
-          {/* Row 4: Suburb, Status */}
-          <Row className="mb-2">
             <Col md={3}>
               <p className="text-muted mb-1 font-size-11 text-uppercase">Suburb</p>
               <p className="mb-2 fw-medium font-size-12">{getLookupName(lookupData.suburb, imamProfile.suburb_id)}</p>
             </Col>
+          </Row>
+
+          {/* Row 4: Status */}
+          <Row className="mb-2">
             <Col md={3}>
               <p className="text-muted mb-1 font-size-11 text-uppercase">Status</p>
               <p className="mb-2 fw-medium font-size-12">
@@ -686,6 +708,42 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
                         onBlur={field.onBlur}
                         {...field}
                       />
+                    )}
+                  />
+                </FormGroup>
+              </Col>
+              <Col md={6}>
+                <FormGroup>
+                  <Label>File Number</Label>
+                  <Controller
+                    name="File_Number"
+                    control={control}
+                    render={({ field }) => (
+                      <Input type="text" {...field} placeholder="Enter file number" />
+                    )}
+                  />
+                </FormGroup>
+              </Col>
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Cell Number</Label>
+                  <Controller
+                    name="Cell_Number"
+                    control={control}
+                    render={({ field }) => (
+                      <Input type="text" {...field} placeholder="Enter cell number" />
+                    )}
+                  />
+                </FormGroup>
+              </Col>
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Contact Number</Label>
+                  <Controller
+                    name="Contact_Number"
+                    control={control}
+                    render={({ field }) => (
+                      <Input type="text" {...field} placeholder="Enter contact number" />
                     )}
                   />
                 </FormGroup>

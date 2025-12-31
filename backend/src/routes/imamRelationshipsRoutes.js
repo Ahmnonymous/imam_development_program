@@ -18,3 +18,5 @@ router.delete('/:id', imamRelationshipsController.delete);
 
 module.exports = router;
 
+
+

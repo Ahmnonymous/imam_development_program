@@ -16,13 +16,6 @@ const WelcomeComp = () => {
     return "User";
   };
 
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return "Good Morning";
-    if (hour < 18) return "Good Afternoon";
-    return "Good Evening";
-  };
-
   // Get current date
   const getCurrentDate = () => {
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
@@ -36,12 +29,12 @@ const WelcomeComp = () => {
           <Row>
             <Col lg="9" md="7" xs="7">
               <div className="text-white p-4">
-                <h6 className="text-white-50 mb-2 font-size-13 text-uppercase" style={{ letterSpacing: '0.5px' }}>
-                  {getGreeting()}
-                </h6>
                 <h4 className="text-white fw-bold mb-2">
-                  Welcome back, {getUserName()}!
+                  Assalamualaikum Warahmatullahi Wabarakatuh {getUserName()}
                 </h4>
+                <p className="text-white-50 mb-2 font-size-14">
+                  InshaAllah you are in great health and spirituality
+                </p>
                 <p className="text-white-50 mb-0 font-size-14">
                   <i className="bx bx-calendar me-1"></i>
                   {getCurrentDate()}

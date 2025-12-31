@@ -287,3 +287,5 @@ const RelationshipsModal = ({ isOpen, toggle, imamProfileId }) => {
 
 export default RelationshipsModal;
 
+
+

@@ -1,4 +1,5 @@
 const imamProfilesModel = require('../models/imamProfilesModel');
+const fs = require('fs').promises;
 
 const imamProfilesController = {
   getAll: async (req, res) => { 
@@ -60,6 +61,17 @@ const imamProfilesController = {
         fields.status_id = 1;
       }
       
+      // Handle Masjid_Image file upload
+      if (req.files && req.files.Masjid_Image && req.files.Masjid_Image.length > 0) {
+        const file = req.files.Masjid_Image[0];
+        const buffer = await fs.readFile(file.path);
+        fields.masjid_image = buffer;
+        fields.masjid_image_filename = file.originalname;
+        fields.masjid_image_mime = file.mimetype;
+        fields.masjid_image_size = file.size;
+        await fs.unlink(file.path);
+      }
+      
       const data = await imamProfilesModel.create(fields); 
       res.status(201).json(data); 
     } catch(err){ 
@@ -74,6 +86,17 @@ const imamProfilesController = {
       const username = req.user?.username || 'system';
       fields.updated_by = username;
       delete fields.created_by;
+      
+      // Handle Masjid_Image file upload
+      if (req.files && req.files.Masjid_Image && req.files.Masjid_Image.length > 0) {
+        const file = req.files.Masjid_Image[0];
+        const buffer = await fs.readFile(file.path);
+        fields.masjid_image = buffer;
+        fields.masjid_image_filename = file.originalname;
+        fields.masjid_image_mime = file.mimetype;
+        fields.masjid_image_size = file.size;
+        await fs.unlink(file.path);
+      }
       
       const data = await imamProfilesModel.update(req.params.id, fields); 
       if (!data) {

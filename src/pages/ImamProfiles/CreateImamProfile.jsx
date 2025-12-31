@@ -77,6 +77,9 @@ const CreateImamProfile = () => {
       Surname: "",
       Email: "",
       ID_Number: "",
+      File_Number: "",
+      Cell_Number: "",
+      Contact_Number: "",
       Title: "",
       DOB: "",
       Race: "",
@@ -184,6 +187,9 @@ const CreateImamProfile = () => {
         Surname: existingProfile.surname || "",
         Email: existingProfile.email || "",
         ID_Number: existingProfile.id_number || "",
+        File_Number: existingProfile.file_number || "",
+        Cell_Number: existingProfile.cell_number || "",
+        Contact_Number: existingProfile.contact_number || "",
         Title: existingProfile.title ? String(existingProfile.title) : "",
         DOB: formatDateForInput(existingProfile.dob),
         Race: existingProfile.race ? String(existingProfile.race) : "",
@@ -557,6 +563,9 @@ const CreateImamProfile = () => {
         surname: data.Surname,
         email: data.Email || null,
         id_number: data.ID_Number || null,
+        file_number: data.File_Number || null,
+        cell_number: data.Cell_Number || null,
+        contact_number: data.Contact_Number || null,
         title: data.Title && data.Title !== "" ? parseInt(data.Title) : null,
         dob: data.DOB || null,
         race: data.Race && data.Race !== "" ? parseInt(data.Race) : null,
@@ -593,6 +602,9 @@ const CreateImamProfile = () => {
                 Surname: refreshedProfile.data.surname || "",
                 Email: refreshedProfile.data.email || "",
                 ID_Number: refreshedProfile.data.id_number || "",
+                File_Number: refreshedProfile.data.file_number || "",
+                Cell_Number: refreshedProfile.data.cell_number || "",
+                Contact_Number: refreshedProfile.data.contact_number || "",
                 Title: refreshedProfile.data.title || "",
                 DOB: formatDateForInput(refreshedProfile.data.dob),
                 Race: refreshedProfile.data.race || "",
@@ -734,6 +746,45 @@ const CreateImamProfile = () => {
                               onBlur={field.onBlur}
                               {...field}
                             />
+                          )}
+                        />
+                      </FormGroup>
+                    </Col>
+
+                    <Col md={6}>
+                      <FormGroup>
+                        <Label for="File_Number">File Number</Label>
+                        <Controller
+                          name="File_Number"
+                          control={control}
+                          render={({ field }) => (
+                            <Input id="File_Number" type="text" placeholder="Enter file number" {...field} />
+                          )}
+                        />
+                      </FormGroup>
+                    </Col>
+
+                    <Col md={6}>
+                      <FormGroup>
+                        <Label for="Cell_Number">Cell Number</Label>
+                        <Controller
+                          name="Cell_Number"
+                          control={control}
+                          render={({ field }) => (
+                            <Input id="Cell_Number" type="text" placeholder="Enter cell number" {...field} />
+                          )}
+                        />
+                      </FormGroup>
+                    </Col>
+
+                    <Col md={6}>
+                      <FormGroup>
+                        <Label for="Contact_Number">Contact Number</Label>
+                        <Controller
+                          name="Contact_Number"
+                          control={control}
+                          render={({ field }) => (
+                            <Input id="Contact_Number" type="text" placeholder="Enter contact number" {...field} />
                           )}
                         />
                       </FormGroup>

@@ -78,6 +78,15 @@ const newMuslimBonusRoutes = require("./routes/newMuslimBonusRoutes");
 const newBabyBonusRoutes = require("./routes/newBabyBonusRoutes");
 const imamRelationshipsRoutes = require("./routes/imamRelationshipsRoutes");
 const boreholeRoutes = require("./routes/boreholeRoutes");
+const imamFinancialAssistanceRoutes = require("./routes/imamFinancialAssistanceRoutes");
+const educationalDevelopmentRoutes = require("./routes/educationalDevelopmentRoutes");
+const treePlantingRoutes = require("./routes/treePlantingRoutes");
+const waqfLoanRoutes = require("./routes/waqfLoanRoutes");
+const hardshipReliefRoutes = require("./routes/hardshipReliefRoutes");
+const higherEducationRequestRoutes = require("./routes/higherEducationRequestRoutes");
+const boreholeConstructionTasksRoutes = require("./routes/boreholeConstructionTasksRoutes");
+const boreholeRepairsMatrixRoutes = require("./routes/boreholeRepairsMatrixRoutes");
+const ticketsRoutes = require("./routes/ticketsRoutes");
 
 // ===========================
 // 📦 ROUTE REGISTRATION
@@ -153,6 +162,15 @@ app.use("/api/newMuslimBonus", newMuslimBonusRoutes);
 app.use("/api/newBabyBonus", newBabyBonusRoutes);
 app.use("/api/imamRelationships", imamRelationshipsRoutes);
 app.use("/api/borehole", boreholeRoutes);
+app.use("/api/imamFinancialAssistance", imamFinancialAssistanceRoutes);
+app.use("/api/educationalDevelopment", educationalDevelopmentRoutes);
+app.use("/api/treePlanting", treePlantingRoutes);
+app.use("/api/waqfLoan", waqfLoanRoutes);
+app.use("/api/hardshipRelief", hardshipReliefRoutes);
+app.use("/api/higherEducationRequest", higherEducationRequestRoutes);
+app.use("/api/boreholeConstructionTasks", boreholeConstructionTasksRoutes);
+app.use("/api/boreholeRepairsMatrix", boreholeRepairsMatrixRoutes);
+app.use("/api/tickets", ticketsRoutes);
 
 // ✅ Export app for testing
 module.exports = app;

@@ -1207,6 +1207,52 @@ VALUES
     ('Attended a Community Halaqah', 'system', 'system')
 ON CONFLICT (Name) DO NOTHING;
 
+-- Request For Lookup (for Hardship Relief)
+CREATE TABLE IF NOT EXISTS Request_For_Lookup (
+    ID BIGSERIAL PRIMARY KEY,
+    Name VARCHAR(255) UNIQUE NOT NULL,
+    Created_By VARCHAR(255),
+    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    Updated_By VARCHAR(255),
+    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Insert default Request For values
+INSERT INTO Request_For_Lookup (Name, Created_By, Updated_By)
+VALUES 
+    ('Myself (Imam/Muallimah)', 'system', 'system'),
+    ('Community Member (1 person or a family)', 'system', 'system'),
+    ('Community (A group of people in the community/community event)', 'system', 'system')
+ON CONFLICT (Name) DO NOTHING;
+
+-- Yes No Some Not Lookup (for Hardship Relief)
+CREATE TABLE IF NOT EXISTS Yes_No_Some_Not_Lookup (
+    ID BIGSERIAL PRIMARY KEY,
+    Name VARCHAR(255) UNIQUE NOT NULL,
+    Created_By VARCHAR(255),
+    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    Updated_By VARCHAR(255),
+    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Insert default Yes/No/Some Not values
+INSERT INTO Yes_No_Some_Not_Lookup (Name, Created_By, Updated_By)
+VALUES 
+    ('Yes', 'system', 'system'),
+    ('No', 'system', 'system'),
+    ('Some are Muslim and some are not', 'system', 'system')
+ON CONFLICT (Name) DO NOTHING;
+
+-- Classification Lookup (for Tickets)
+CREATE TABLE IF NOT EXISTS Classification_Lookup (
+    ID BIGSERIAL PRIMARY KEY,
+    Name VARCHAR(255) UNIQUE NOT NULL,
+    Created_By VARCHAR(255),
+    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    Updated_By VARCHAR(255),
+    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 -- Medical Visit Type Lookup
 CREATE TABLE IF NOT EXISTS Medical_Visit_Type (
     ID BIGSERIAL PRIMARY KEY,
@@ -1337,6 +1383,124 @@ VALUES
     ('Sanitation (Toilets)', 'system', 'system')
 ON CONFLICT (Name) DO NOTHING;
 
+-- Course Type Lookup (for Higher Education Request)
+CREATE TABLE IF NOT EXISTS Course_Type_Lookup (
+    ID BIGSERIAL PRIMARY KEY,
+    Name VARCHAR(255) UNIQUE NOT NULL,
+    Created_By VARCHAR(255),
+    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    Updated_By VARCHAR(255),
+    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Insert default course types
+INSERT INTO Course_Type_Lookup (Name, Created_By, Updated_By)
+VALUES 
+    ('Higher Certificate', 'system', 'system'),
+    ('Diploma', 'system', 'system'),
+    ('Degree', 'system', 'system'),
+    ('Honours Degree', 'system', 'system'),
+    ('Master''s degree', 'system', 'system'),
+    ('Doctoral Degree (PhD)', 'system', 'system')
+ON CONFLICT (Name) DO NOTHING;
+
+-- Course Duration Lookup (for Higher Education Request)
+CREATE TABLE IF NOT EXISTS Course_Duration_Lookup (
+    ID BIGSERIAL PRIMARY KEY,
+    Name VARCHAR(255) UNIQUE NOT NULL,
+    Created_By VARCHAR(255),
+    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    Updated_By VARCHAR(255),
+    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Insert default course durations
+INSERT INTO Course_Duration_Lookup (Name, Created_By, Updated_By)
+VALUES 
+    ('1 Year', 'system', 'system'),
+    ('2 Years', 'system', 'system'),
+    ('3 Years', 'system', 'system'),
+    ('4 Years', 'system', 'system')
+ON CONFLICT (Name) DO NOTHING;
+
+-- Study Method Lookup (for Higher Education Request)
+CREATE TABLE IF NOT EXISTS Study_Method_Lookup (
+    ID BIGSERIAL PRIMARY KEY,
+    Name VARCHAR(255) UNIQUE NOT NULL,
+    Created_By VARCHAR(255),
+    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    Updated_By VARCHAR(255),
+    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Insert default study methods
+INSERT INTO Study_Method_Lookup (Name, Created_By, Updated_By)
+VALUES 
+    ('Part time', 'system', 'system'),
+    ('Full time', 'system', 'system'),
+    ('Online', 'system', 'system'),
+    ('Through correspondence', 'system', 'system')
+ON CONFLICT (Name) DO NOTHING;
+
+-- Attendance Frequency Lookup (for Higher Education Request)
+CREATE TABLE IF NOT EXISTS Attendance_Frequency_Lookup (
+    ID BIGSERIAL PRIMARY KEY,
+    Name VARCHAR(255) UNIQUE NOT NULL,
+    Created_By VARCHAR(255),
+    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    Updated_By VARCHAR(255),
+    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Insert default attendance frequencies
+INSERT INTO Attendance_Frequency_Lookup (Name, Created_By, Updated_By)
+VALUES 
+    ('1 day a week', 'system', 'system'),
+    ('2 days a week', 'system', 'system'),
+    ('3 days a week', 'system', 'system'),
+    ('4 days a week', 'system', 'system'),
+    ('5 days a week', 'system', 'system')
+ON CONFLICT (Name) DO NOTHING;
+
+-- Semesters Per Year Lookup (for Higher Education Request)
+CREATE TABLE IF NOT EXISTS Semesters_Per_Year_Lookup (
+    ID BIGSERIAL PRIMARY KEY,
+    Name VARCHAR(255) UNIQUE NOT NULL,
+    Created_By VARCHAR(255),
+    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    Updated_By VARCHAR(255),
+    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Insert default semesters per year
+INSERT INTO Semesters_Per_Year_Lookup (Name, Created_By, Updated_By)
+VALUES 
+    ('1 Semester', 'system', 'system'),
+    ('2 Semesters', 'system', 'system'),
+    ('3 Semesters', 'system', 'system'),
+    ('4 Semesters', 'system', 'system')
+ON CONFLICT (Name) DO NOTHING;
+
+-- Borehole Construction Tasks Lookup
+CREATE TABLE IF NOT EXISTS Borehole_Construction_Tasks_Lookup (
+    ID BIGSERIAL PRIMARY KEY,
+    Name VARCHAR(255) UNIQUE NOT NULL,
+    Created_By VARCHAR(255),
+    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    Updated_By VARCHAR(255),
+    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Supplier Lookup
+CREATE TABLE IF NOT EXISTS Supplier_Lookup (
+    ID BIGSERIAL PRIMARY KEY,
+    Name VARCHAR(255) UNIQUE NOT NULL,
+    Created_By VARCHAR(255),
+    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    Updated_By VARCHAR(255),
+    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 -- ============================================================
 -- PHASE 2: MASTER TABLE - Imam Profiles
 -- ============================================================
@@ -1347,6 +1511,9 @@ CREATE TABLE IF NOT EXISTS Imam_Profiles (
     Surname VARCHAR(255) NOT NULL,
     Email VARCHAR(255),
     ID_Number VARCHAR(255),
+    File_Number VARCHAR(255),
+    Cell_Number VARCHAR(255),
+    Contact_Number VARCHAR(255),
     Title BIGINT,
     DOB DATE,
     Madhab BIGINT,
@@ -1358,6 +1525,33 @@ CREATE TABLE IF NOT EXISTS Imam_Profiles (
     suburb_id BIGINT,
     status_id BIGINT NOT NULL DEFAULT 1,
     employee_id BIGINT NOT NULL UNIQUE,
+    Employment_Type BIGINT,
+    Lead_Salah_In_Masjid BIGINT,
+    Teach_Maktab_Madrassah BIGINT,
+    Do_Street_Dawah BIGINT,
+    Teaching_Frequency BIGINT,
+    Teach_Adults_Community_Classes BIGINT,
+    Average_Students_Taught_Daily BIGINT,
+    Prayers_Lead_Daily BIGINT,
+    Jumuah_Prayers_Lead BIGINT,
+    Average_Fajr_Attendees BIGINT,
+    Average_Dhuhr_Attendees BIGINT,
+    Average_Asr_Attendees BIGINT,
+    Average_Maghrib_Attendees BIGINT,
+    Average_Esha_Attendees BIGINT,
+    English_Proficiency BIGINT,
+    Arabic_Proficiency BIGINT,
+    Quran_Reading_Ability BIGINT,
+    Public_Speaking_Khutbah_Skills BIGINT,
+    Quran_Memorization VARCHAR(255),
+    Additional_Weekly_Tasks TEXT,
+    Acknowledge BOOLEAN DEFAULT false,
+    Masjid_Image BYTEA,
+    Masjid_Image_Filename VARCHAR(255),
+    Masjid_Image_Mime VARCHAR(255),
+    Masjid_Image_Size INT,
+    Longitude DECIMAL(10, 8),
+    Latitude DECIMAL(10, 8),
     Created_By VARCHAR(255),
     Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     Updated_By VARCHAR(255),
@@ -1698,6 +1892,139 @@ CREATE TABLE IF NOT EXISTS Borehole_Water_Usage_Purpose (
 CREATE INDEX IF NOT EXISTS idx_borehole_imam ON borehole(imam_profile_id);
 CREATE INDEX IF NOT EXISTS idx_borehole_water_usage_borehole ON Borehole_Water_Usage_Purpose(borehole_id);
 CREATE INDEX IF NOT EXISTS idx_borehole_water_usage_purpose ON Borehole_Water_Usage_Purpose(water_usage_purpose_id);
+
+-- ============================================================
+-- PHASE 3.5: ADDITIONAL CHILD TABLES (linked to Imam Profiles)
+-- ============================================================
+
+-- Financial Assistance (for Imam Profiles)
+CREATE TABLE IF NOT EXISTS imam_financial_assistance (
+    ID BIGSERIAL PRIMARY KEY,
+    imam_profile_id BIGINT NOT NULL,
+    assistance_type VARCHAR(255),
+    amount_required DECIMAL(12,2),
+    amount_required_currency BIGINT,
+    reason_for_assistance TEXT,
+    monthly_income DECIMAL(12,2),
+    monthly_expenses DECIMAL(12,2),
+    acknowledge BOOLEAN NOT NULL DEFAULT false,
+    status_id BIGINT NOT NULL DEFAULT 1,
+    comment TEXT,
+    datestamp TIMESTAMPTZ NOT NULL DEFAULT now(),
+    Created_By VARCHAR(255),
+    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    Updated_By VARCHAR(255),
+    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT fk_imam_financial_imam FOREIGN KEY (imam_profile_id) REFERENCES Imam_Profiles(ID) ON DELETE CASCADE,
+    CONSTRAINT fk_imam_financial_currency FOREIGN KEY (amount_required_currency) REFERENCES Currency(ID),
+    CONSTRAINT fk_imam_financial_status FOREIGN KEY (status_id) REFERENCES Status(ID)
+);
+
+-- Educational Development
+CREATE TABLE IF NOT EXISTS educational_development (
+    ID BIGSERIAL PRIMARY KEY,
+    imam_profile_id BIGINT NOT NULL,
+    course_name VARCHAR(500),
+    institution_name VARCHAR(255),
+    course_type VARCHAR(255),
+    start_date DATE,
+    end_date DATE,
+    cost DECIMAL(12,2),
+    cost_currency BIGINT,
+    funding_source VARCHAR(255),
+    completion_status VARCHAR(255),
+    certificate_obtained BOOLEAN DEFAULT false,
+    certificate BYTEA,
+    certificate_filename VARCHAR(255),
+    certificate_mime VARCHAR(255),
+    certificate_size INT,
+    certificate_updated_at TIMESTAMPTZ,
+    certificate_show_link TEXT,
+    acknowledge BOOLEAN NOT NULL DEFAULT false,
+    status_id BIGINT NOT NULL DEFAULT 1,
+    comment TEXT,
+    datestamp TIMESTAMPTZ NOT NULL DEFAULT now(),
+    Created_By VARCHAR(255),
+    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    Updated_By VARCHAR(255),
+    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT fk_educational_imam FOREIGN KEY (imam_profile_id) REFERENCES Imam_Profiles(ID) ON DELETE CASCADE,
+    CONSTRAINT fk_educational_currency FOREIGN KEY (cost_currency) REFERENCES Currency(ID),
+    CONSTRAINT fk_educational_status FOREIGN KEY (status_id) REFERENCES Status(ID)
+);
+
+-- Tree Planting
+CREATE TABLE IF NOT EXISTS tree_planting (
+    ID BIGSERIAL PRIMARY KEY,
+    imam_profile_id BIGINT NOT NULL,
+    number_of_trees INT,
+    tree_type VARCHAR(255),
+    planting_location VARCHAR(500),
+    planting_date DATE,
+    planting_image BYTEA,
+    planting_image_filename VARCHAR(255),
+    planting_image_mime VARCHAR(255),
+    planting_image_size INT,
+    planting_image_updated_at TIMESTAMPTZ,
+    planting_image_show_link TEXT,
+    acknowledge BOOLEAN NOT NULL DEFAULT false,
+    status_id BIGINT NOT NULL DEFAULT 1,
+    comment TEXT,
+    datestamp TIMESTAMPTZ NOT NULL DEFAULT now(),
+    Created_By VARCHAR(255),
+    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    Updated_By VARCHAR(255),
+    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT fk_tree_planting_imam FOREIGN KEY (imam_profile_id) REFERENCES Imam_Profiles(ID) ON DELETE CASCADE,
+    CONSTRAINT fk_tree_planting_status FOREIGN KEY (status_id) REFERENCES Status(ID)
+);
+
+-- WAQF Loan
+CREATE TABLE IF NOT EXISTS waqf_loan (
+    ID BIGSERIAL PRIMARY KEY,
+    imam_profile_id BIGINT NOT NULL,
+    participated_recent_bonuses_90_days BIGINT,
+    recent_bonuses_details TEXT,
+    active_dawah BIGINT,
+    dawah_activities_details TEXT,
+    contributed_to_waqf_loan_fund BIGINT,
+    loan_type VARCHAR(255),
+    loan_reason TEXT,
+    tried_employer_request VARCHAR(255),
+    promise_to_repay BIGINT,
+    understand_waqf_fund BIGINT,
+    amount_required DECIMAL(12,2),
+    monthly_income DECIMAL(12,2),
+    monthly_expenses DECIMAL(12,2),
+    repayment_structure DECIMAL(12,2),
+    repayment_explanation TEXT,
+    first_guarantor_name VARCHAR(255),
+    first_guarantor_contact VARCHAR(255),
+    second_guarantor_name VARCHAR(255),
+    second_guarantor_contact VARCHAR(255),
+    acknowledge BOOLEAN NOT NULL DEFAULT false,
+    status_id BIGINT NOT NULL DEFAULT 1,
+    comment TEXT,
+    datestamp TIMESTAMPTZ NOT NULL DEFAULT now(),
+    Created_By VARCHAR(255),
+    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    Updated_By VARCHAR(255),
+    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT fk_waqf_loan_imam FOREIGN KEY (imam_profile_id) REFERENCES Imam_Profiles(ID) ON DELETE CASCADE,
+    CONSTRAINT fk_waqf_loan_bonuses FOREIGN KEY (participated_recent_bonuses_90_days) REFERENCES Yes_No(ID),
+    CONSTRAINT fk_waqf_loan_dawah FOREIGN KEY (active_dawah) REFERENCES Yes_No(ID),
+    CONSTRAINT fk_waqf_loan_contributed FOREIGN KEY (contributed_to_waqf_loan_fund) REFERENCES Yes_No(ID),
+    CONSTRAINT fk_waqf_loan_repay FOREIGN KEY (promise_to_repay) REFERENCES Yes_No(ID),
+    CONSTRAINT fk_waqf_loan_understand FOREIGN KEY (understand_waqf_fund) REFERENCES Yes_No(ID),
+    CONSTRAINT fk_waqf_loan_status FOREIGN KEY (status_id) REFERENCES Status(ID)
+);
+
+-- Create indexes for new tables
+CREATE INDEX IF NOT EXISTS idx_imam_financial_imam ON imam_financial_assistance(imam_profile_id);
+CREATE INDEX IF NOT EXISTS idx_educational_imam ON educational_development(imam_profile_id);
+CREATE INDEX IF NOT EXISTS idx_tree_planting_imam ON tree_planting(imam_profile_id);
+CREATE INDEX IF NOT EXISTS idx_waqf_loan_imam ON waqf_loan(imam_profile_id);
+
 -- ============================================================
 -- PHASE 4: BUG #9 - COUNTRY → PROVINCE → SUBURB HIERARCHY
 -- ============================================================
@@ -1785,6 +2112,194 @@ BEGIN
         ) THEN
             ALTER TABLE Suburb 
             ADD CONSTRAINT uq_suburb_province UNIQUE (Name, province_id);
+        END IF;
+    END IF;
+END $$;
+
+-- ============================================================
+-- SAFE MIGRATION: Add new columns to Imam_Profiles table
+-- ============================================================
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'Imam_Profiles' AND table_schema = current_schema()) THEN
+        -- Add File_Number if it doesn't exist (check both cases)
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'imam_profiles' AND (column_name = 'File_Number' OR column_name = 'file_number') AND table_schema = current_schema()) THEN
+            ALTER TABLE Imam_Profiles ADD COLUMN File_Number VARCHAR(255);
+            RAISE NOTICE 'Added File_Number column to Imam_Profiles';
+        END IF;
+        
+        -- Add Cell_Number if it doesn't exist
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'imam_profiles' AND (column_name = 'Cell_Number' OR column_name = 'cell_number') AND table_schema = current_schema()) THEN
+            ALTER TABLE Imam_Profiles ADD COLUMN Cell_Number VARCHAR(255);
+            RAISE NOTICE 'Added Cell_Number column to Imam_Profiles';
+        END IF;
+        
+        -- Add Contact_Number if it doesn't exist
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'imam_profiles' AND (column_name = 'Contact_Number' OR column_name = 'contact_number') AND table_schema = current_schema()) THEN
+            ALTER TABLE Imam_Profiles ADD COLUMN Contact_Number VARCHAR(255);
+            RAISE NOTICE 'Added Contact_Number column to Imam_Profiles';
+        END IF;
+        
+        -- Add Employment_Type if it doesn't exist
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Imam_Profiles' AND column_name = 'Employment_Type' AND table_schema = current_schema()) THEN
+            ALTER TABLE Imam_Profiles ADD COLUMN Employment_Type BIGINT;
+            RAISE NOTICE 'Added Employment_Type column to Imam_Profiles';
+        END IF;
+        
+        -- Add Lead_Salah_In_Masjid if it doesn't exist
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Imam_Profiles' AND column_name = 'Lead_Salah_In_Masjid' AND table_schema = current_schema()) THEN
+            ALTER TABLE Imam_Profiles ADD COLUMN Lead_Salah_In_Masjid BIGINT;
+            RAISE NOTICE 'Added Lead_Salah_In_Masjid column to Imam_Profiles';
+        END IF;
+        
+        -- Add Teach_Maktab_Madrassah if it doesn't exist
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Imam_Profiles' AND column_name = 'Teach_Maktab_Madrassah' AND table_schema = current_schema()) THEN
+            ALTER TABLE Imam_Profiles ADD COLUMN Teach_Maktab_Madrassah BIGINT;
+            RAISE NOTICE 'Added Teach_Maktab_Madrassah column to Imam_Profiles';
+        END IF;
+        
+        -- Add Do_Street_Dawah if it doesn't exist
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Imam_Profiles' AND column_name = 'Do_Street_Dawah' AND table_schema = current_schema()) THEN
+            ALTER TABLE Imam_Profiles ADD COLUMN Do_Street_Dawah BIGINT;
+            RAISE NOTICE 'Added Do_Street_Dawah column to Imam_Profiles';
+        END IF;
+        
+        -- Add Teaching_Frequency if it doesn't exist
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Imam_Profiles' AND column_name = 'Teaching_Frequency' AND table_schema = current_schema()) THEN
+            ALTER TABLE Imam_Profiles ADD COLUMN Teaching_Frequency BIGINT;
+            RAISE NOTICE 'Added Teaching_Frequency column to Imam_Profiles';
+        END IF;
+        
+        -- Add Teach_Adults_Community_Classes if it doesn't exist
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Imam_Profiles' AND column_name = 'Teach_Adults_Community_Classes' AND table_schema = current_schema()) THEN
+            ALTER TABLE Imam_Profiles ADD COLUMN Teach_Adults_Community_Classes BIGINT;
+            RAISE NOTICE 'Added Teach_Adults_Community_Classes column to Imam_Profiles';
+        END IF;
+        
+        -- Add Average_Students_Taught_Daily if it doesn't exist
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Imam_Profiles' AND column_name = 'Average_Students_Taught_Daily' AND table_schema = current_schema()) THEN
+            ALTER TABLE Imam_Profiles ADD COLUMN Average_Students_Taught_Daily BIGINT;
+            RAISE NOTICE 'Added Average_Students_Taught_Daily column to Imam_Profiles';
+        END IF;
+        
+        -- Add Prayers_Lead_Daily if it doesn't exist
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Imam_Profiles' AND column_name = 'Prayers_Lead_Daily' AND table_schema = current_schema()) THEN
+            ALTER TABLE Imam_Profiles ADD COLUMN Prayers_Lead_Daily BIGINT;
+            RAISE NOTICE 'Added Prayers_Lead_Daily column to Imam_Profiles';
+        END IF;
+        
+        -- Add Jumuah_Prayers_Lead if it doesn't exist
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Imam_Profiles' AND column_name = 'Jumuah_Prayers_Lead' AND table_schema = current_schema()) THEN
+            ALTER TABLE Imam_Profiles ADD COLUMN Jumuah_Prayers_Lead BIGINT;
+            RAISE NOTICE 'Added Jumuah_Prayers_Lead column to Imam_Profiles';
+        END IF;
+        
+        -- Add Average_Fajr_Attendees if it doesn't exist
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Imam_Profiles' AND column_name = 'Average_Fajr_Attendees' AND table_schema = current_schema()) THEN
+            ALTER TABLE Imam_Profiles ADD COLUMN Average_Fajr_Attendees BIGINT;
+            RAISE NOTICE 'Added Average_Fajr_Attendees column to Imam_Profiles';
+        END IF;
+        
+        -- Add Average_Dhuhr_Attendees if it doesn't exist
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Imam_Profiles' AND column_name = 'Average_Dhuhr_Attendees' AND table_schema = current_schema()) THEN
+            ALTER TABLE Imam_Profiles ADD COLUMN Average_Dhuhr_Attendees BIGINT;
+            RAISE NOTICE 'Added Average_Dhuhr_Attendees column to Imam_Profiles';
+        END IF;
+        
+        -- Add Average_Asr_Attendees if it doesn't exist
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Imam_Profiles' AND column_name = 'Average_Asr_Attendees' AND table_schema = current_schema()) THEN
+            ALTER TABLE Imam_Profiles ADD COLUMN Average_Asr_Attendees BIGINT;
+            RAISE NOTICE 'Added Average_Asr_Attendees column to Imam_Profiles';
+        END IF;
+        
+        -- Add Average_Maghrib_Attendees if it doesn't exist
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Imam_Profiles' AND column_name = 'Average_Maghrib_Attendees' AND table_schema = current_schema()) THEN
+            ALTER TABLE Imam_Profiles ADD COLUMN Average_Maghrib_Attendees BIGINT;
+            RAISE NOTICE 'Added Average_Maghrib_Attendees column to Imam_Profiles';
+        END IF;
+        
+        -- Add Average_Esha_Attendees if it doesn't exist
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Imam_Profiles' AND column_name = 'Average_Esha_Attendees' AND table_schema = current_schema()) THEN
+            ALTER TABLE Imam_Profiles ADD COLUMN Average_Esha_Attendees BIGINT;
+            RAISE NOTICE 'Added Average_Esha_Attendees column to Imam_Profiles';
+        END IF;
+        
+        -- Add English_Proficiency if it doesn't exist
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Imam_Profiles' AND column_name = 'English_Proficiency' AND table_schema = current_schema()) THEN
+            ALTER TABLE Imam_Profiles ADD COLUMN English_Proficiency BIGINT;
+            RAISE NOTICE 'Added English_Proficiency column to Imam_Profiles';
+        END IF;
+        
+        -- Add Arabic_Proficiency if it doesn't exist
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Imam_Profiles' AND column_name = 'Arabic_Proficiency' AND table_schema = current_schema()) THEN
+            ALTER TABLE Imam_Profiles ADD COLUMN Arabic_Proficiency BIGINT;
+            RAISE NOTICE 'Added Arabic_Proficiency column to Imam_Profiles';
+        END IF;
+        
+        -- Add Quran_Reading_Ability if it doesn't exist
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Imam_Profiles' AND column_name = 'Quran_Reading_Ability' AND table_schema = current_schema()) THEN
+            ALTER TABLE Imam_Profiles ADD COLUMN Quran_Reading_Ability BIGINT;
+            RAISE NOTICE 'Added Quran_Reading_Ability column to Imam_Profiles';
+        END IF;
+        
+        -- Add Public_Speaking_Khutbah_Skills if it doesn't exist
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Imam_Profiles' AND column_name = 'Public_Speaking_Khutbah_Skills' AND table_schema = current_schema()) THEN
+            ALTER TABLE Imam_Profiles ADD COLUMN Public_Speaking_Khutbah_Skills BIGINT;
+            RAISE NOTICE 'Added Public_Speaking_Khutbah_Skills column to Imam_Profiles';
+        END IF;
+        
+        -- Add Quran_Memorization if it doesn't exist
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Imam_Profiles' AND column_name = 'Quran_Memorization' AND table_schema = current_schema()) THEN
+            ALTER TABLE Imam_Profiles ADD COLUMN Quran_Memorization VARCHAR(255);
+            RAISE NOTICE 'Added Quran_Memorization column to Imam_Profiles';
+        END IF;
+        
+        -- Add Additional_Weekly_Tasks if it doesn't exist
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Imam_Profiles' AND column_name = 'Additional_Weekly_Tasks' AND table_schema = current_schema()) THEN
+            ALTER TABLE Imam_Profiles ADD COLUMN Additional_Weekly_Tasks TEXT;
+            RAISE NOTICE 'Added Additional_Weekly_Tasks column to Imam_Profiles';
+        END IF;
+        
+        -- Add Acknowledge if it doesn't exist
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Imam_Profiles' AND column_name = 'Acknowledge' AND table_schema = current_schema()) THEN
+            ALTER TABLE Imam_Profiles ADD COLUMN Acknowledge BOOLEAN DEFAULT false;
+            RAISE NOTICE 'Added Acknowledge column to Imam_Profiles';
+        END IF;
+        
+        -- Add Masjid_Image if it doesn't exist
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Imam_Profiles' AND column_name = 'Masjid_Image' AND table_schema = current_schema()) THEN
+            ALTER TABLE Imam_Profiles ADD COLUMN Masjid_Image BYTEA;
+            RAISE NOTICE 'Added Masjid_Image column to Imam_Profiles';
+        END IF;
+        
+        -- Add Masjid_Image_Filename if it doesn't exist
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Imam_Profiles' AND column_name = 'Masjid_Image_Filename' AND table_schema = current_schema()) THEN
+            ALTER TABLE Imam_Profiles ADD COLUMN Masjid_Image_Filename VARCHAR(255);
+            RAISE NOTICE 'Added Masjid_Image_Filename column to Imam_Profiles';
+        END IF;
+        
+        -- Add Masjid_Image_Mime if it doesn't exist
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Imam_Profiles' AND column_name = 'Masjid_Image_Mime' AND table_schema = current_schema()) THEN
+            ALTER TABLE Imam_Profiles ADD COLUMN Masjid_Image_Mime VARCHAR(255);
+            RAISE NOTICE 'Added Masjid_Image_Mime column to Imam_Profiles';
+        END IF;
+        
+        -- Add Masjid_Image_Size if it doesn't exist
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Imam_Profiles' AND column_name = 'Masjid_Image_Size' AND table_schema = current_schema()) THEN
+            ALTER TABLE Imam_Profiles ADD COLUMN Masjid_Image_Size INT;
+            RAISE NOTICE 'Added Masjid_Image_Size column to Imam_Profiles';
+        END IF;
+        
+        -- Add Longitude if it doesn't exist
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Imam_Profiles' AND column_name = 'Longitude' AND table_schema = current_schema()) THEN
+            ALTER TABLE Imam_Profiles ADD COLUMN Longitude DECIMAL(10, 8);
+            RAISE NOTICE 'Added Longitude column to Imam_Profiles';
+        END IF;
+        
+        -- Add Latitude if it doesn't exist
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Imam_Profiles' AND column_name = 'Latitude' AND table_schema = current_schema()) THEN
+            ALTER TABLE Imam_Profiles ADD COLUMN Latitude DECIMAL(10, 8);
+            RAISE NOTICE 'Added Latitude column to Imam_Profiles';
         END IF;
     END IF;
 END $$;
@@ -3604,4 +4119,209 @@ WHERE NOT EXISTS (
 -- - Countries: REST Countries API (https://restcountries.com)
 -- - Provinces: Curated dataset for major countries (ZA, US, CA, GB, AU, IN)
 -- - Suburbs: Curated dataset for major provinces/cities
+-- ============================================================
+
+-- ============================================================
+-- NEW TABLES FROM API SNAPSHOT (Status: In Progress)
+-- ============================================================
+
+-- Hardship Relief
+CREATE TABLE IF NOT EXISTS hardship_relief (
+    ID BIGSERIAL PRIMARY KEY,
+    imam_profile_id BIGINT NOT NULL,
+    request_for BIGINT,
+    is_muslim BIGINT,
+    name_of_person_community TEXT,
+    area_of_residence BIGINT,
+    age_group TEXT,
+    has_disabilities BIGINT,
+    disability_details TEXT,
+    dependents TEXT,
+    assistance_type TEXT NOT NULL,
+    amount_required_local_currency DECIMAL(12,2) NOT NULL,
+    acknowledge BOOLEAN NOT NULL DEFAULT false,
+    status_id BIGINT NOT NULL DEFAULT 1,
+    datestamp TIMESTAMPTZ NOT NULL DEFAULT now(),
+    Created_By VARCHAR(255),
+    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    Updated_By VARCHAR(255),
+    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT fk_hardship_imam FOREIGN KEY (imam_profile_id) REFERENCES Imam_Profiles(ID) ON DELETE CASCADE,
+    CONSTRAINT fk_hardship_request_for FOREIGN KEY (request_for) REFERENCES Request_For_Lookup(ID),
+    CONSTRAINT fk_hardship_is_muslim FOREIGN KEY (is_muslim) REFERENCES Yes_No_Some_Not_Lookup(ID),
+    CONSTRAINT fk_hardship_area FOREIGN KEY (area_of_residence) REFERENCES Suburb(ID),
+    CONSTRAINT fk_hardship_disabilities FOREIGN KEY (has_disabilities) REFERENCES Yes_No(ID),
+    CONSTRAINT fk_hardship_status FOREIGN KEY (status_id) REFERENCES Status(ID)
+);
+
+-- Higher Education Request
+CREATE TABLE IF NOT EXISTS higher_education_request (
+    ID BIGSERIAL PRIMARY KEY,
+    imam_profile_id BIGINT NOT NULL,
+    course_type BIGINT,
+    course_name VARCHAR(500),
+    cost_local_currency DECIMAL(12,2),
+    cost_south_african_rand DECIMAL(12,2),
+    institute_name VARCHAR(500),
+    duration BIGINT,
+    start_date DATE,
+    end_date DATE,
+    study_method BIGINT,
+    days_times_attending TEXT,
+    times_per_month BIGINT,
+    semesters_per_year BIGINT,
+    will_stop_imam_duties BIGINT,
+    course_brochure BYTEA,
+    course_brochure_filename VARCHAR(255),
+    course_brochure_mime VARCHAR(255),
+    course_brochure_size INT,
+    quotation BYTEA,
+    quotation_filename VARCHAR(255),
+    quotation_mime VARCHAR(255),
+    quotation_size INT,
+    motivation_letter BYTEA,
+    motivation_letter_filename VARCHAR(255),
+    motivation_letter_mime VARCHAR(255),
+    motivation_letter_size INT,
+    acknowledge BOOLEAN NOT NULL DEFAULT false,
+    status_id BIGINT NOT NULL DEFAULT 1,
+    datestamp DATE NOT NULL DEFAULT CURRENT_DATE,
+    Created_By VARCHAR(255),
+    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    Updated_By VARCHAR(255),
+    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT fk_higher_ed_imam FOREIGN KEY (imam_profile_id) REFERENCES Imam_Profiles(ID) ON DELETE CASCADE,
+    CONSTRAINT fk_higher_ed_status FOREIGN KEY (status_id) REFERENCES Status(ID)
+);
+
+-- Borehole Construction Tasks
+CREATE TABLE IF NOT EXISTS borehole_construction_tasks (
+    ID BIGSERIAL PRIMARY KEY,
+    borehole_id BIGINT,
+    task BIGINT,
+    appointed_supplier BIGINT,
+    appointed_date DATE,
+    estimated_completion_date DATE,
+    warranty TEXT,
+    cost DECIMAL(12,2),
+    rating INT,
+    status_id BIGINT,
+    invoice BYTEA,
+    invoice_filename VARCHAR(255),
+    invoice_mime VARCHAR(255),
+    invoice_size INT,
+    datestamp TIMESTAMPTZ NOT NULL DEFAULT now(),
+    Created_By VARCHAR(255),
+    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    Updated_By VARCHAR(255),
+    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    comments TEXT,
+    CONSTRAINT fk_borehole_construction_borehole FOREIGN KEY (borehole_id) REFERENCES borehole(ID) ON DELETE CASCADE
+);
+
+-- Borehole Repairs Matrix
+CREATE TABLE IF NOT EXISTS borehole_repairs_matrix (
+    ID BIGSERIAL PRIMARY KEY,
+    borehole_id BIGINT NOT NULL,
+    component TEXT,
+    task BYTEA,
+    task_filename VARCHAR(255),
+    task_mime VARCHAR(255),
+    task_size INT,
+    supplier BIGINT,
+    warranty TEXT,
+    cost DECIMAL(12,2),
+    invoice BYTEA,
+    invoice_filename VARCHAR(255),
+    invoice_mime VARCHAR(255),
+    invoice_size INT,
+    notes_comments TEXT,
+    parts_image BYTEA,
+    parts_image_filename VARCHAR(255),
+    parts_image_mime VARCHAR(255),
+    parts_image_size INT,
+    datestamp DATE NOT NULL DEFAULT CURRENT_DATE,
+    Created_By VARCHAR(255),
+    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    Updated_By VARCHAR(255),
+    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT fk_borehole_repairs_borehole FOREIGN KEY (borehole_id) REFERENCES borehole(ID) ON DELETE CASCADE
+);
+
+-- Tickets
+CREATE TABLE IF NOT EXISTS tickets (
+    ID BIGSERIAL PRIMARY KEY,
+    classification_id BIGINT,
+    description TEXT,
+    status_id BIGINT NOT NULL DEFAULT 1,
+    allocated_to INTEGER,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    closed_at TIMESTAMPTZ,
+    closing_notes TEXT,
+    media BYTEA,
+    media_filename VARCHAR(255),
+    media_mime VARCHAR(255),
+    media_size INT,
+    Created_By VARCHAR(255),
+    Updated_By VARCHAR(255),
+    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT fk_tickets_classification FOREIGN KEY (classification_id) REFERENCES Classification_Lookup(ID),
+    CONSTRAINT fk_tickets_status FOREIGN KEY (status_id) REFERENCES Status(ID),
+    CONSTRAINT fk_tickets_allocated_to FOREIGN KEY (allocated_to) REFERENCES Employee(ID)
+);
+
+-- Create indexes for new tables
+CREATE INDEX IF NOT EXISTS idx_hardship_imam ON hardship_relief(imam_profile_id);
+CREATE INDEX IF NOT EXISTS idx_higher_ed_imam ON higher_education_request(imam_profile_id);
+CREATE INDEX IF NOT EXISTS idx_borehole_construction_borehole ON borehole_construction_tasks(borehole_id);
+CREATE INDEX IF NOT EXISTS idx_borehole_repairs_borehole ON borehole_repairs_matrix(borehole_id);
+CREATE INDEX IF NOT EXISTS idx_tickets_allocated ON tickets(allocated_to);
+
+-- ============================================================
+-- MIGRATION: Update tickets table to use status_id instead of status
+-- ============================================================
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'tickets' AND table_schema = current_schema()) THEN
+        -- Add status_id column if it doesn't exist
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'tickets' AND column_name = 'status_id' AND table_schema = current_schema()) THEN
+            ALTER TABLE tickets ADD COLUMN status_id BIGINT NOT NULL DEFAULT 1;
+            -- Migrate existing status values to status_id
+            UPDATE tickets SET status_id = 1 WHERE status = 'Open' OR status IS NULL;
+            UPDATE tickets SET status_id = 2 WHERE status = 'In Progress';
+            UPDATE tickets SET status_id = 3 WHERE status = 'Closed';
+            -- Add foreign key constraint
+            ALTER TABLE tickets ADD CONSTRAINT fk_tickets_status FOREIGN KEY (status_id) REFERENCES Status(ID);
+            RAISE NOTICE 'Added status_id column to tickets table and migrated data';
+        END IF;
+        
+        -- Remove old status column if it exists
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'tickets' AND column_name = 'status' AND table_schema = current_schema()) THEN
+            ALTER TABLE tickets DROP COLUMN status;
+            RAISE NOTICE 'Removed old status column from tickets table';
+        END IF;
+        
+        -- Add created_at and closed_at columns if they don't exist (rename from created_time/closed_time)
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'tickets' AND column_name = 'created_at' AND table_schema = current_schema()) THEN
+            IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'tickets' AND column_name = 'created_time' AND table_schema = current_schema()) THEN
+                ALTER TABLE tickets RENAME COLUMN created_time TO created_at;
+                RAISE NOTICE 'Renamed created_time to created_at in tickets table';
+            ELSE
+                ALTER TABLE tickets ADD COLUMN created_at TIMESTAMPTZ NOT NULL DEFAULT now();
+                RAISE NOTICE 'Added created_at column to tickets table';
+            END IF;
+        END IF;
+        
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'tickets' AND column_name = 'closed_at' AND table_schema = current_schema()) THEN
+            IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'tickets' AND column_name = 'closed_time' AND table_schema = current_schema()) THEN
+                ALTER TABLE tickets RENAME COLUMN closed_time TO closed_at;
+                RAISE NOTICE 'Renamed closed_time to closed_at in tickets table';
+            ELSE
+                ALTER TABLE tickets ADD COLUMN closed_at TIMESTAMPTZ;
+                RAISE NOTICE 'Added closed_at column to tickets table';
+            END IF;
+        END IF;
+    END IF;
+END $$;
+
 -- ============================================================

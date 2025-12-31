@@ -86,3 +86,5 @@ const imamRelationshipsModel = {
 
 module.exports = imamRelationshipsModel;
 
+
+

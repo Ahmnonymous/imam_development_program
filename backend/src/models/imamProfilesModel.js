@@ -12,6 +12,14 @@ const imamProfilesModel = {
     try {
       const query = `SELECT * FROM ${tableName} ORDER BY id DESC`;
       const res = await pool.query(query);
+      res.rows = res.rows.map((row) => {
+        if (row.masjid_image && row.masjid_image_filename) {
+          row.masjid_image = "exists";
+        } else if (row.masjid_image) {
+          row.masjid_image = row.masjid_image.toString("base64");
+        }
+        return row;
+      });
       return res.rows;
     } catch (err) {
       throw new Error(
@@ -25,7 +33,13 @@ const imamProfilesModel = {
       const query = `SELECT * FROM ${tableName} WHERE id = $1`;
       const res = await pool.query(query, [id]);
       if (!res.rows[0]) return null;
-      return res.rows[0];
+      const row = res.rows[0];
+      if (row.masjid_image && row.masjid_image_filename) {
+        row.masjid_image = "exists";
+      } else if (row.masjid_image) {
+        row.masjid_image = row.masjid_image.toString("base64");
+      }
+      return row;
     } catch (err) {
       throw new Error(
         `Error fetching record by ID from ${tableName}: ${err.message}`,
@@ -55,7 +69,13 @@ const imamProfilesModel = {
       const query = `SELECT * FROM ${tableName} WHERE employee_id = $1 LIMIT 1`;
       const res = await pool.query(query, [employeeId]);
       if (!res.rows[0]) return null;
-      return res.rows[0];
+      const row = res.rows[0];
+      if (row.masjid_image && row.masjid_image_filename) {
+        row.masjid_image = "exists";
+      } else if (row.masjid_image) {
+        row.masjid_image = row.masjid_image.toString("base64");
+      }
+      return row;
     } catch (err) {
       throw new Error(
         `Error fetching record by employee_id from ${tableName}: ${err.message}`,

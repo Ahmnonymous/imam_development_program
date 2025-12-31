@@ -116,7 +116,16 @@ const MODULE_ROUTE_MAP = [
       "/api/newmuslimbonus",
       "/api/newbabybonus",
       "/api/imamrelationships",
-      "/api/borehole"
+      "/api/borehole",
+      "/api/imamfinancialassistance",
+      "/api/educationaldevelopment",
+      "/api/treeplanting",
+      "/api/waqfloan",
+      "/api/hardshiprelief",
+      "/api/highereducationrequest",
+      "/api/boreholeconstructiontasks",
+      "/api/boreholerepairsmatrix",
+      "/api/tickets"
     ] 
   },
 ];
