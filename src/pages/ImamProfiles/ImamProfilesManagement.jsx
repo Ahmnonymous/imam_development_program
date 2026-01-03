@@ -186,6 +186,7 @@ const ImamProfilesManagement = () => {
         proficiencyRes,
         quranMemorizationRes,
         additionalTasksRes,
+        communityEngagementTypeRes,
       ] = await Promise.all([
         axiosApi.get(`${API_BASE_URL}/lookup/Race`),
         axiosApi.get(`${API_BASE_URL}/lookup/Nationality`),
@@ -225,6 +226,7 @@ const ImamProfilesManagement = () => {
         axiosApi.get(`${API_BASE_URL}/lookup/Proficiency`),
         axiosApi.get(`${API_BASE_URL}/lookup/Quran_Memorization`),
         axiosApi.get(`${API_BASE_URL}/lookup/Additional_Weekly_Tasks`),
+        axiosApi.get(`${API_BASE_URL}/lookup/Community_Engagement_Type`),
       ]);
 
       setLookupData({
@@ -266,6 +268,7 @@ const ImamProfilesManagement = () => {
         proficiency: proficiencyRes.data || [],
         quranMemorization: quranMemorizationRes.data || [],
         additionalTasks: additionalTasksRes.data || [],
+        communityEngagementType: communityEngagementTypeRes.data || [],
       });
     } catch (error) {
       console.error("Error fetching lookup data:", error);

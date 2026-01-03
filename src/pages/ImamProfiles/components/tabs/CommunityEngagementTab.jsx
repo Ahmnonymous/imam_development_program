@@ -41,6 +41,7 @@ const CommunityEngagementTab = ({ imamProfileId, communityEngagement, lookupData
     if (modalOpen) {
       reset({
         engagement_date: formatDateForInput(editItem?.engagement_date),
+        engagement_type: editItem?.engagement_type || "",
         people_count: editItem?.people_count || "",
         comment: editItem?.comment || "",
         Engagement_Image: null,
@@ -69,6 +70,7 @@ const CommunityEngagementTab = ({ imamProfileId, communityEngagement, lookupData
       const formData = new FormData();
       formData.append("imam_profile_id", imamProfileId);
       formData.append("engagement_date", data.engagement_date);
+      formData.append("engagement_type", data.engagement_type || "");
       formData.append("people_count", data.people_count);
       formData.append("comment", data.comment || "");
       
@@ -162,6 +164,13 @@ const CommunityEngagementTab = ({ imamProfileId, communityEngagement, lookupData
             {cell.getValue() ? new Date(cell.getValue()).toLocaleDateString() : "-"}
           </span>
         ),
+      },
+      {
+        header: "Engagement Type",
+        accessorKey: "engagement_type",
+        enableSorting: true,
+        enableColumnFilter: false,
+        cell: (cell) => getLookupValue(lookupData?.communityEngagementType, cell.getValue()),
       },
       {
         header: "People Count",
@@ -328,6 +337,25 @@ const CommunityEngagementTab = ({ imamProfileId, communityEngagement, lookupData
                     render={({ field }) => <Input type="date" invalid={!!errors.engagement_date} disabled={isOrgExecutive} {...field} />} 
                   />
                   {errors.engagement_date && <FormFeedback>{errors.engagement_date.message}</FormFeedback>}
+                </FormGroup>
+              </Col>
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Engagement Type</Label>
+                  <Controller 
+                    name="engagement_type" 
+                    control={control} 
+                    render={({ field }) => (
+                      <Input type="select" disabled={isOrgExecutive} {...field}>
+                        <option value="">Select Engagement Type</option>
+                        {(lookupData?.communityEngagementType || []).map((type) => (
+                          <option key={type.id} value={type.id}>
+                            {type.name}
+                          </option>
+                        ))}
+                      </Input>
+                    )} 
+                  />
                 </FormGroup>
               </Col>
               <Col md={6}>

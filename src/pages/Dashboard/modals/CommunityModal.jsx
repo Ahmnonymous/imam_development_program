@@ -8,12 +8,26 @@ import TopRightAlert from "../../../components/Common/TopRightAlert";
 
 const CommunityModal = ({ isOpen, toggle, imamProfileId }) => {
   const [alert, setAlert] = useState(null);
+  const [communityEngagementTypes, setCommunityEngagementTypes] = useState([]);
   const { control, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm();
+
+  useEffect(() => {
+    const fetchEngagementTypes = async () => {
+      try {
+        const response = await axiosApi.get(`${API_BASE_URL}/lookup/Community_Engagement_Type`);
+        setCommunityEngagementTypes(response.data || []);
+      } catch (error) {
+        console.error("Error fetching community engagement types:", error);
+      }
+    };
+    fetchEngagementTypes();
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
       reset({
         engagement_date: "",
+        engagement_type: "",
         people_count: "",
         comment: "",
         Engagement_Image: null,
@@ -32,6 +46,7 @@ const CommunityModal = ({ isOpen, toggle, imamProfileId }) => {
       const formData = new FormData();
       formData.append("imam_profile_id", imamProfileId);
       formData.append("engagement_date", data.engagement_date);
+      formData.append("engagement_type", data.engagement_type || "");
       formData.append("people_count", data.people_count);
       formData.append("comment", data.comment || "");
       
@@ -68,6 +83,25 @@ const CommunityModal = ({ isOpen, toggle, imamProfileId }) => {
                     name="engagement_date" 
                     control={control} 
                     render={({ field }) => <Input type="date" {...field} />} 
+                  />
+                </FormGroup>
+              </Col>
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Engagement Type</Label>
+                  <Controller 
+                    name="engagement_type" 
+                    control={control} 
+                    render={({ field }) => (
+                      <Input type="select" {...field}>
+                        <option value="">Select Engagement Type</option>
+                        {communityEngagementTypes.map((type) => (
+                          <option key={type.id} value={type.id}>
+                            {type.name}
+                          </option>
+                        ))}
+                      </Input>
+                    )} 
                   />
                 </FormGroup>
               </Col>
