@@ -1501,6 +1501,201 @@ CREATE TABLE IF NOT EXISTS Supplier_Lookup (
     Updated_At TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Employment Type Lookup (for Imam Profiles)
+CREATE TABLE IF NOT EXISTS Employment_Type (
+    ID BIGSERIAL PRIMARY KEY,
+    Name VARCHAR(255) UNIQUE NOT NULL,
+    Created_By VARCHAR(255),
+    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    Updated_By VARCHAR(255),
+    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Insert default employment types
+INSERT INTO Employment_Type (Name, Created_By, Updated_By)
+VALUES 
+    ('Full Time', 'system', 'system'),
+    ('Part Time', 'system', 'system')
+ON CONFLICT (Name) DO NOTHING;
+
+-- Teaching Frequency Lookup (for Imam Profiles)
+CREATE TABLE IF NOT EXISTS Teaching_Frequency (
+    ID BIGSERIAL PRIMARY KEY,
+    Name VARCHAR(255) UNIQUE NOT NULL,
+    Created_By VARCHAR(255),
+    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    Updated_By VARCHAR(255),
+    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Insert default teaching frequencies
+INSERT INTO Teaching_Frequency (Name, Created_By, Updated_By)
+VALUES 
+    ('Daily', 'system', 'system'),
+    ('Few times a week', 'system', 'system'),
+    ('Weekends', 'system', 'system')
+ON CONFLICT (Name) DO NOTHING;
+
+-- Teach Adults Community Classes Lookup (for Imam Profiles)
+CREATE TABLE IF NOT EXISTS Teach_Adults_Community_Classes (
+    ID BIGSERIAL PRIMARY KEY,
+    Name VARCHAR(255) UNIQUE NOT NULL,
+    Created_By VARCHAR(255),
+    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    Updated_By VARCHAR(255),
+    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Insert default teach adults values
+INSERT INTO Teach_Adults_Community_Classes (Name, Created_By, Updated_By)
+VALUES 
+    ('Yes', 'system', 'system'),
+    ('Occasionally', 'system', 'system'),
+    ('No', 'system', 'system')
+ON CONFLICT (Name) DO NOTHING;
+
+-- Average Students Taught Daily Lookup (for Imam Profiles)
+CREATE TABLE IF NOT EXISTS Average_Students_Taught_Daily (
+    ID BIGSERIAL PRIMARY KEY,
+    Name VARCHAR(255) UNIQUE NOT NULL,
+    Created_By VARCHAR(255),
+    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    Updated_By VARCHAR(255),
+    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Insert default average students values
+INSERT INTO Average_Students_Taught_Daily (Name, Created_By, Updated_By)
+VALUES 
+    ('Between 10 and 20', 'system', 'system'),
+    ('Between 20 and 30', 'system', 'system'),
+    ('Between 30 and 50', 'system', 'system'),
+    ('Between 50 and 100', 'system', 'system'),
+    ('More than 100', 'system', 'system')
+ON CONFLICT (Name) DO NOTHING;
+
+-- Prayers Lead Daily Lookup (for Imam Profiles)
+CREATE TABLE IF NOT EXISTS Prayers_Lead_Daily (
+    ID BIGSERIAL PRIMARY KEY,
+    Name VARCHAR(255) UNIQUE NOT NULL,
+    Created_By VARCHAR(255),
+    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    Updated_By VARCHAR(255),
+    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Insert default prayers lead daily values
+INSERT INTO Prayers_Lead_Daily (Name, Created_By, Updated_By)
+VALUES 
+    ('Leading 1 prayer a day', 'system', 'system'),
+    ('Leading 2 prayer a day', 'system', 'system'),
+    ('Leading 3 prayer a day', 'system', 'system'),
+    ('Leading 4 prayer a day', 'system', 'system'),
+    ('Leading 5 prayer a day', 'system', 'system')
+ON CONFLICT (Name) DO NOTHING;
+
+-- Jumuah Prayers Lead Lookup (for Imam Profiles)
+CREATE TABLE IF NOT EXISTS Jumuah_Prayers_Lead (
+    ID BIGSERIAL PRIMARY KEY,
+    Name VARCHAR(255) UNIQUE NOT NULL,
+    Created_By VARCHAR(255),
+    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    Updated_By VARCHAR(255),
+    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Insert default jumuah prayers values
+INSERT INTO Jumuah_Prayers_Lead (Name, Created_By, Updated_By)
+VALUES 
+    ('1', 'system', 'system'),
+    ('2', 'system', 'system'),
+    ('3', 'system', 'system'),
+    ('4', 'system', 'system')
+ON CONFLICT (Name) DO NOTHING;
+
+-- Average Attendees Lookup (for Imam Profiles - used for all prayer times)
+CREATE TABLE IF NOT EXISTS Average_Attendees (
+    ID BIGSERIAL PRIMARY KEY,
+    Name VARCHAR(255) UNIQUE NOT NULL,
+    Created_By VARCHAR(255),
+    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    Updated_By VARCHAR(255),
+    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Insert default average attendees values
+INSERT INTO Average_Attendees (Name, Created_By, Updated_By)
+VALUES 
+    ('Less than 10', 'system', 'system'),
+    ('Between 10 and 20', 'system', 'system'),
+    ('Between 20 and 30', 'system', 'system'),
+    ('Between 30 and 50', 'system', 'system'),
+    ('between 50 and 100', 'system', 'system'),
+    ('More than 100', 'system', 'system')
+ON CONFLICT (Name) DO NOTHING;
+
+-- Proficiency Lookup (for Imam Profiles - used for English, Arabic, Quran Reading, Public Speaking)
+CREATE TABLE IF NOT EXISTS Proficiency (
+    ID BIGSERIAL PRIMARY KEY,
+    Name VARCHAR(255) UNIQUE NOT NULL,
+    Created_By VARCHAR(255),
+    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    Updated_By VARCHAR(255),
+    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Insert default proficiency values
+INSERT INTO Proficiency (Name, Created_By, Updated_By)
+VALUES 
+    ('Basic', 'system', 'system'),
+    ('Intermediate', 'system', 'system'),
+    ('Proficient', 'system', 'system'),
+    ('Advanced', 'system', 'system')
+ON CONFLICT (Name) DO NOTHING;
+
+-- Quran Memorization Lookup (for Imam Profiles)
+CREATE TABLE IF NOT EXISTS Quran_Memorization (
+    ID BIGSERIAL PRIMARY KEY,
+    Name VARCHAR(255) UNIQUE NOT NULL,
+    Created_By VARCHAR(255),
+    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    Updated_By VARCHAR(255),
+    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Insert default quran memorization values
+INSERT INTO Quran_Memorization (Name, Created_By, Updated_By)
+VALUES 
+    ('Memorised the short surah only', 'system', 'system'),
+    ('Memorised 5 juz or less', 'system', 'system'),
+    ('Memorised 15 juz or more', 'system', 'system')
+ON CONFLICT (Name) DO NOTHING;
+
+-- Additional Weekly Tasks Lookup (for Imam Profiles)
+CREATE TABLE IF NOT EXISTS Additional_Weekly_Tasks (
+    ID BIGSERIAL PRIMARY KEY,
+    Name VARCHAR(255) UNIQUE NOT NULL,
+    Created_By VARCHAR(255),
+    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    Updated_By VARCHAR(255),
+    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Insert default additional weekly tasks values
+INSERT INTO Additional_Weekly_Tasks (Name, Created_By, Updated_By)
+VALUES 
+    ('Khateeb for Jumuah', 'system', 'system'),
+    ('Guest Khateeb for Jumuah at surrounding Masjid', 'system', 'system'),
+    ('Hifz/Hidth Teacher', 'system', 'system'),
+    ('Active in Street Dawah', 'system', 'system'),
+    ('Ghusl/Burial duties', 'system', 'system'),
+    ('Nikah duties', 'system', 'system'),
+    ('Prison visits', 'system', 'system'),
+    ('Hospital visits', 'system', 'system'),
+    ('Counselling Sessions (Individual/Marriage etc)', 'system', 'system'),
+    ('Food/Hamper distribution', 'system', 'system')
+ON CONFLICT (Name) DO NOTHING;
+
 -- ============================================================
 -- PHASE 2: MASTER TABLE - Imam Profiles
 -- ============================================================
@@ -1563,9 +1758,29 @@ CREATE TABLE IF NOT EXISTS Imam_Profiles (
     CONSTRAINT fk_imam_marital_status FOREIGN KEY (Marital_Status) REFERENCES Marital_Status(ID),
     CONSTRAINT fk_imam_status FOREIGN KEY (status_id) REFERENCES Status(ID),
     CONSTRAINT fk_imam_employee FOREIGN KEY (employee_id) REFERENCES Employee(ID),
+    CONSTRAINT fk_imam_employment_type FOREIGN KEY (Employment_Type) REFERENCES Employment_Type(ID),
+    CONSTRAINT fk_imam_lead_salah FOREIGN KEY (Lead_Salah_In_Masjid) REFERENCES Yes_No(ID),
+    CONSTRAINT fk_imam_teach_maktab FOREIGN KEY (Teach_Maktab_Madrassah) REFERENCES Yes_No(ID),
+    CONSTRAINT fk_imam_street_dawah FOREIGN KEY (Do_Street_Dawah) REFERENCES Yes_No(ID),
+    CONSTRAINT fk_imam_teaching_frequency FOREIGN KEY (Teaching_Frequency) REFERENCES Teaching_Frequency(ID),
+    CONSTRAINT fk_imam_teach_adults FOREIGN KEY (Teach_Adults_Community_Classes) REFERENCES Teach_Adults_Community_Classes(ID),
+    CONSTRAINT fk_imam_avg_students FOREIGN KEY (Average_Students_Taught_Daily) REFERENCES Average_Students_Taught_Daily(ID),
+    CONSTRAINT fk_imam_prayers_lead FOREIGN KEY (Prayers_Lead_Daily) REFERENCES Prayers_Lead_Daily(ID),
+    CONSTRAINT fk_imam_jumuah_prayers FOREIGN KEY (Jumuah_Prayers_Lead) REFERENCES Jumuah_Prayers_Lead(ID),
+    CONSTRAINT fk_imam_avg_fajr FOREIGN KEY (Average_Fajr_Attendees) REFERENCES Average_Attendees(ID),
+    CONSTRAINT fk_imam_avg_dhuhr FOREIGN KEY (Average_Dhuhr_Attendees) REFERENCES Average_Attendees(ID),
+    CONSTRAINT fk_imam_avg_asr FOREIGN KEY (Average_Asr_Attendees) REFERENCES Average_Attendees(ID),
+    CONSTRAINT fk_imam_avg_maghrib FOREIGN KEY (Average_Maghrib_Attendees) REFERENCES Average_Attendees(ID),
+    CONSTRAINT fk_imam_avg_esha FOREIGN KEY (Average_Esha_Attendees) REFERENCES Average_Attendees(ID),
+    CONSTRAINT fk_imam_english_proficiency FOREIGN KEY (English_Proficiency) REFERENCES Proficiency(ID),
+    CONSTRAINT fk_imam_arabic_proficiency FOREIGN KEY (Arabic_Proficiency) REFERENCES Proficiency(ID),
+    CONSTRAINT fk_imam_quran_reading FOREIGN KEY (Quran_Reading_Ability) REFERENCES Proficiency(ID),
+    CONSTRAINT fk_imam_public_speaking FOREIGN KEY (Public_Speaking_Khutbah_Skills) REFERENCES Proficiency(ID),
     CONSTRAINT uq_imam_employee UNIQUE (employee_id)
     -- Note: Foreign keys for nationality_id, province_id, suburb_id are added by migration block
     -- after Country, Province, and Suburb tables are created
+    -- Note: Quran_Memorization is stored as VARCHAR(255) text, not a foreign key
+    -- Note: Additional_Weekly_Tasks is stored as TEXT (comma-separated or JSON), not a foreign key
 );
 
 -- ============================================================

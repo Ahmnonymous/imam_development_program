@@ -62,6 +62,17 @@ const lookupTables = {
   Semesters_Per_Year_Lookup: { orderByName: true },
   Borehole_Construction_Tasks_Lookup: { orderByName: true },
   Supplier_Lookup: { orderByName: true },
+  // Imam Profile Additional Lookup Tables
+  Employment_Type: { orderByName: true },
+  Teaching_Frequency: { orderByName: true },
+  Teach_Adults_Community_Classes: { orderByName: true },
+  Average_Students_Taught_Daily: { orderByName: true },
+  Prayers_Lead_Daily: { orderByName: true },
+  Jumuah_Prayers_Lead: { orderByName: true },
+  Average_Attendees: { orderByName: true },
+  Proficiency: { orderByName: true },
+  Quran_Memorization: { orderByName: true },
+  Additional_Weekly_Tasks: { orderByName: true },
 };
 
 const getLookupConfig = (table = "") => lookupTables[table] || null;

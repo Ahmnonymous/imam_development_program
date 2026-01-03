@@ -74,6 +74,16 @@ const ImamProfilesManagement = () => {
     boreholeConstructionTasks: [],
     supplier: [],
     tasksStatus: [],
+    employmentType: [],
+    teachingFrequency: [],
+    teachAdults: [],
+    averageStudents: [],
+    prayersLead: [],
+    jumuahPrayers: [],
+    averageAttendees: [],
+    proficiency: [],
+    quranMemorization: [],
+    additionalTasks: [],
   });
 
   // Fetch all imam profiles on mount
@@ -166,6 +176,16 @@ const ImamProfilesManagement = () => {
         boreholeConstructionTasksRes,
         supplierRes,
         tasksStatusRes,
+        employmentTypeRes,
+        teachingFrequencyRes,
+        teachAdultsRes,
+        averageStudentsRes,
+        prayersLeadRes,
+        jumuahPrayersRes,
+        averageAttendeesRes,
+        proficiencyRes,
+        quranMemorizationRes,
+        additionalTasksRes,
       ] = await Promise.all([
         axiosApi.get(`${API_BASE_URL}/lookup/Race`),
         axiosApi.get(`${API_BASE_URL}/lookup/Nationality`),
@@ -195,6 +215,16 @@ const ImamProfilesManagement = () => {
         axiosApi.get(`${API_BASE_URL}/lookup/Borehole_Construction_Tasks_Lookup`),
         axiosApi.get(`${API_BASE_URL}/lookup/Supplier_Lookup`),
         axiosApi.get(`${API_BASE_URL}/lookup/Tasks_Status`),
+        axiosApi.get(`${API_BASE_URL}/lookup/Employment_Type`),
+        axiosApi.get(`${API_BASE_URL}/lookup/Teaching_Frequency`),
+        axiosApi.get(`${API_BASE_URL}/lookup/Teach_Adults_Community_Classes`),
+        axiosApi.get(`${API_BASE_URL}/lookup/Average_Students_Taught_Daily`),
+        axiosApi.get(`${API_BASE_URL}/lookup/Prayers_Lead_Daily`),
+        axiosApi.get(`${API_BASE_URL}/lookup/Jumuah_Prayers_Lead`),
+        axiosApi.get(`${API_BASE_URL}/lookup/Average_Attendees`),
+        axiosApi.get(`${API_BASE_URL}/lookup/Proficiency`),
+        axiosApi.get(`${API_BASE_URL}/lookup/Quran_Memorization`),
+        axiosApi.get(`${API_BASE_URL}/lookup/Additional_Weekly_Tasks`),
       ]);
 
       setLookupData({
@@ -226,6 +256,16 @@ const ImamProfilesManagement = () => {
         boreholeConstructionTasks: boreholeConstructionTasksRes.data || [],
         supplier: supplierRes.data || [],
         tasksStatus: tasksStatusRes.data || [],
+        employmentType: employmentTypeRes.data || [],
+        teachingFrequency: teachingFrequencyRes.data || [],
+        teachAdults: teachAdultsRes.data || [],
+        averageStudents: averageStudentsRes.data || [],
+        prayersLead: prayersLeadRes.data || [],
+        jumuahPrayers: jumuahPrayersRes.data || [],
+        averageAttendees: averageAttendeesRes.data || [],
+        proficiency: proficiencyRes.data || [],
+        quranMemorization: quranMemorizationRes.data || [],
+        additionalTasks: additionalTasksRes.data || [],
       });
     } catch (error) {
       console.error("Error fetching lookup data:", error);

@@ -164,17 +164,40 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
         File_Number: imamProfile.file_number || "",
         Cell_Number: imamProfile.cell_number || "",
         Contact_Number: imamProfile.contact_number || "",
-        Title: imamProfile.title || "",
+        Title: imamProfile.title ? String(imamProfile.title) : "",
         DOB: formatDateForInput(imamProfile.dob),
-        Race: imamProfile.race || "",
-        Gender: imamProfile.gender || "",
-        Marital_Status: imamProfile.marital_status || "",
-        Madhab: imamProfile.madhab || "",
-        nationality_id: imamProfile.nationality_id || "",
+        Race: imamProfile.race ? String(imamProfile.race) : "",
+        Gender: imamProfile.gender ? String(imamProfile.gender) : "",
+        Marital_Status: imamProfile.marital_status ? String(imamProfile.marital_status) : "",
+        Madhab: imamProfile.madhab ? String(imamProfile.madhab) : "",
+        nationality_id: imamProfile.nationality_id ? String(imamProfile.nationality_id) : "",
         country_id: derivedCountryId,
-        province_id: imamProfile.province_id || "",
-        suburb_id: imamProfile.suburb_id || "",
-        status_id: imamProfile.status_id || "1",
+        province_id: imamProfile.province_id ? String(imamProfile.province_id) : "",
+        suburb_id: imamProfile.suburb_id ? String(imamProfile.suburb_id) : "",
+        status_id: imamProfile.status_id ? String(imamProfile.status_id) : "1",
+        Employment_Type: imamProfile.employment_type ? String(imamProfile.employment_type) : "",
+        Lead_Salah_In_Masjid: imamProfile.lead_salah_in_masjid ? String(imamProfile.lead_salah_in_masjid) : "",
+        Teach_Maktab_Madrassah: imamProfile.teach_maktab_madrassah ? String(imamProfile.teach_maktab_madrassah) : "",
+        Do_Street_Dawah: imamProfile.do_street_dawah ? String(imamProfile.do_street_dawah) : "",
+        Teaching_Frequency: imamProfile.teaching_frequency ? String(imamProfile.teaching_frequency) : "",
+        Teach_Adults_Community_Classes: imamProfile.teach_adults_community_classes ? String(imamProfile.teach_adults_community_classes) : "",
+        Average_Students_Taught_Daily: imamProfile.average_students_taught_daily ? String(imamProfile.average_students_taught_daily) : "",
+        Prayers_Lead_Daily: imamProfile.prayers_lead_daily ? String(imamProfile.prayers_lead_daily) : "",
+        Jumuah_Prayers_Lead: imamProfile.jumuah_prayers_lead ? String(imamProfile.jumuah_prayers_lead) : "",
+        Average_Fajr_Attendees: imamProfile.average_fajr_attendees ? String(imamProfile.average_fajr_attendees) : "",
+        Average_Dhuhr_Attendees: imamProfile.average_dhuhr_attendees ? String(imamProfile.average_dhuhr_attendees) : "",
+        Average_Asr_Attendees: imamProfile.average_asr_attendees ? String(imamProfile.average_asr_attendees) : "",
+        Average_Maghrib_Attendees: imamProfile.average_maghrib_attendees ? String(imamProfile.average_maghrib_attendees) : "",
+        Average_Esha_Attendees: imamProfile.average_esha_attendees ? String(imamProfile.average_esha_attendees) : "",
+        English_Proficiency: imamProfile.english_proficiency ? String(imamProfile.english_proficiency) : "",
+        Arabic_Proficiency: imamProfile.arabic_proficiency ? String(imamProfile.arabic_proficiency) : "",
+        Quran_Reading_Ability: imamProfile.quran_reading_ability ? String(imamProfile.quran_reading_ability) : "",
+        Public_Speaking_Khutbah_Skills: imamProfile.public_speaking_khutbah_skills ? String(imamProfile.public_speaking_khutbah_skills) : "",
+        Quran_Memorization: imamProfile.quran_memorization || "",
+        Additional_Weekly_Tasks: imamProfile.additional_weekly_tasks ? (Array.isArray(imamProfile.additional_weekly_tasks) ? imamProfile.additional_weekly_tasks : imamProfile.additional_weekly_tasks.split(',').map(t => t.trim())) : [],
+        Acknowledge: imamProfile.acknowledge || false,
+        Longitude: imamProfile.longitude || "",
+        Latitude: imamProfile.latitude || "",
       };
       reset(formData);
       
@@ -194,29 +217,102 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
 
   const onSubmit = async (data) => {
     try {
-      const payload = {
-        name: data.Name,
-        surname: data.Surname,
-        email: data.Email || null,
-        id_number: data.ID_Number || null,
-        file_number: data.File_Number || null,
-        cell_number: data.Cell_Number || null,
-        contact_number: data.Contact_Number || null,
-        title: data.Title && data.Title !== "" ? parseInt(data.Title) : null,
-        dob: data.DOB || null,
-        race: data.Race && data.Race !== "" ? parseInt(data.Race) : null,
-        gender: data.Gender && data.Gender !== "" ? parseInt(data.Gender) : null,
-        marital_status: data.Marital_Status && data.Marital_Status !== "" ? parseInt(data.Marital_Status) : null,
-        madhab: data.Madhab && data.Madhab !== "" ? parseInt(data.Madhab) : null,
-        nationality_id: data.nationality_id && data.nationality_id !== "" ? parseInt(data.nationality_id) : null,
-        // country_id is not stored in Imam_Profiles table - it's derived from province
-        province_id: data.province_id && data.province_id !== "" ? parseInt(data.province_id) : null,
-        suburb_id: data.suburb_id && data.suburb_id !== "" ? parseInt(data.suburb_id) : null,
-        status_id: data.status_id && data.status_id !== "" ? parseInt(data.status_id) : 1,
-        updated_by: getAuditName(),
-      };
+      const hasFile = data.Masjid_Image && data.Masjid_Image.length > 0;
+      
+      let payload;
+      if (hasFile) {
+        const formData = new FormData();
+        formData.append("name", data.Name);
+        formData.append("surname", data.Surname);
+        formData.append("email", data.Email || "");
+        formData.append("id_number", data.ID_Number || "");
+        formData.append("file_number", data.File_Number || "");
+        formData.append("cell_number", data.Cell_Number || "");
+        formData.append("contact_number", data.Contact_Number || "");
+        formData.append("title", data.Title && data.Title !== "" ? data.Title : "");
+        formData.append("dob", data.DOB || "");
+        formData.append("race", data.Race && data.Race !== "" ? data.Race : "");
+        formData.append("gender", data.Gender && data.Gender !== "" ? data.Gender : "");
+        formData.append("marital_status", data.Marital_Status && data.Marital_Status !== "" ? data.Marital_Status : "");
+        formData.append("madhab", data.Madhab && data.Madhab !== "" ? data.Madhab : "");
+        formData.append("nationality_id", data.nationality_id && data.nationality_id !== "" ? data.nationality_id : "");
+        formData.append("province_id", data.province_id && data.province_id !== "" ? data.province_id : "");
+        formData.append("suburb_id", data.suburb_id && data.suburb_id !== "" ? data.suburb_id : "");
+        formData.append("status_id", data.status_id && data.status_id !== "" ? data.status_id : "1");
+        formData.append("employment_type", data.Employment_Type && data.Employment_Type !== "" ? data.Employment_Type : "");
+        formData.append("lead_salah_in_masjid", data.Lead_Salah_In_Masjid && data.Lead_Salah_In_Masjid !== "" ? data.Lead_Salah_In_Masjid : "");
+        formData.append("teach_maktab_madrassah", data.Teach_Maktab_Madrassah && data.Teach_Maktab_Madrassah !== "" ? data.Teach_Maktab_Madrassah : "");
+        formData.append("do_street_dawah", data.Do_Street_Dawah && data.Do_Street_Dawah !== "" ? data.Do_Street_Dawah : "");
+        formData.append("teaching_frequency", data.Teaching_Frequency && data.Teaching_Frequency !== "" ? data.Teaching_Frequency : "");
+        formData.append("teach_adults_community_classes", data.Teach_Adults_Community_Classes && data.Teach_Adults_Community_Classes !== "" ? data.Teach_Adults_Community_Classes : "");
+        formData.append("average_students_taught_daily", data.Average_Students_Taught_Daily && data.Average_Students_Taught_Daily !== "" ? data.Average_Students_Taught_Daily : "");
+        formData.append("prayers_lead_daily", data.Prayers_Lead_Daily && data.Prayers_Lead_Daily !== "" ? data.Prayers_Lead_Daily : "");
+        formData.append("jumuah_prayers_lead", data.Jumuah_Prayers_Lead && data.Jumuah_Prayers_Lead !== "" ? data.Jumuah_Prayers_Lead : "");
+        formData.append("average_fajr_attendees", data.Average_Fajr_Attendees && data.Average_Fajr_Attendees !== "" ? data.Average_Fajr_Attendees : "");
+        formData.append("average_dhuhr_attendees", data.Average_Dhuhr_Attendees && data.Average_Dhuhr_Attendees !== "" ? data.Average_Dhuhr_Attendees : "");
+        formData.append("average_asr_attendees", data.Average_Asr_Attendees && data.Average_Asr_Attendees !== "" ? data.Average_Asr_Attendees : "");
+        formData.append("average_maghrib_attendees", data.Average_Maghrib_Attendees && data.Average_Maghrib_Attendees !== "" ? data.Average_Maghrib_Attendees : "");
+        formData.append("average_esha_attendees", data.Average_Esha_Attendees && data.Average_Esha_Attendees !== "" ? data.Average_Esha_Attendees : "");
+        formData.append("english_proficiency", data.English_Proficiency && data.English_Proficiency !== "" ? data.English_Proficiency : "");
+        formData.append("arabic_proficiency", data.Arabic_Proficiency && data.Arabic_Proficiency !== "" ? data.Arabic_Proficiency : "");
+        formData.append("quran_reading_ability", data.Quran_Reading_Ability && data.Quran_Reading_Ability !== "" ? data.Quran_Reading_Ability : "");
+        formData.append("public_speaking_khutbah_skills", data.Public_Speaking_Khutbah_Skills && data.Public_Speaking_Khutbah_Skills !== "" ? data.Public_Speaking_Khutbah_Skills : "");
+        formData.append("quran_memorization", data.Quran_Memorization || "");
+        formData.append("additional_weekly_tasks", Array.isArray(data.Additional_Weekly_Tasks) ? data.Additional_Weekly_Tasks.join(',') : (data.Additional_Weekly_Tasks || ""));
+        formData.append("acknowledge", data.Acknowledge ? "true" : "false");
+        formData.append("longitude", data.Longitude && data.Longitude !== "" ? data.Longitude : "");
+        formData.append("latitude", data.Latitude && data.Latitude !== "" ? data.Latitude : "");
+        formData.append("updated_by", getAuditName());
+        formData.append("Masjid_Image", data.Masjid_Image[0]);
+        payload = formData;
+      } else {
+        payload = {
+          name: data.Name,
+          surname: data.Surname,
+          email: data.Email || null,
+          id_number: data.ID_Number || null,
+          file_number: data.File_Number || null,
+          cell_number: data.Cell_Number || null,
+          contact_number: data.Contact_Number || null,
+          title: data.Title && data.Title !== "" ? parseInt(data.Title) : null,
+          dob: data.DOB || null,
+          race: data.Race && data.Race !== "" ? parseInt(data.Race) : null,
+          gender: data.Gender && data.Gender !== "" ? parseInt(data.Gender) : null,
+          marital_status: data.Marital_Status && data.Marital_Status !== "" ? parseInt(data.Marital_Status) : null,
+          madhab: data.Madhab && data.Madhab !== "" ? parseInt(data.Madhab) : null,
+          nationality_id: data.nationality_id && data.nationality_id !== "" ? parseInt(data.nationality_id) : null,
+          province_id: data.province_id && data.province_id !== "" ? parseInt(data.province_id) : null,
+          suburb_id: data.suburb_id && data.suburb_id !== "" ? parseInt(data.suburb_id) : null,
+          status_id: data.status_id && data.status_id !== "" ? parseInt(data.status_id) : 1,
+          employment_type: data.Employment_Type && data.Employment_Type !== "" ? parseInt(data.Employment_Type) : null,
+          lead_salah_in_masjid: data.Lead_Salah_In_Masjid && data.Lead_Salah_In_Masjid !== "" ? parseInt(data.Lead_Salah_In_Masjid) : null,
+          teach_maktab_madrassah: data.Teach_Maktab_Madrassah && data.Teach_Maktab_Madrassah !== "" ? parseInt(data.Teach_Maktab_Madrassah) : null,
+          do_street_dawah: data.Do_Street_Dawah && data.Do_Street_Dawah !== "" ? parseInt(data.Do_Street_Dawah) : null,
+          teaching_frequency: data.Teaching_Frequency && data.Teaching_Frequency !== "" ? parseInt(data.Teaching_Frequency) : null,
+          teach_adults_community_classes: data.Teach_Adults_Community_Classes && data.Teach_Adults_Community_Classes !== "" ? parseInt(data.Teach_Adults_Community_Classes) : null,
+          average_students_taught_daily: data.Average_Students_Taught_Daily && data.Average_Students_Taught_Daily !== "" ? parseInt(data.Average_Students_Taught_Daily) : null,
+          prayers_lead_daily: data.Prayers_Lead_Daily && data.Prayers_Lead_Daily !== "" ? parseInt(data.Prayers_Lead_Daily) : null,
+          jumuah_prayers_lead: data.Jumuah_Prayers_Lead && data.Jumuah_Prayers_Lead !== "" ? parseInt(data.Jumuah_Prayers_Lead) : null,
+          average_fajr_attendees: data.Average_Fajr_Attendees && data.Average_Fajr_Attendees !== "" ? parseInt(data.Average_Fajr_Attendees) : null,
+          average_dhuhr_attendees: data.Average_Dhuhr_Attendees && data.Average_Dhuhr_Attendees !== "" ? parseInt(data.Average_Dhuhr_Attendees) : null,
+          average_asr_attendees: data.Average_Asr_Attendees && data.Average_Asr_Attendees !== "" ? parseInt(data.Average_Asr_Attendees) : null,
+          average_maghrib_attendees: data.Average_Maghrib_Attendees && data.Average_Maghrib_Attendees !== "" ? parseInt(data.Average_Maghrib_Attendees) : null,
+          average_esha_attendees: data.Average_Esha_Attendees && data.Average_Esha_Attendees !== "" ? parseInt(data.Average_Esha_Attendees) : null,
+          english_proficiency: data.English_Proficiency && data.English_Proficiency !== "" ? parseInt(data.English_Proficiency) : null,
+          arabic_proficiency: data.Arabic_Proficiency && data.Arabic_Proficiency !== "" ? parseInt(data.Arabic_Proficiency) : null,
+          quran_reading_ability: data.Quran_Reading_Ability && data.Quran_Reading_Ability !== "" ? parseInt(data.Quran_Reading_Ability) : null,
+          public_speaking_khutbah_skills: data.Public_Speaking_Khutbah_Skills && data.Public_Speaking_Khutbah_Skills !== "" ? parseInt(data.Public_Speaking_Khutbah_Skills) : null,
+          quran_memorization: data.Quran_Memorization || null,
+          additional_weekly_tasks: Array.isArray(data.Additional_Weekly_Tasks) ? data.Additional_Weekly_Tasks.join(',') : (data.Additional_Weekly_Tasks || null),
+          acknowledge: data.Acknowledge || false,
+          longitude: data.Longitude && data.Longitude !== "" ? parseFloat(data.Longitude) : null,
+          latitude: data.Latitude && data.Latitude !== "" ? parseFloat(data.Latitude) : null,
+          updated_by: getAuditName(),
+        };
+      }
 
-      await axiosApi.put(`${API_BASE_URL}/imamProfiles/${imamProfile.id}`, payload);
+      const requestConfig = hasFile ? { headers: { "Content-Type": "multipart/form-data" } } : {};
+      await axiosApi.put(`${API_BASE_URL}/imamProfiles/${imamProfile.id}`, payload, requestConfig);
       
       showAlert("Imam profile has been updated successfully", "success");
       onUpdate();
@@ -675,11 +771,12 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
               </Col>
               <Col md={6}>
                 <FormGroup>
-                  <Label>Email</Label>
+                  <Label>Email <span className="text-danger">*</span></Label>
                   <Controller
                     name="Email"
                     control={control}
                     rules={{ 
+                      required: "Email is required",
                       pattern: {
                         value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
                         message: "Invalid email address"
@@ -731,7 +828,18 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
                     name="Cell_Number"
                     control={control}
                     render={({ field }) => (
-                      <Input type="text" {...field} placeholder="Enter cell number" />
+                      <Input
+                        type="text"
+                        maxLength={10}
+                        onInput={(e) => {
+                          e.target.value = (e.target.value || "").replace(/\D/g, "").slice(0, 10);
+                          field.onChange(e);
+                        }}
+                        value={field.value}
+                        onBlur={field.onBlur}
+                        placeholder="Enter cell number"
+                        {...field}
+                      />
                     )}
                   />
                 </FormGroup>
@@ -743,7 +851,18 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
                     name="Contact_Number"
                     control={control}
                     render={({ field }) => (
-                      <Input type="text" {...field} placeholder="Enter contact number" />
+                      <Input
+                        type="text"
+                        maxLength={10}
+                        onInput={(e) => {
+                          e.target.value = (e.target.value || "").replace(/\D/g, "").slice(0, 10);
+                          field.onChange(e);
+                        }}
+                        value={field.value}
+                        onBlur={field.onBlur}
+                        placeholder="Enter contact number"
+                        {...field}
+                      />
                     )}
                   />
                 </FormGroup>
@@ -1001,6 +1120,525 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
                   </InputGroup>
                 </FormGroup>
               </Col>
+              {/* Employment Type */}
+              <Col md={6}>
+                <FormGroup>
+                  <Label>What is your employment type?</Label>
+                  <Controller
+                    name="Employment_Type"
+                    control={control}
+                    render={({ field }) => (
+                      <Input type="select" {...field}>
+                        <option value="">Select Employment Type</option>
+                        {(lookupData.employmentType || []).map((item) => (
+                          <option key={item.id} value={String(item.id)}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </Input>
+                    )}
+                  />
+                </FormGroup>
+              </Col>
+
+              {/* Lead Salah In Masjid */}
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Do You Lead Salah In Your Masjid?</Label>
+                  <Controller
+                    name="Lead_Salah_In_Masjid"
+                    control={control}
+                    render={({ field }) => (
+                      <Input type="select" {...field}>
+                        <option value="">Select</option>
+                        {(lookupData.yesNo || []).map((item) => (
+                          <option key={item.id} value={String(item.id)}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </Input>
+                    )}
+                  />
+                </FormGroup>
+              </Col>
+
+              {/* Teach Maktab Madrassah */}
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Do You Teach Maktab Madrassah?</Label>
+                  <Controller
+                    name="Teach_Maktab_Madrassah"
+                    control={control}
+                    render={({ field }) => (
+                      <Input type="select" {...field}>
+                        <option value="">Select</option>
+                        {(lookupData.yesNo || []).map((item) => (
+                          <option key={item.id} value={String(item.id)}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </Input>
+                    )}
+                  />
+                </FormGroup>
+              </Col>
+
+              {/* Do Street Dawah */}
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Do You Do Any Type Of Street Dawah?</Label>
+                  <Controller
+                    name="Do_Street_Dawah"
+                    control={control}
+                    render={({ field }) => (
+                      <Input type="select" {...field}>
+                        <option value="">Select</option>
+                        {(lookupData.yesNo || []).map((item) => (
+                          <option key={item.id} value={String(item.id)}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </Input>
+                    )}
+                  />
+                </FormGroup>
+              </Col>
+
+              {/* Teaching Frequency */}
+              <Col md={6}>
+                <FormGroup>
+                  <Label>How Frequently Do You Teach At The Madrassah?</Label>
+                  <Controller
+                    name="Teaching_Frequency"
+                    control={control}
+                    render={({ field }) => (
+                      <Input type="select" {...field}>
+                        <option value="">Select Frequency</option>
+                        {(lookupData.teachingFrequency || []).map((item) => (
+                          <option key={item.id} value={String(item.id)}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </Input>
+                    )}
+                  />
+                </FormGroup>
+              </Col>
+
+              {/* Teach Adults Community Classes */}
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Do You Teach Adults Or Offer Community Classes Outside Of Madrassah?</Label>
+                  <Controller
+                    name="Teach_Adults_Community_Classes"
+                    control={control}
+                    render={({ field }) => (
+                      <Input type="select" {...field}>
+                        <option value="">Select</option>
+                        {(lookupData.teachAdults || []).map((item) => (
+                          <option key={item.id} value={String(item.id)}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </Input>
+                    )}
+                  />
+                </FormGroup>
+              </Col>
+
+              {/* Average Students Taught Daily */}
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Average Number Of Students Taught Daily?</Label>
+                  <Controller
+                    name="Average_Students_Taught_Daily"
+                    control={control}
+                    render={({ field }) => (
+                      <Input type="select" {...field}>
+                        <option value="">Select</option>
+                        {(lookupData.averageStudents || []).map((item) => (
+                          <option key={item.id} value={String(item.id)}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </Input>
+                    )}
+                  />
+                </FormGroup>
+              </Col>
+
+              {/* Prayers Lead Daily */}
+              <Col md={6}>
+                <FormGroup>
+                  <Label>How many Prayers Do You Lead Daily?</Label>
+                  <Controller
+                    name="Prayers_Lead_Daily"
+                    control={control}
+                    render={({ field }) => (
+                      <Input type="select" {...field}>
+                        <option value="">Select</option>
+                        {(lookupData.prayersLead || []).map((item) => (
+                          <option key={item.id} value={String(item.id)}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </Input>
+                    )}
+                  />
+                </FormGroup>
+              </Col>
+
+              {/* Jumuah Prayers Lead */}
+              <Col md={6}>
+                <FormGroup>
+                  <Label>How Many Jumu'ah Prayers Do You Lead</Label>
+                  <Controller
+                    name="Jumuah_Prayers_Lead"
+                    control={control}
+                    render={({ field }) => (
+                      <Input type="select" {...field}>
+                        <option value="">Select</option>
+                        {(lookupData.jumuahPrayers || []).map((item) => (
+                          <option key={item.id} value={String(item.id)}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </Input>
+                    )}
+                  />
+                </FormGroup>
+              </Col>
+
+              {/* Average Fajr Attendees */}
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Average Fajr Attendees?*</Label>
+                  <Controller
+                    name="Average_Fajr_Attendees"
+                    control={control}
+                    render={({ field }) => (
+                      <Input type="select" {...field}>
+                        <option value="">Select</option>
+                        {(lookupData.averageAttendees || []).map((item) => (
+                          <option key={item.id} value={String(item.id)}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </Input>
+                    )}
+                  />
+                </FormGroup>
+              </Col>
+
+              {/* Average Dhuhr Attendees */}
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Average Dhuhr Attendees?</Label>
+                  <Controller
+                    name="Average_Dhuhr_Attendees"
+                    control={control}
+                    render={({ field }) => (
+                      <Input type="select" {...field}>
+                        <option value="">Select</option>
+                        {(lookupData.averageAttendees || []).map((item) => (
+                          <option key={item.id} value={String(item.id)}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </Input>
+                    )}
+                  />
+                </FormGroup>
+              </Col>
+
+              {/* Average Asr Attendees */}
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Average Asr Attendees?</Label>
+                  <Controller
+                    name="Average_Asr_Attendees"
+                    control={control}
+                    render={({ field }) => (
+                      <Input type="select" {...field}>
+                        <option value="">Select</option>
+                        {(lookupData.averageAttendees || []).map((item) => (
+                          <option key={item.id} value={String(item.id)}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </Input>
+                    )}
+                  />
+                </FormGroup>
+              </Col>
+
+              {/* Average Maghrib Attendees */}
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Average Maghrib Attendees?</Label>
+                  <Controller
+                    name="Average_Maghrib_Attendees"
+                    control={control}
+                    render={({ field }) => (
+                      <Input type="select" {...field}>
+                        <option value="">Select</option>
+                        {(lookupData.averageAttendees || []).map((item) => (
+                          <option key={item.id} value={String(item.id)}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </Input>
+                    )}
+                  />
+                </FormGroup>
+              </Col>
+
+              {/* Average Esha Attendees */}
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Average Esha Attendees?</Label>
+                  <Controller
+                    name="Average_Esha_Attendees"
+                    control={control}
+                    render={({ field }) => (
+                      <Input type="select" {...field}>
+                        <option value="">Select</option>
+                        {(lookupData.averageAttendees || []).map((item) => (
+                          <option key={item.id} value={String(item.id)}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </Input>
+                    )}
+                  />
+                </FormGroup>
+              </Col>
+
+              {/* English Proficiency */}
+              <Col md={6}>
+                <FormGroup>
+                  <Label>English Proficiency</Label>
+                  <Controller
+                    name="English_Proficiency"
+                    control={control}
+                    render={({ field }) => (
+                      <Input type="select" {...field}>
+                        <option value="">Select</option>
+                        {(lookupData.proficiency || []).map((item) => (
+                          <option key={item.id} value={String(item.id)}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </Input>
+                    )}
+                  />
+                </FormGroup>
+              </Col>
+
+              {/* Arabic Proficiency */}
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Arabic Proficiency</Label>
+                  <Controller
+                    name="Arabic_Proficiency"
+                    control={control}
+                    render={({ field }) => (
+                      <Input type="select" {...field}>
+                        <option value="">Select</option>
+                        {(lookupData.proficiency || []).map((item) => (
+                          <option key={item.id} value={String(item.id)}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </Input>
+                    )}
+                  />
+                </FormGroup>
+              </Col>
+
+              {/* Quran Reading Ability */}
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Qur'an Reading Ability</Label>
+                  <Controller
+                    name="Quran_Reading_Ability"
+                    control={control}
+                    render={({ field }) => (
+                      <Input type="select" {...field}>
+                        <option value="">Select</option>
+                        {(lookupData.proficiency || []).map((item) => (
+                          <option key={item.id} value={String(item.id)}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </Input>
+                    )}
+                  />
+                </FormGroup>
+              </Col>
+
+              {/* Public Speaking Khutbah Skills */}
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Public Speaking Or Khutbah Delivery Skills</Label>
+                  <Controller
+                    name="Public_Speaking_Khutbah_Skills"
+                    control={control}
+                    render={({ field }) => (
+                      <Input type="select" {...field}>
+                        <option value="">Select</option>
+                        {(lookupData.proficiency || []).map((item) => (
+                          <option key={item.id} value={String(item.id)}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </Input>
+                    )}
+                  />
+                </FormGroup>
+              </Col>
+
+              {/* Quran Memorization */}
+              <Col md={6}>
+                <FormGroup>
+                  <Label>How Much Of The Qur'an Have You Memorised?</Label>
+                  <Controller
+                    name="Quran_Memorization"
+                    control={control}
+                    render={({ field }) => (
+                      <Input type="select" {...field}>
+                        <option value="">Select</option>
+                        {(lookupData.quranMemorization || []).map((item) => (
+                          <option key={item.id} value={item.name}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </Input>
+                    )}
+                  />
+                </FormGroup>
+              </Col>
+
+              {/* Additional Weekly Tasks - Multiple Select */}
+              <Col md={12}>
+                <FormGroup>
+                  <Label>Additional Weekly Tasks</Label>
+                  <Controller
+                    name="Additional_Weekly_Tasks"
+                    control={control}
+                    render={({ field }) => (
+                      <Input 
+                        type="select" 
+                        multiple
+                        value={field.value || []}
+                        onChange={(e) => {
+                          const selected = Array.from(e.target.selectedOptions, option => option.value);
+                          field.onChange(selected);
+                        }}
+                      >
+                        {(lookupData.additionalTasks || []).map((item) => (
+                          <option key={item.id} value={item.name}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </Input>
+                    )}
+                  />
+                  <small className="text-muted">Hold Ctrl (or Cmd on Mac) to select multiple options</small>
+                </FormGroup>
+              </Col>
+
+              {/* Masjid Image Upload */}
+              <Col md={12}>
+                <FormGroup>
+                  <Label>Upload Image of Masjid</Label>
+                  <Controller
+                    name="Masjid_Image"
+                    control={control}
+                    render={({ field: { value, onChange, ...field } }) => (
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const files = e.target.files;
+                          onChange(files);
+                        }}
+                        {...field}
+                      />
+                    )}
+                  />
+                  <small className="text-muted">Leave empty to keep existing image. Longitude and latitude will be extracted from the image metadata if available.</small>
+                </FormGroup>
+              </Col>
+
+              {/* Longitude and Latitude */}
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Longitude</Label>
+                  <Controller
+                    name="Longitude"
+                    control={control}
+                    render={({ field }) => (
+                      <Input
+                        type="number"
+                        step="any"
+                        placeholder="Enter longitude"
+                        {...field}
+                      />
+                    )}
+                  />
+                  <small className="text-muted">Will be extracted from image if available</small>
+                </FormGroup>
+              </Col>
+
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Latitude</Label>
+                  <Controller
+                    name="Latitude"
+                    control={control}
+                    render={({ field }) => (
+                      <Input
+                        type="number"
+                        step="any"
+                        placeholder="Enter latitude"
+                        {...field}
+                      />
+                    )}
+                  />
+                  <small className="text-muted">Will be extracted from image if available</small>
+                </FormGroup>
+              </Col>
+
+              {/* Acknowledge */}
+              <Col md={12}>
+                <FormGroup check>
+                  <Controller
+                    name="Acknowledge"
+                    control={control}
+                    rules={{ required: "You must acknowledge this statement" }}
+                    render={({ field }) => (
+                      <Label check className="d-flex align-items-center">
+                        <Input
+                          type="checkbox"
+                          defaultChecked={false}
+                          onChange={(e) => field.onChange(e.target.checked)}
+                          invalid={!!errors.Acknowledge}
+                          className="me-2"
+                        />
+                        I declare that the information submitted is accurate and truthful. I understand that Allah is All-Seeing and All-Aware of what is in our hearts. <span className="text-danger">*</span>
+                      </Label>
+                    )}
+                  />
+                  {errors.Acknowledge && (
+                    <FormFeedback className="d-block">
+                      {errors.Acknowledge.message}
+                    </FormFeedback>
+                  )}
+                </FormGroup>
+              </Col>
+
+              {/* Status */}
               <Col md={6}>
                 <FormGroup>
                   <Label>Status {isAppAdmin ? "" : "(Read Only)"}</Label>
@@ -1024,7 +1662,7 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
                           >
                             <option value="">Select Status</option>
                             {(lookupData.status || []).map((item) => (
-                              <option key={item.id} value={item.id}>
+                              <option key={item.id} value={String(item.id)}>
                                 {item.name}
                               </option>
                             ))}
