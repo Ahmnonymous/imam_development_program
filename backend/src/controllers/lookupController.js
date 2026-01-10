@@ -1,7 +1,6 @@
 const lookupModel = require('../models/lookupModel');
 
 const lookupTables = {
-  Supplier_Category: { orderByName: true },
   Suburb: { orderByName: true },
   Nationality: { orderByName: true },
   Health_Conditions: { orderByName: true },
@@ -61,7 +60,6 @@ const lookupTables = {
   Attendance_Frequency_Lookup: { orderByName: true },
   Semesters_Per_Year_Lookup: { orderByName: true },
   Borehole_Construction_Tasks_Lookup: { orderByName: true },
-  Supplier_Lookup: { orderByName: true },
   // Imam Profile Additional Lookup Tables
   Employment_Type: { orderByName: true },
   Teaching_Frequency: { orderByName: true },

@@ -8,32 +8,32 @@ const DURATION_CONFIGS = {
 
 const METRIC_DEFINITIONS = [
   {
-    key: 'filesCreated',
-    label: ' Files Created',
-    table: 'personal_files',
-    alias: 'pf',
-    // icon: 'bx-folder-open',
+    key: 'imamProfiles',
+    label: ' Imam Profiles',
+    table: 'Imam_Profiles',
+    alias: 'ip',
+    // icon: 'bx-user',
   },
   {
-    key: 'foodAidGiven',
-    label: ' Food Aid Given',
-    table: 'food_assistance',
-    alias: 'fa',
-    // icon: 'bx-bowl-hot',
+    key: 'jumuahKhutbah',
+    label: ' Jumuah Khutbah',
+    table: 'Jumuah_Khutbah_Topic_Submission',
+    alias: 'jk',
+    // icon: 'bx-message',
   },
   {
-    key: 'financialAidGiven',
-    label: ' Financial Aid Given',
-    table: 'financial_assistance',
-    alias: 'fia',
-    // icon: 'bx-wallet',
+    key: 'communityEngagement',
+    label: ' Community Engagement',
+    table: 'Community_Engagement',
+    alias: 'ce',
+    // icon: 'bx-group',
   },
   {
-    key: 'homeVisitsDone',
-    label: ' Home Visits Done',
-    table: 'home_visit',
-    alias: 'hv',
-    // icon: 'bx-home-smile',
+    key: 'medicalReimbursement',
+    label: ' Medical Reimbursement',
+    table: 'Medical_Reimbursement',
+    alias: 'mr',
+    // icon: 'bx-heart',
   },
 ];
 
@@ -112,14 +112,9 @@ function formatPeriodLabel(dateString, config) {
 const dashboardModel = {
   getApplicantStatistics: async (centerId, isSuperAdmin) => {
     try {
-      const hasCenterFilter = !isSuperAdmin && centerId;
-      const params = hasCenterFilter ? [centerId] : [];
-      const centerFilterCondition = (alias) =>
-        hasCenterFilter ? `${alias}.center_id = $1` : 'TRUE';
-      const centerFilterAnd = (alias) =>
-        hasCenterFilter ? `AND ${alias}.center_id = $1` : '';
-
-      // Get all statistics in parallel
+      const params = [];
+      
+      // Get statistics from Imam Profiles and related tables
       const [
         nationalityStats,
         genderStats,
@@ -128,136 +123,124 @@ const dashboardModel = {
         suburbStats,
         employmentStats,
         maritalStats,
-        fileStatusStats,
-        fileConditionStats,
+        statusStats,
         summaryStats,
-        applicantTrendStats,
-        foodAidTrendStats,
-        homeVisitTrendStats,
-        programsTrendStats,
+        imamTrendStats,
+        jumuahTrendStats,
+        communityTrendStats,
+        medicalTrendStats,
       ] = await Promise.all([
-        // Nationality statistics with tenant filter
+        // Nationality statistics from Imam Profiles
         pool.query(`
           SELECT 
-            n.name as label,
-            COUNT(a.id)::INTEGER as value
-          FROM applicant_details a
-          LEFT JOIN nationality n ON a.nationality = n.id
-          WHERE n.name IS NOT NULL ${centerFilterAnd('a')}
-          GROUP BY n.id, n.name
+            c.name as label,
+            COUNT(ip.id)::INTEGER as value
+          FROM Imam_Profiles ip
+          LEFT JOIN Country c ON ip.nationality_id = c.id
+          WHERE c.name IS NOT NULL AND ip.status_id = (SELECT id FROM Status WHERE name = 'Approved' LIMIT 1)
+          GROUP BY c.id, c.name
           ORDER BY value DESC
         `, params),
         
-        // Gender statistics with tenant filter
+        // Gender statistics from Imam Profiles
         pool.query(`
           SELECT 
             g.name as label,
-            COUNT(a.id)::INTEGER as value
-          FROM applicant_details a
-          LEFT JOIN gender g ON a.gender = g.id
-          WHERE g.name IS NOT NULL ${centerFilterAnd('a')}
+            COUNT(ip.id)::INTEGER as value
+          FROM Imam_Profiles ip
+          LEFT JOIN Gender g ON ip.gender = g.id
+          WHERE g.name IS NOT NULL AND ip.status_id = (SELECT id FROM Status WHERE name = 'Approved' LIMIT 1)
           GROUP BY g.id, g.name
           ORDER BY value DESC
         `, params),
         
-        // Education statistics with tenant filter
+        // Education statistics from Imam Profiles (using Highest_Education_Level from Employee)
         pool.query(`
           SELECT 
             e.name as label,
-            COUNT(a.id)::INTEGER as value
-          FROM applicant_details a
-          LEFT JOIN education_level e ON a.highest_education_level = e.id
-          WHERE e.name IS NOT NULL ${centerFilterAnd('a')}
+            COUNT(DISTINCT ip.id)::INTEGER as value
+          FROM Imam_Profiles ip
+          INNER JOIN Employee emp ON ip.employee_id = emp.id
+          LEFT JOIN Education_Level e ON emp.highest_education_level = e.id
+          WHERE e.name IS NOT NULL AND ip.status_id = (SELECT id FROM Status WHERE name = 'Approved' LIMIT 1)
           GROUP BY e.id, e.name
           ORDER BY value DESC
         `, params),
         
-        // Race statistics with tenant filter
+        // Race statistics from Imam Profiles
         pool.query(`
           SELECT 
             r.name as label,
-            COUNT(a.id)::INTEGER as value
-          FROM applicant_details a
-          LEFT JOIN race r ON a.race = r.id
-          WHERE r.name IS NOT NULL ${centerFilterAnd('a')}
+            COUNT(ip.id)::INTEGER as value
+          FROM Imam_Profiles ip
+          LEFT JOIN Race r ON ip.race = r.id
+          WHERE r.name IS NOT NULL AND ip.status_id = (SELECT id FROM Status WHERE name = 'Approved' LIMIT 1)
           GROUP BY r.id, r.name
           ORDER BY value DESC
         `, params),
         
-        // Suburb statistics with tenant filter
+        // Suburb statistics from Imam Profiles
         pool.query(`
           SELECT 
             s.name as label,
-            COUNT(a.id)::INTEGER as value
-          FROM applicant_details a
-          LEFT JOIN suburb s ON a.suburb = s.id
-          WHERE s.name IS NOT NULL ${centerFilterAnd('a')}
+            COUNT(ip.id)::INTEGER as value
+          FROM Imam_Profiles ip
+          LEFT JOIN Suburb s ON ip.suburb_id = s.id
+          WHERE s.name IS NOT NULL AND ip.status_id = (SELECT id FROM Status WHERE name = 'Approved' LIMIT 1)
           GROUP BY s.id, s.name
           ORDER BY value DESC
+          LIMIT 20
         `, params),
         
-        // Employment Status statistics with tenant filter
+        // Employment Type statistics from Imam Profiles
         pool.query(`
           SELECT 
-            e.name as label,
-            COUNT(a.id)::INTEGER as value
-          FROM applicant_details a
-          LEFT JOIN employment_status e ON a.employment_status = e.id
-          WHERE e.name IS NOT NULL ${centerFilterAnd('a')}
-          GROUP BY e.id, e.name
+            et.name as label,
+            COUNT(ip.id)::INTEGER as value
+          FROM Imam_Profiles ip
+          LEFT JOIN Employment_Type et ON ip.employment_type = et.id
+          WHERE et.name IS NOT NULL AND ip.status_id = (SELECT id FROM Status WHERE name = 'Approved' LIMIT 1)
+          GROUP BY et.id, et.name
           ORDER BY value DESC
         `, params),
         
-        // Marital Status statistics with tenant filter
+        // Marital Status statistics from Imam Profiles
         pool.query(`
           SELECT 
             m.name as label,
-            COUNT(a.id)::INTEGER as value
-          FROM applicant_details a
-          LEFT JOIN marital_status m ON a.marital_status = m.id
-          WHERE m.name IS NOT NULL ${centerFilterAnd('a')}
+            COUNT(ip.id)::INTEGER as value
+          FROM Imam_Profiles ip
+          LEFT JOIN Marital_Status m ON ip.marital_status = m.id
+          WHERE m.name IS NOT NULL AND ip.status_id = (SELECT id FROM Status WHERE name = 'Approved' LIMIT 1)
           GROUP BY m.id, m.name
           ORDER BY value DESC
         `, params),
         
-        // File Status statistics with tenant filter
+        // Status statistics from Imam Profiles
         pool.query(`
           SELECT 
-            f.name as label,
-            COUNT(a.id)::INTEGER as value
-          FROM applicant_details a
-          LEFT JOIN file_status f ON a.file_status = f.id
-          WHERE f.name IS NOT NULL ${centerFilterAnd('a')}
-          GROUP BY f.id, f.name
+            s.name as label,
+            COUNT(ip.id)::INTEGER as value
+          FROM Imam_Profiles ip
+          LEFT JOIN Status s ON ip.status_id = s.id
+          WHERE s.name IS NOT NULL
+          GROUP BY s.id, s.name
           ORDER BY value DESC
         `, params),
         
-        // File Condition statistics with tenant filter
+        // Summary statistics from Imam Profiles
         pool.query(`
           SELECT 
-            f.name as label,
-            COUNT(a.id)::INTEGER as value
-          FROM applicant_details a
-          LEFT JOIN file_condition f ON a.file_condition = f.id
-          WHERE f.name IS NOT NULL ${centerFilterAnd('a')}
-          GROUP BY f.id, f.name
-          ORDER BY value DESC
-        `, params),
-        
-        // Summary statistics with tenant filter
-        pool.query(`
-          SELECT 
-            COUNT(*)::INTEGER as total_applicants,
-            COUNT(CASE WHEN file_status = (SELECT id FROM file_status WHERE name = 'Active' LIMIT 1) THEN 1 END)::INTEGER as active_applicants,
-            COUNT(CASE WHEN created_at >= DATE_TRUNC('month', CURRENT_DATE) THEN 1 END)::INTEGER as new_this_month,
-            (SELECT COUNT(*)::INTEGER FROM food_assistance fa WHERE ${centerFilterCondition('fa')}) AS total_food_aid,
-            (SELECT COUNT(*)::INTEGER FROM home_visit hv WHERE ${centerFilterCondition('hv')}) AS total_home_visits,
-            (SELECT COUNT(*)::INTEGER FROM programs p WHERE ${centerFilterCondition('p')}) AS total_programs
-          FROM applicant_details a
-          WHERE ${centerFilterCondition('a')}
+            COUNT(*)::INTEGER as total_imams,
+            COUNT(CASE WHEN ip.status_id = (SELECT id FROM Status WHERE name = 'Approved' LIMIT 1) THEN 1 END)::INTEGER as approved_imams,
+            COUNT(CASE WHEN ip.created_at >= DATE_TRUNC('month', CURRENT_DATE) THEN 1 END)::INTEGER as new_this_month,
+            (SELECT COUNT(*)::INTEGER FROM Jumuah_Khutbah_Topic_Submission jk WHERE jk.status_id = (SELECT id FROM Status WHERE name = 'Approved' LIMIT 1)) AS total_jumuah_khutbah,
+            (SELECT COUNT(*)::INTEGER FROM Community_Engagement ce WHERE ce.status_id = (SELECT id FROM Status WHERE name = 'Approved' LIMIT 1)) AS total_community_engagement,
+            (SELECT COUNT(*)::INTEGER FROM Medical_Reimbursement mr WHERE mr.status_id = (SELECT id FROM Status WHERE name = 'Approved' LIMIT 1)) AS total_medical_reimbursement
+          FROM Imam_Profiles ip
         `, params),
 
-        // Applicant trend (last 8 months)
+        // Imam Profiles trend (last 8 months)
         pool.query(`
           WITH months AS (
             SELECT generate_series(
@@ -272,17 +255,16 @@ const dashboardModel = {
           FROM months
           LEFT JOIN (
             SELECT 
-              date_trunc('month', a.created_at) AS month_start,
+              date_trunc('month', ip.created_at) AS month_start,
               COUNT(*)::INTEGER AS value
-            FROM applicant_details a
-            WHERE ${centerFilterCondition('a')}
-              AND a.created_at >= date_trunc('month', CURRENT_DATE) - INTERVAL '7 months'
+            FROM Imam_Profiles ip
+            WHERE ip.created_at >= date_trunc('month', CURRENT_DATE) - INTERVAL '7 months'
             GROUP BY 1
           ) counts ON counts.month_start = months.month_start
           ORDER BY months.month_start
         `, params),
 
-        // Food aid trend (last 8 months)
+        // Jumuah Khutbah trend (last 8 months)
         pool.query(`
           WITH months AS (
             SELECT generate_series(
@@ -297,17 +279,16 @@ const dashboardModel = {
           FROM months
           LEFT JOIN (
             SELECT 
-              date_trunc('month', fa.created_at) AS month_start,
+              date_trunc('month', jk.created_at) AS month_start,
               COUNT(*)::INTEGER AS value
-            FROM food_assistance fa
-            WHERE ${centerFilterCondition('fa')}
-              AND fa.created_at >= date_trunc('month', CURRENT_DATE) - INTERVAL '7 months'
+            FROM Jumuah_Khutbah_Topic_Submission jk
+            WHERE jk.created_at >= date_trunc('month', CURRENT_DATE) - INTERVAL '7 months'
             GROUP BY 1
           ) counts ON counts.month_start = months.month_start
           ORDER BY months.month_start
         `, params),
 
-        // Home visits trend (last 8 months)
+        // Community Engagement trend (last 8 months)
         pool.query(`
           WITH months AS (
             SELECT generate_series(
@@ -322,17 +303,16 @@ const dashboardModel = {
           FROM months
           LEFT JOIN (
             SELECT 
-              date_trunc('month', hv.created_at) AS month_start,
+              date_trunc('month', ce.created_at) AS month_start,
               COUNT(*)::INTEGER AS value
-            FROM home_visit hv
-            WHERE ${centerFilterCondition('hv')}
-              AND hv.created_at >= date_trunc('month', CURRENT_DATE) - INTERVAL '7 months'
+            FROM Community_Engagement ce
+            WHERE ce.created_at >= date_trunc('month', CURRENT_DATE) - INTERVAL '7 months'
             GROUP BY 1
           ) counts ON counts.month_start = months.month_start
           ORDER BY months.month_start
         `, params),
 
-        // Programs trend (last 8 months)
+        // Medical Reimbursement trend (last 8 months)
         pool.query(`
           WITH months AS (
             SELECT generate_series(
@@ -347,11 +327,10 @@ const dashboardModel = {
           FROM months
           LEFT JOIN (
             SELECT 
-              date_trunc('month', p.created_at) AS month_start,
+              date_trunc('month', mr.created_at) AS month_start,
               COUNT(*)::INTEGER AS value
-            FROM programs p
-            WHERE ${centerFilterCondition('p')}
-              AND p.created_at >= date_trunc('month', CURRENT_DATE) - INTERVAL '7 months'
+            FROM Medical_Reimbursement mr
+            WHERE mr.created_at >= date_trunc('month', CURRENT_DATE) - INTERVAL '7 months'
             GROUP BY 1
           ) counts ON counts.month_start = months.month_start
           ORDER BY months.month_start
@@ -370,18 +349,18 @@ const dashboardModel = {
         return ((current - prev) / prev) * 100;
       };
 
-      const applicantTrendSeries = mapTrendValues(applicantTrendStats.rows);
-      const foodAidTrendSeries = mapTrendValues(foodAidTrendStats.rows);
-      const homeVisitTrendSeries = mapTrendValues(homeVisitTrendStats.rows);
-      const programsTrendSeries = mapTrendValues(programsTrendStats.rows);
+      const imamTrendSeries = mapTrendValues(imamTrendStats.rows);
+      const jumuahTrendSeries = mapTrendValues(jumuahTrendStats.rows);
+      const communityTrendSeries = mapTrendValues(communityTrendStats.rows);
+      const medicalTrendSeries = mapTrendValues(medicalTrendStats.rows);
 
       const summaryRow = summaryStats.rows[0] || {
-        total_applicants: 0,
-        active_applicants: 0,
+        total_imams: 0,
+        approved_imams: 0,
         new_this_month: 0,
-        total_food_aid: 0,
-        total_home_visits: 0,
-        total_programs: 0,
+        total_jumuah_khutbah: 0,
+        total_community_engagement: 0,
+        total_medical_reimbursement: 0,
       };
 
       return {
@@ -392,25 +371,25 @@ const dashboardModel = {
         suburbs: suburbStats.rows,
         employment: employmentStats.rows,
         marital: maritalStats.rows,
-        fileStatus: fileStatusStats.rows,
-        fileCondition: fileConditionStats.rows,
+        fileStatus: statusStats.rows,
+        fileCondition: [],
         summary: {
-          total_applicants: Number(summaryRow.total_applicants) || 0,
-          active_applicants: Number(summaryRow.active_applicants) || 0,
+          total_applicants: Number(summaryRow.total_imams) || 0,
+          active_applicants: Number(summaryRow.approved_imams) || 0,
           new_this_month: Number(summaryRow.new_this_month) || 0,
-          total_food_aid: Number(summaryRow.total_food_aid) || 0,
-          total_home_visits: Number(summaryRow.total_home_visits) || 0,
-          total_programs: Number(summaryRow.total_programs) || 0,
+          total_food_aid: Number(summaryRow.total_jumuah_khutbah) || 0,
+          total_home_visits: Number(summaryRow.total_community_engagement) || 0,
+          total_programs: Number(summaryRow.total_medical_reimbursement) || 0,
         },
         trends: {
-          applicants: applicantTrendSeries,
-          foodAid: foodAidTrendSeries,
-          homeVisits: homeVisitTrendSeries,
-          programs: programsTrendSeries,
-          applicantsChange: calculateChange(applicantTrendSeries),
-          foodAidChange: calculateChange(foodAidTrendSeries),
-          homeVisitsChange: calculateChange(homeVisitTrendSeries),
-          programsChange: calculateChange(programsTrendSeries),
+          applicants: imamTrendSeries,
+          foodAid: jumuahTrendSeries,
+          homeVisits: communityTrendSeries,
+          programs: medicalTrendSeries,
+          applicantsChange: calculateChange(imamTrendSeries),
+          foodAidChange: calculateChange(jumuahTrendSeries),
+          homeVisitsChange: calculateChange(communityTrendSeries),
+          programsChange: calculateChange(medicalTrendSeries),
         },
       };
     } catch (err) {
@@ -432,10 +411,10 @@ const dashboardModel = {
       const totalsQuery = pool.query(
         `
           SELECT
-            (SELECT COUNT(*)::INTEGER FROM ${METRIC_DEFINITIONS[0].table} ${METRIC_DEFINITIONS[0].alias} WHERE ${buildCenterCondition(METRIC_DEFINITIONS[0].alias, centerParamIndex)}) AS files_created_total,
-            (SELECT COUNT(*)::INTEGER FROM ${METRIC_DEFINITIONS[1].table} ${METRIC_DEFINITIONS[1].alias} WHERE ${buildCenterCondition(METRIC_DEFINITIONS[1].alias, centerParamIndex)}) AS food_aid_given_total,
-            (SELECT COUNT(*)::INTEGER FROM ${METRIC_DEFINITIONS[2].table} ${METRIC_DEFINITIONS[2].alias} WHERE ${buildCenterCondition(METRIC_DEFINITIONS[2].alias, centerParamIndex)}) AS financial_aid_given_total,
-            (SELECT COUNT(*)::INTEGER FROM ${METRIC_DEFINITIONS[3].table} ${METRIC_DEFINITIONS[3].alias} WHERE ${buildCenterCondition(METRIC_DEFINITIONS[3].alias, centerParamIndex)}) AS home_visits_done_total
+            (SELECT COUNT(*)::INTEGER FROM ${METRIC_DEFINITIONS[0].table} ${METRIC_DEFINITIONS[0].alias} WHERE ${buildCenterCondition(METRIC_DEFINITIONS[0].alias, centerParamIndex)}) AS imam_profiles_total,
+            (SELECT COUNT(*)::INTEGER FROM ${METRIC_DEFINITIONS[1].table} ${METRIC_DEFINITIONS[1].alias} WHERE ${buildCenterCondition(METRIC_DEFINITIONS[1].alias, centerParamIndex)}) AS jumuah_khutbah_total,
+            (SELECT COUNT(*)::INTEGER FROM ${METRIC_DEFINITIONS[2].table} ${METRIC_DEFINITIONS[2].alias} WHERE ${buildCenterCondition(METRIC_DEFINITIONS[2].alias, centerParamIndex)}) AS community_engagement_total,
+            (SELECT COUNT(*)::INTEGER FROM ${METRIC_DEFINITIONS[3].table} ${METRIC_DEFINITIONS[3].alias} WHERE ${buildCenterCondition(METRIC_DEFINITIONS[3].alias, centerParamIndex)}) AS medical_reimbursement_total
         `,
         params
       );
@@ -467,10 +446,10 @@ const dashboardModel = {
       const totalsRow = queryResults[queryResults.length - 1].rows[0] || {};
 
       const overallTotals = {
-        filesCreated: Number(totalsRow.files_created_total) || 0,
-        foodAidGiven: Number(totalsRow.food_aid_given_total) || 0,
-        financialAidGiven: Number(totalsRow.financial_aid_given_total) || 0,
-        homeVisitsDone: Number(totalsRow.home_visits_done_total) || 0,
+        imamProfiles: Number(totalsRow.imam_profiles_total) || 0,
+        jumuahKhutbah: Number(totalsRow.jumuah_khutbah_total) || 0,
+        communityEngagement: Number(totalsRow.community_engagement_total) || 0,
+        medicalReimbursement: Number(totalsRow.medical_reimbursement_total) || 0,
       };
 
       return {

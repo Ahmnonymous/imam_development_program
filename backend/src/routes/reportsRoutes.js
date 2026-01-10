@@ -11,8 +11,6 @@ router.use(roleMiddleware());
 
 router.use(filterMiddleware);
 
-// Applicant Details Report
-router.get('/applicant-details', ReportsController.getApplicantDetails.bind(ReportsController));
 
 // Total Financial Assistance Report (includes both financial and food assistance)
 router.get('/total-financial-assistance', ReportsController.getTotalFinancialAssistance.bind(ReportsController));
@@ -32,13 +30,57 @@ router.get('/center-audits', ReportsController.getCenterAudits.bind(ReportsContr
 // Relationship Report
 router.get('/relationship-report', ReportsController.getRelationshipReport.bind(ReportsController));
 
-// Applicant Programs Report
-router.get('/applicant-programs', ReportsController.getApplicantPrograms.bind(ReportsController));
 
-// Financial Assessment Report
-router.get('/financial-assessment', ReportsController.getFinancialAssessment.bind(ReportsController));
 
 // Skills Matrix Report
 router.get('/skills-matrix', ReportsController.getSkillsMatrix.bind(ReportsController));
+
+// Imam Details Report
+router.get('/imam-details', ReportsController.getImamDetails.bind(ReportsController));
+
+// Hardship Relief Report
+router.get('/hardship-relief', ReportsController.getHardshipRelief.bind(ReportsController));
+
+// Community Engagement Report
+router.get('/community-engagement', ReportsController.getCommunityEngagement.bind(ReportsController));
+
+// Borehole Report
+router.get('/borehole', ReportsController.getBorehole.bind(ReportsController));
+
+// Continuous Professional Development Report
+router.get('/continuous-professional-development', ReportsController.getContinuousProfessionalDevelopment.bind(ReportsController));
+
+// Higher Education Request Report
+router.get('/higher-education-request', ReportsController.getHigherEducationRequest.bind(ReportsController));
+
+// Jumuah Audio Khutbah Report
+router.get('/jumuah-audio-khutbah', ReportsController.getJumuahAudioKhutbah.bind(ReportsController));
+
+// Jumuah Khutbah Topic Submission Report
+router.get('/jumuah-khutbah-topic-submission', ReportsController.getJumuahKhutbahTopicSubmission.bind(ReportsController));
+
+// Medical Reimbursement Report
+router.get('/medical-reimbursement', ReportsController.getMedicalReimbursement.bind(ReportsController));
+
+// New Baby Bonus Report
+router.get('/new-baby-bonus', ReportsController.getNewBabyBonus.bind(ReportsController));
+
+// New Muslim Bonus Report
+router.get('/new-muslim-bonus', ReportsController.getNewMuslimBonus.bind(ReportsController));
+
+// Nikah Bonus Report
+router.get('/nikah-bonus', ReportsController.getNikahBonus.bind(ReportsController));
+
+// Pearls of Wisdom Report
+router.get('/pearls-of-wisdom', ReportsController.getPearlsOfWisdom.bind(ReportsController));
+
+// Tickets Report
+router.get('/tickets', ReportsController.getTickets.bind(ReportsController));
+
+// Tree Requests Report
+router.get('/tree-requests', ReportsController.getTreeRequests.bind(ReportsController));
+
+// WAQF Loan Report
+router.get('/waqf-loan', ReportsController.getWaqfLoan.bind(ReportsController));
 
 module.exports = router;

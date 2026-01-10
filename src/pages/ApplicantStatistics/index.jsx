@@ -22,7 +22,6 @@ import EmploymentChart from "./EmploymentChart";
 import MaritalChart from "./MaritalChart";
 import SuburbsChart from "./SuburbsChart";
 import FileStatusChart from "./FileStatusChart";
-import FileConditionChart from "./FileConditionChart";
 import StatsCards from "./StatsCards";
 import StatisticsApplications from "./StatisticsApplications";
 import CandidateSection from "./CandidateSection";
@@ -62,13 +61,12 @@ const ApplicantStatistics = (props) => {
     marital: [],
     suburbs: [],
     fileStatus: [],
-    fileCondition: [],
-    totalApplicants: 0,
-    activeApplicants: 0,
+    totalImams: 0,
+    approvedImams: 0,
     newThisMonth: 0,
-    totalFoodAid: 0,
-    totalHomeVisits: 0,
-    totalPrograms: 0,
+    totalJumuahKhutbah: 0,
+    totalCommunityEngagement: 0,
+    totalMedicalReimbursement: 0,
     applicantsTrend: [0, 0, 0, 0, 0, 0, 0, 0],
     foodAidTrend: [0, 0, 0, 0, 0, 0, 0, 0],
     homeVisitsTrend: [0, 0, 0, 0, 0, 0, 0, 0],
@@ -107,13 +105,12 @@ const ApplicantStatistics = (props) => {
         marital: Array.isArray(data.marital) ? data.marital : [],
         suburbs: Array.isArray(data.suburbs) ? data.suburbs : [],
         fileStatus: Array.isArray(data.fileStatus) ? data.fileStatus : [],
-        fileCondition: Array.isArray(data.fileCondition) ? data.fileCondition : [],
-        totalApplicants: parseInt(data.summary?.total_applicants) || 0,
-        activeApplicants: parseInt(data.summary?.active_applicants) || 0,
+        totalImams: parseInt(data.summary?.total_applicants) || 0,
+        approvedImams: parseInt(data.summary?.active_applicants) || 0,
         newThisMonth: parseInt(data.summary?.new_this_month) || 0,
-        totalFoodAid: parseInt(data.summary?.total_food_aid) || 0,
-        totalHomeVisits: parseInt(data.summary?.total_home_visits) || 0,
-        totalPrograms: parseInt(data.summary?.total_programs) || 0,
+        totalJumuahKhutbah: parseInt(data.summary?.total_food_aid) || 0,
+        totalCommunityEngagement: parseInt(data.summary?.total_home_visits) || 0,
+        totalMedicalReimbursement: parseInt(data.summary?.total_programs) || 0,
         applicantsTrend: Array.isArray(data.trends?.applicants)
           ? data.trends.applicants.map((val) => Number(val) || 0)
           : [0, 0, 0, 0, 0, 0, 0, 0],
@@ -206,21 +203,16 @@ const ApplicantStatistics = (props) => {
         { label: "Nyanga", value: 45 },
       ],
       fileStatus: [
-        { label: "Active", value: 520 },
-        { label: "Inactive", value: 180 },
-        { label: "Pending", value: 100 },
+        { label: "Approved", value: 520 },
+        { label: "Pending", value: 180 },
+        { label: "Rejected", value: 100 },
       ],
-      fileCondition: [
-        { label: "Good", value: 420 },
-        { label: "Fair", value: 250 },
-        { label: "Poor", value: 130 },
-      ],
-      totalApplicants: 800,
-      activeApplicants: 520,
+      totalImams: 800,
+      approvedImams: 520,
       newThisMonth: 45,
-      totalFoodAid: 320,
-      totalHomeVisits: 210,
-      totalPrograms: 95,
+      totalJumuahKhutbah: 320,
+      totalCommunityEngagement: 210,
+      totalMedicalReimbursement: 95,
       applicantsTrend: [680, 700, 720, 740, 760, 780, 795, 810],
       foodAidTrend: [260, 270, 280, 290, 300, 305, 315, 320],
       homeVisitsTrend: [160, 170, 180, 190, 195, 200, 205, 210],
@@ -276,34 +268,34 @@ const ApplicantStatistics = (props) => {
           <Row className="mb-4">
             {[
               {
-                title: "Total Applicants",
-                value: statsData.totalApplicants,
+                title: "Total Imam Profiles",
+                value: statsData.totalImams,
                 dataColors: '["--bs-primary", "--bs-transparent"]',
-                seriesName: "Total Applicants",
+                seriesName: "Total Imam Profiles",
                 series: statsData.applicantsTrend,
                 change: statsData.applicantsTrendChange,
               },
               {
-                title: "Total Food Aid",
-                value: statsData.totalFoodAid,
+                title: "Total Jumuah Khutbah",
+                value: statsData.totalJumuahKhutbah,
                 dataColors: '["--bs-success", "--bs-transparent"]',
-                seriesName: "Total Food Aid",
+                seriesName: "Total Jumuah Khutbah",
                 series: statsData.foodAidTrend,
                 change: statsData.foodAidTrendChange,
               },
               {
-                title: "Total Home Visits",
-                value: statsData.totalHomeVisits,
+                title: "Total Community Engagement",
+                value: statsData.totalCommunityEngagement,
                 dataColors: '["--bs-info", "--bs-transparent"]',
-                seriesName: "Total Home Visits",
+                seriesName: "Total Community Engagement",
                 series: statsData.homeVisitsTrend,
                 change: statsData.homeVisitsTrendChange,
               },
               {
-                title: "Total Programs",
-                value: statsData.totalPrograms,
+                title: "Total Medical Reimbursement",
+                value: statsData.totalMedicalReimbursement,
                 dataColors: '["--bs-warning", "--bs-transparent"]',
-                seriesName: "Total Programs",
+                seriesName: "Total Medical Reimbursement",
                 series: statsData.programsTrend,
                 change: statsData.programsTrendChange,
               },
@@ -497,7 +489,7 @@ const ApplicantStatistics = (props) => {
             <Col xl="4" lg="6">
               <Card>
                 <CardBody>
-                  <h4 className="card-title mb-4">File Status</h4>
+                  <h4 className="card-title mb-4">Profile Status</h4>
                   {loading ? (
                     <div className="text-center py-5">
                       <Spinner color="info" />
@@ -510,21 +502,6 @@ const ApplicantStatistics = (props) => {
               </Card>
             </Col>
 
-            <Col xl="4" lg="6">
-              <Card>
-                <CardBody>
-                  <h4 className="card-title mb-4">File Condition</h4>
-                  {loading ? (
-                    <div className="text-center py-5">
-                      <Spinner color="warning" />
-                      <p className="text-muted font-size-12 mt-2">Loading...</p>
-                    </div>
-                  ) : (
-                    <FileConditionChart data={statsData.fileCondition} />
-                  )}
-                </CardBody>
-              </Card>
-            </Col>
           </Row>
             </>
           )}

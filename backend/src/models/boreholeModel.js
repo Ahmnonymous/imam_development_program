@@ -5,6 +5,7 @@ const {
   scopeQuery,
 } = require("../utils/modelHelpers");
 
+// PostgreSQL converts unquoted identifiers to lowercase, so "borehole" matches the schema
 const tableName = "borehole";
 
 const boreholeModel = {
@@ -127,7 +128,7 @@ const boreholeModel = {
         'current_water_source_image_show_link', 'masjid_area_image', 'masjid_area_image_filename',
         'masjid_area_image_mime', 'masjid_area_image_size', 'masjid_area_image_updated_at',
         'masjid_area_image_show_link', 'longitude', 'latitude', 'acknowledge', 'status_id',
-        'comment', 'datestamp', 'center_id', 'Created_By', 'Created_At', 'Updated_By', 'Updated_At'
+        'comment', 'datestamp', 'Created_By', 'Created_At', 'Updated_By', 'Updated_At'
       ];
       
       const filteredFields = {};
@@ -188,7 +189,7 @@ const boreholeModel = {
         'current_water_source_image_show_link', 'masjid_area_image', 'masjid_area_image_filename',
         'masjid_area_image_mime', 'masjid_area_image_size', 'masjid_area_image_updated_at',
         'masjid_area_image_show_link', 'longitude', 'latitude', 'acknowledge', 'status_id',
-        'comment', 'datestamp', 'center_id', 'updated_by', 'updated_at'
+        'comment', 'datestamp', 'updated_by', 'updated_at'
       ].map(col => col.toLowerCase());
       
       // Map lowercase column names to their actual database column names (for WHO columns)

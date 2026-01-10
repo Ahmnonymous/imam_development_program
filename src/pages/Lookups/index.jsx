@@ -7,7 +7,7 @@ const Lookups = () => {
   // Grouped lookup categories
   const lookupGroups = [
     {
-      title: "Applicant Details",
+      title: "General Details",
       color: "primary",
       icon: "bxs-user-circle",
       categories: [
@@ -29,7 +29,7 @@ const Lookups = () => {
       ],
     },
     {
-      title: "Applicant Sub Details",
+      title: "General Sub Details",
       color: "info",
       icon: "bxs-detail",
       categories: [
@@ -97,7 +97,6 @@ const Lookups = () => {
         { name: "Attendance Frequency", table: "Attendance_Frequency_Lookup", icon: "bxs-calendar-check" },
         { name: "Semesters Per Year", table: "Semesters_Per_Year_Lookup", icon: "bxs-calendar-event" },
         { name: "Borehole Construction Tasks", table: "Borehole_Construction_Tasks_Lookup", icon: "bxs-wrench" },
-        { name: "Supplier", table: "Supplier_Lookup", icon: "bxs-store-alt" },
         { name: "Tasks Status", table: "Tasks_Status", icon: "bxs-check-square" },
       ],
     },
@@ -178,7 +177,7 @@ const Lookups = () => {
       <Container fluid>
         <Breadcrumbs title="Administration" breadcrumbItem="Lookup Setup" />
 
-         {/* Full-width Row for the largest groups: Applicant Details and Imam Management (2 columns) */}
+         {/* Full-width Row for the largest groups: General Details and Imam Management (2 columns) */}
          {lookupGroups[0].categories.length > 0 && (
            <Row className="mb-3">
              <Col lg={12}>
@@ -198,10 +197,10 @@ const Lookups = () => {
 
         {/* Balanced Row for remaining groups: Split into two columns with similar total items */}
         <Row className="g-3 h-100">
-          {/* Left Column: Employee Set Up + Applicant Sub Details */}
+          {/* Left Column: Employee Set Up + General Sub Details */}
           <Col lg={6} className="d-flex flex-column">
             {lookupGroups[1].categories.length > 0 && renderGroupCard(lookupGroups[1], 1)} {/* Employee Set Up */}
-            {lookupGroups[2].categories.length > 0 && renderGroupCard(lookupGroups[2], 2)} {/* Applicant Sub Details */}
+            {lookupGroups[2].categories.length > 0 && renderGroupCard(lookupGroups[2], 2)} {/* General Sub Details */}
             <div className="flex-grow-1"></div> {/* Spacer to fill remaining space */}
           </Col>
 

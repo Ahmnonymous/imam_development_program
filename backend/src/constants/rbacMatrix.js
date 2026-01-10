@@ -30,22 +30,9 @@ const MODULES = {
   DEFAULT: "default",
   AUTH: "auth",
   DASHBOARD: "dashboard",
-  CENTERS: "centers",
-  MEETINGS: "meetings",
-  SUPPLIER: "supplier",
-  INVENTORY: "inventory",
-  APPLICANTS: "applicants",
-  TASKS: "tasks",
-  COMMENTS: "comments",
-  RELATIONSHIPS: "relationships",
-  HOME_VISITS: "homeVisits",
-  FINANCIAL_ASSISTANCE: "financialAssistance",
-  FOOD_ASSISTANCE: "foodAssistance",
-  ATTACHMENTS: "attachments",
+  // TASKS, COMMENTS, RELATIONSHIPS, HOME_VISITS, FINANCIAL_ASSISTANCE, FOOD_ASSISTANCE, ATTACHMENTS removed (had File_ID)
   PROGRAMS: "programs",
   FINANCIAL_ASSESSMENT: "financialAssessment",
-  APPLICANT_INCOME: "applicantIncome",
-  APPLICANT_EXPENSE: "applicantExpense",
   EMPLOYEE: "employee",
   TRAINING: "training",
   HSEQ: "hseq",
@@ -61,37 +48,8 @@ const MODULES = {
 const MODULE_ROUTE_MAP = [
   { module: MODULES.AUTH, prefixes: ["/api/auth"] },
   { module: MODULES.DASHBOARD, prefixes: ["/api/dashboard"] },
-  { module: MODULES.CENTERS, prefixes: ["/api/centerdetail", "/api/centeraudits"] },
-  { module: MODULES.MEETINGS, prefixes: ["/api/meetings", "/api/hseqtoolboxmeeting", "/api/hseqtoolboxmeetingtasks"] },
-  { module: MODULES.SUPPLIER, prefixes: ["/api/supplierdocument", "/api/supplierevaluation", "/api/supplierprofile", "/api/servicerating"] },
-  { module: MODULES.INVENTORY, prefixes: ["/api/inventoryitems", "/api/inventorytransactions"] },
-  {
-    module: MODULES.APPLICANTS,
-    prefixes: [
-      "/api/applicantdetails",
-      "/api/applicantincome",
-      "/api/applicantexpense",
-      "/api/financialassessment",
-      "/api/attachments",
-      "/api/programs",
-      "/api/financialassistance",
-      "/api/foodassistance",
-      "/api/homevisit",
-      "/api/relationships",
-      "/api/comments",
-    ],
-  },
-  { module: MODULES.TASKS, prefixes: ["/api/tasks"] },
-  { module: MODULES.COMMENTS, prefixes: ["/api/comments"] },
-  { module: MODULES.RELATIONSHIPS, prefixes: ["/api/relationships"] },
-  { module: MODULES.HOME_VISITS, prefixes: ["/api/homevisit"] },
-  { module: MODULES.FINANCIAL_ASSISTANCE, prefixes: ["/api/financialassistance"] },
-  { module: MODULES.FOOD_ASSISTANCE, prefixes: ["/api/foodassistance"] },
-  { module: MODULES.ATTACHMENTS, prefixes: ["/api/attachments"] },
+  // TASKS, COMMENTS, RELATIONSHIPS, HOME_VISITS, FINANCIAL_ASSISTANCE, FOOD_ASSISTANCE, ATTACHMENTS removed (had File_ID)
   { module: MODULES.PROGRAMS, prefixes: ["/api/programs"] },
-  { module: MODULES.FINANCIAL_ASSESSMENT, prefixes: ["/api/financialassessment"] },
-  { module: MODULES.APPLICANT_INCOME, prefixes: ["/api/applicantincome"] },
-  { module: MODULES.APPLICANT_EXPENSE, prefixes: ["/api/applicantexpense"] },
   {
     module: MODULES.EMPLOYEE,
     prefixes: ["/api/employee", "/api/employeeappraisal", "/api/employeeinitiative", "/api/employeeskills"],
@@ -152,12 +110,11 @@ const ROLE_RULES = {
     reportScope: "all",
     moduleAccess: {
       allow: "*",
-      deny: [MODULES.SUPPLIER, MODULES.INVENTORY],
+      deny: [],
     },
     methodAccess: {
       default: METHODS.FULL,
       overrides: {
-        [MODULES.CENTERS]: METHODS.READ_ONLY, // cannot create/update centers
       },
     },
   },
@@ -168,7 +125,7 @@ const ROLE_RULES = {
     reportScope: "own",
     moduleAccess: {
       allow: "*",
-      deny: [MODULES.SUPPLIER, MODULES.INVENTORY, MODULES.CENTERS],
+      deny: [],
     },
     methodAccess: {
       default: METHODS.FULL,
@@ -185,13 +142,9 @@ const ROLE_RULES = {
     moduleAccess: {
       allow: "*",
       deny: [
-        MODULES.SUPPLIER,
-        MODULES.INVENTORY,
-        MODULES.CENTERS,
         MODULES.FILE_MANAGER,
         MODULES.PERSONAL_FILES,
         MODULES.CHAT,
-        MODULES.MEETINGS,
       ],
     },
     methodAccess: {
@@ -209,18 +162,8 @@ const ROLE_RULES = {
     moduleAccess: {
       allow: [
         MODULES.DASHBOARD,
-        MODULES.APPLICANTS,
-        MODULES.TASKS,
-        MODULES.COMMENTS,
-        MODULES.RELATIONSHIPS,
-        MODULES.HOME_VISITS,
-        MODULES.FINANCIAL_ASSISTANCE,
-        MODULES.FOOD_ASSISTANCE,
-        MODULES.ATTACHMENTS,
+        // TASKS, COMMENTS, RELATIONSHIPS, HOME_VISITS, FINANCIAL_ASSISTANCE, FOOD_ASSISTANCE, ATTACHMENTS removed (had File_ID)
         MODULES.PROGRAMS,
-        MODULES.FINANCIAL_ASSESSMENT,
-        MODULES.APPLICANT_INCOME,
-        MODULES.APPLICANT_EXPENSE,
         MODULES.FILE_MANAGER,
         MODULES.CHAT,
         MODULES.POLICY,
@@ -231,7 +174,7 @@ const ROLE_RULES = {
         MODULES.LOOKUP,
         MODULES.AUTH,
       ],
-      deny: [MODULES.SUPPLIER, MODULES.INVENTORY, MODULES.CENTERS, MODULES.MEETINGS],
+      deny: [],
     },
     methodAccess: {
       default: METHODS.FULL,
@@ -252,22 +195,8 @@ const ROLE_RULES = {
     moduleAccess: {
       allow: [MODULES.DASHBOARD, MODULES.IMAM_PROFILES, MODULES.AUTH, MODULES.EMPLOYEE],
       deny: [
-        MODULES.SUPPLIER,
-        MODULES.INVENTORY,
-        MODULES.CENTERS,
-        MODULES.MEETINGS,
-        MODULES.APPLICANTS,
-        MODULES.TASKS,
-        MODULES.COMMENTS,
-        MODULES.RELATIONSHIPS,
-        MODULES.HOME_VISITS,
-        MODULES.FINANCIAL_ASSISTANCE,
-        MODULES.FOOD_ASSISTANCE,
-        MODULES.ATTACHMENTS,
+        // TASKS, COMMENTS, RELATIONSHIPS, HOME_VISITS, FINANCIAL_ASSISTANCE, FOOD_ASSISTANCE, ATTACHMENTS removed (had File_ID)
         MODULES.PROGRAMS,
-        MODULES.FINANCIAL_ASSESSMENT,
-        MODULES.APPLICANT_INCOME,
-        MODULES.APPLICANT_EXPENSE,
         MODULES.FILE_MANAGER,
         MODULES.CHAT,
         MODULES.POLICY,

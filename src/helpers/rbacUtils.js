@@ -17,30 +17,9 @@ const ROLE_BY_ID = Object.entries(ROLE_IDS).reduce((acc, [key, id]) => {
 const MODULE_ALIASES = {
   dashboard: "dashboard",
   "dashboard-main": "dashboard",
-  centers: "centers",
-  "center-management": "centers",
-  meetings: "meetings",
-  "meetings-management": "meetings",
-  suppliers: "supplier",
-  supplier: "supplier",
-  inventory: "inventory",
-  "inventory-management": "inventory",
-  applicants: "applicants",
-  applicant: "applicants",
-  "create-applicant": "applicants",
-  tasks: "tasks",
-  comments: "comments",
-  relationships: "relationships",
-  "home-visit": "homeVisits",
-  homevisits: "homeVisits",
-  "home-visits": "homeVisits",
-  "financial-assistance": "financialAssistance",
-  "food-assistance": "foodAssistance",
-  attachments: "attachments",
+  // tasks, comments, relationships, home-visit, financial-assistance, food-assistance, attachments removed (had File_ID)
   programs: "programs",
   "financial-assessment": "financialAssessment",
-  "applicant-income": "applicantIncome",
-  "applicant-expense": "applicantExpense",
   employees: "employee",
   employee: "employee",
   training: "training",
@@ -69,11 +48,6 @@ const normalizeModule = (module) => {
 
 const NAV_ITEM_TO_MODULE = {
   dashboard: "dashboard",
-  centers: "centers",
-  meetings: "meetings",
-  suppliers: "supplier",
-  inventory: "inventory",
-  applicants: "applicants",
   reports: "reports",
   lookups: "lookup",
   filemanager: "fileManager",
@@ -103,10 +77,10 @@ const ROLE_RULES = {
     modules: {
       view: "all",
       edit: "all",
-      denyView: createSet(["inventory", "supplier"]),
-      denyEdit: createSet(["centers", "inventory", "supplier"]),
+      denyView: createSet([]),
+      denyEdit: createSet([]),
     },
-    navHide: createSet(["inventory", "supplier"]),
+    navHide: createSet([]),
     readOnly: false,
   },
   OrgAdmin: {
@@ -115,10 +89,10 @@ const ROLE_RULES = {
     modules: {
       view: "all",
       edit: "all",
-      denyView: createSet(["inventory", "supplier", "centers"]),
-      denyEdit: createSet(["inventory", "supplier", "centers", "policy"]),
+      denyView: createSet([]),
+      denyEdit: createSet(["policy"]),
     },
-    navHide: createSet(["centers", "inventory", "supplier"]),
+    navHide: createSet([]),
     readOnly: false,
   },
   OrgExecutive: {
@@ -127,10 +101,10 @@ const ROLE_RULES = {
     modules: {
       view: "all",
       edit: "none",
-      denyView: createSet(["inventory", "supplier", "centers", "filemanager", "chat", "meetings", "lookup"]),
-      denyEdit: createSet(["inventory", "supplier", "centers", "filemanager", "chat", "meetings", "lookup"]),
+      denyView: createSet(["filemanager", "chat", "lookup"]),
+      denyEdit: createSet(["filemanager", "chat", "lookup"]),
     },
-    navHide: createSet(["centers", "inventory", "supplier", "filemanager", "chat", "meetings", "lookup"]),
+    navHide: createSet(["filemanager", "chat", "lookup"]),
     readOnly: true,
   },
   OrgCaseworker: {
@@ -139,18 +113,8 @@ const ROLE_RULES = {
     modules: {
       view: createSet([
         "dashboard",
-        "applicants",
-        "tasks",
-        "comments",
-        "relationships",
-        "homevisits",
-        "financialassistance",
-        "foodassistance",
-        "attachments",
+        // tasks, comments, relationships, homevisits, financialassistance, foodassistance, attachments removed (had File_ID)
         "programs",
-        "financialassessment",
-        "applicantincome",
-        "applicantexpense",
         "filemanager",
         "chat",
         "policy",
@@ -160,23 +124,13 @@ const ROLE_RULES = {
         "lookup",
       ]),
       edit: createSet([
-        "applicants",
-        "tasks",
-        "comments",
-        "relationships",
-        "homevisits",
-        "financialassistance",
-        "foodassistance",
-        "attachments",
+        // tasks, comments, relationships, homevisits, financialassistance, foodassistance, attachments removed (had File_ID)
         "programs",
-        "financialassessment",
-        "applicantincome",
-        "applicantexpense",
       ]),
-      denyView: createSet(["inventory", "supplier", "centers", "meetings"]),
-      denyEdit: createSet(["inventory", "supplier", "centers", "meetings", "policy", "reports", "lookup", "employee"]),
+      denyView: createSet([]),
+      denyEdit: createSet(["policy", "reports", "lookup", "employee"]),
     },
-    navHide: createSet(["centers", "inventory", "supplier", "meetings", "lookup", "employee"]),
+    navHide: createSet(["lookup", "employee"]),
     readOnly: false,
   },
   ImamUser: {
@@ -185,10 +139,10 @@ const ROLE_RULES = {
     modules: {
       view: createSet(["dashboard", "imam-profiles"]),
       edit: createSet(["imam-profiles"]),
-      denyView: createSet(["inventory", "supplier", "centers", "meetings", "applicants", "tasks", "comments", "relationships", "homevisits", "financialassistance", "foodassistance", "attachments", "programs", "financialassessment", "applicantincome", "applicantexpense", "filemanager", "chat", "policy", "reports", "training", "employee", "lookup"]),
-      denyEdit: createSet(["inventory", "supplier", "centers", "meetings", "applicants", "tasks", "comments", "relationships", "homevisits", "financialassistance", "foodassistance", "attachments", "programs", "financialassessment", "applicantincome", "applicantexpense", "filemanager", "chat", "policy", "reports", "training", "employee", "lookup"]),
+      denyView: createSet(["tasks", "comments", "relationships", "homevisits", "financialassistance", "foodassistance", "attachments", "programs", "filemanager", "chat", "policy", "reports", "training", "employee", "lookup"]),
+      denyEdit: createSet(["tasks", "comments", "relationships", "homevisits", "financialassistance", "foodassistance", "attachments", "programs", "filemanager", "chat", "policy", "reports", "training", "employee", "lookup"]),
     },
-    navHide: createSet(["centers", "inventory", "supplier", "meetings", "applicants", "tasks", "comments", "relationships", "homevisits", "financialassistance", "foodassistance", "attachments", "programs", "financialassessment", "applicantincome", "applicantexpense", "filemanager", "chat", "policy", "reports", "training", "employee", "lookup"]),
+    navHide: createSet(["tasks", "comments", "relationships", "homevisits", "financialassistance", "foodassistance", "attachments", "programs", "filemanager", "chat", "policy", "reports", "training", "employee", "lookup"]),
     readOnly: false,
   },
 };
@@ -336,7 +290,6 @@ export const isReadOnlyRole = (roleOrUser) => {
   return roleRules?.readOnly || false;
 };
 
-export const canManageCenters = (roleOrUser) => canEdit("centers", roleOrUser);
 
 export const canSeeReports = (roleOrUser) => canView("reports", roleOrUser);
 

@@ -2,7 +2,6 @@ import { useMemo } from "react";
 import {
   canAccessNav as canAccessNavUtil,
   canEdit as canEditModule,
-  canManageCenters as canManageCentersUtil,
   canManagePolicy as canManagePolicyUtil,
   canSeeReports,
   canView as canViewModule,
@@ -48,11 +47,10 @@ export const useRole = () => {
       isCaseworker: safeRoleKey === "OrgCaseworker",
       isImamUser: safeRoleKey === "ImamUser",
       isGlobalAdmin: ["AppAdmin", "HQ"].includes(safeRoleKey),
+      centerId: null, // center_id has been removed
       hasRole,
       isAdmin: () => ["AppAdmin", "HQ", "OrgAdmin"].includes(safeRoleKey),
       canManageEmployees: () => ["AppAdmin", "HQ", "OrgAdmin"].includes(safeRoleKey),
-      canManageCenters: () => canManageCentersUtil(safeRoleKey),
-      canViewAllCenters: () => ["AppAdmin", "HQ"].includes(safeRoleKey),
       canWrite: () => !isReadOnlyRole(safeRoleKey),
       canAccessModule: (module) => canViewModule(module, safeRoleKey),
       canEditModule: (module) => canEditModule(module, safeRoleKey),

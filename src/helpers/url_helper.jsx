@@ -136,11 +136,25 @@ export const ON_ADD_REPLY = "/comments-product-add-reply";
 export const ON_ADD_COMMENT = "/comments-product-add-comment";
 
 // REPORTS
-export const GET_APPLICANT_DETAILS_REPORT = `${API_BASE_URL}/reports/applicant-details`;
 export const GET_TOTAL_FINANCIAL_ASSISTANCE_REPORT = `${API_BASE_URL}/reports/total-financial-assistance`;
 export const GET_FINANCIAL_ASSISTANCE_REPORT = `${API_BASE_URL}/reports/financial-assistance`;
 export const GET_FOOD_ASSISTANCE_REPORT = `${API_BASE_URL}/reports/food-assistance`;
 export const GET_HOME_VISITS_REPORT = `${API_BASE_URL}/reports/home-visits`;
-export const GET_APPLICANT_PROGRAMS_REPORT = `${API_BASE_URL}/reports/applicant-programs`;
 export const GET_RELATIONSHIP_REPORT = `${API_BASE_URL}/reports/relationship-report`;
 export const GET_SKILLS_MATRIX_REPORT = `${API_BASE_URL}/reports/skills-matrix`;
+export const GET_IMAM_DETAILS_REPORT = `${API_BASE_URL}/reports/imam-details`;
+export const GET_HARDSHIP_RELIEF_REPORT = `${API_BASE_URL}/reports/hardship-relief`;
+export const GET_COMMUNITY_ENGAGEMENT_REPORT = `${API_BASE_URL}/reports/community-engagement`;
+export const GET_BOREHOLE_REPORT = `${API_BASE_URL}/reports/borehole`;
+export const GET_CONTINUOUS_PROFESSIONAL_DEVELOPMENT_REPORT = `${API_BASE_URL}/reports/continuous-professional-development`;
+export const GET_HIGHER_EDUCATION_REQUEST_REPORT = `${API_BASE_URL}/reports/higher-education-request`;
+export const GET_JUMUAH_AUDIO_KHUTBAH_REPORT = `${API_BASE_URL}/reports/jumuah-audio-khutbah`;
+export const GET_JUMUAH_KHUTBAH_TOPIC_SUBMISSION_REPORT = `${API_BASE_URL}/reports/jumuah-khutbah-topic-submission`;
+export const GET_MEDICAL_REIMBURSEMENT_REPORT = `${API_BASE_URL}/reports/medical-reimbursement`;
+export const GET_NEW_BABY_BONUS_REPORT = `${API_BASE_URL}/reports/new-baby-bonus`;
+export const GET_NEW_MUSLIM_BONUS_REPORT = `${API_BASE_URL}/reports/new-muslim-bonus`;
+export const GET_NIKAH_BONUS_REPORT = `${API_BASE_URL}/reports/nikah-bonus`;
+export const GET_PEARLS_OF_WISDOM_REPORT = `${API_BASE_URL}/reports/pearls-of-wisdom`;
+export const GET_TICKETS_REPORT = `${API_BASE_URL}/reports/tickets`;
+export const GET_TREE_REQUESTS_REPORT = `${API_BASE_URL}/reports/tree-requests`;
+export const GET_WAQF_LOAN_REPORT = `${API_BASE_URL}/reports/waqf-loan`;

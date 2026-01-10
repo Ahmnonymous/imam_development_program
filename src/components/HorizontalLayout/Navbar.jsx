@@ -129,30 +129,6 @@ const Navbar = (props) => {
                 {/* Management dropdown – render only when at least one item is accessible */}
                 {(() => {
                   const managementLinks = [
-                    canAccessNav("centers") && (
-                      <Link to="/centers" className="dropdown-item" key="centers">
-                        <i className="bx bx-building me-2"></i>
-                        {props.t("Center Management")}
-                      </Link>
-                    ),
-                    canAccessNav("meetings") && (
-                      <Link to="/meetings" className="dropdown-item" key="meetings">
-                        <i className="bx bx-calendar me-2"></i>
-                        {props.t("Meetings Management")}
-                      </Link>
-                    ),
-                    canAccessNav("suppliers") && (
-                      <Link to="/suppliers" className="dropdown-item" key="suppliers">
-                        <i className="bx bx-store me-2"></i>
-                        {props.t("Supplier Management")}
-                      </Link>
-                    ),
-                    canAccessNav("inventory") && (
-                      <Link to="/inventory" className="dropdown-item" key="inventory">
-                        <i className="bx bx-box me-2"></i>
-                        {props.t("Inventory Management")}
-                      </Link>
-                    ),
                   ].filter(Boolean);
 
                   if (!managementLinks.length) {
@@ -179,22 +155,6 @@ const Navbar = (props) => {
                   );
                 })()}
 
-                {/* Create Applicant – only roles with write access */}
-                {canEditModule("applicants") && !isOrgExecutive && (
-                  <li className="nav-item">
-                    <Link to="/applicants/create" className="nav-link">
-                      <i className="bx bx-user-plus me-2"></i>
-                      {props.t("Create Applicant")}
-                    </Link>
-                  </li>
-                )}
-
-                <li className="nav-item">
-                  <Link to="/applicants" className="nav-link">
-                    <i className="bx bx-user-check me-2"></i>
-                    {props.t("Applicant Details")}
-                        </Link>
-                </li>
 
                 {/* Reports dropdown */}
                 {canAccessNav("reports") && (
@@ -210,30 +170,128 @@ const Navbar = (props) => {
                       <i className="bx bx-file-find me-2"></i>
                       {props.t("Reports")} <div className="arrow-down"></div>
                     </Link>
-                    <div className={classname("dropdown-menu", { show: reports })}>
-                      <Link to="/reports/applicant-details" className="dropdown-item">
-                        {props.t("Applicant Details")}
+                    <div className={classname("dropdown-menu dropdown-menu-lg", { show: reports })} style={{ maxHeight: '80vh', overflowY: 'auto' }}>
+                      <Link to="/reports" className="dropdown-item">
+                        <i className="bx bx-bar-chart-alt-2 me-2"></i>
+                        {props.t("Reports Dashboard")}
                       </Link>
-                      <Link to="/reports/total-financial-assistance" className="dropdown-item">
-                        {props.t("Total Assistance")}
+                      <div className="dropdown-divider"></div>
+                      
+                      <h6 className="dropdown-header">
+                        <i className="bx bx-user me-2"></i>
+                        {props.t("Imam Reports")}
+                      </h6>
+                      <Link to="/reports/imam-details" className="dropdown-item">
+                        <i className="bx bx-user me-2"></i>
+                        {props.t("Imam Details")}
                       </Link>
-                      <Link to="/reports/financial-assistance" className="dropdown-item">
-                        {props.t("Financial Assistance")}
+                      <div className="dropdown-divider"></div>
+                      
+                      <h6 className="dropdown-header">
+                        <i className="bx bx-money me-2"></i>
+                        {props.t("Financial & Assistance")}
+                      </h6>
+                      <Link to="/reports/hardship-relief" className="dropdown-item">
+                        <i className="bx bx-heart me-2"></i>
+                        {props.t("Hardship Relief")}
                       </Link>
-                      <Link to="/reports/food-assistance" className="dropdown-item">
-                        {props.t("Food Assistance")}
+                      <Link to="/reports/medical-reimbursement" className="dropdown-item">
+                        <i className="bx bx-plus-medical me-2"></i>
+                        {props.t("Medical Reimbursement")}
                       </Link>
-                      <Link to="/reports/home-visits" className="dropdown-item">
-                        {props.t("Home Visits")}
+                      <Link to="/reports/waqf-loan" className="dropdown-item">
+                        <i className="bx bx-money me-2"></i>
+                        {props.t("WAQF Loan")}
                       </Link>
-                      <Link to="/reports/applicant-programs" className="dropdown-item">
-                        {props.t("Applicant Programs")}
+                      {/* Reports for tables with File_ID removed: total-financial-assistance, financial-assistance, food-assistance */}
+                      <div className="dropdown-divider"></div>
+                      
+                      <h6 className="dropdown-header">
+                        <i className="bx bx-gift me-2"></i>
+                        {props.t("Bonus Reports")}
+                      </h6>
+                      <Link to="/reports/new-baby-bonus" className="dropdown-item">
+                        <i className="bx bx-baby me-2"></i>
+                        {props.t("New Baby Bonus")}
                       </Link>
-                      <Link to="/reports/relationship-report" className="dropdown-item">
-                        {props.t("Relationship Report")}
+                      <Link to="/reports/new-muslim-bonus" className="dropdown-item">
+                        <i className="bx bx-user-circle me-2"></i>
+                        {props.t("New Muslim Bonus")}
+                      </Link>
+                      <Link to="/reports/nikah-bonus" className="dropdown-item">
+                        <i className="bx bx-heart-circle me-2"></i>
+                        {props.t("Nikah Bonus")}
+                      </Link>
+                      <div className="dropdown-divider"></div>
+                      
+                      <h6 className="dropdown-header">
+                        <i className="bx bx-book me-2"></i>
+                        {props.t("Educational & Development")}
+                      </h6>
+                      <Link to="/reports/continuous-professional-development" className="dropdown-item">
+                        <i className="bx bx-graduation me-2"></i>
+                        {props.t("CPD")}
+                      </Link>
+                      <Link to="/reports/higher-education-request" className="dropdown-item">
+                        <i className="bx bx-book-reader me-2"></i>
+                        {props.t("Higher Education")}
+                      </Link>
+                      <Link to="/reports/pearls-of-wisdom" className="dropdown-item">
+                        <i className="bx bx-book me-2"></i>
+                        {props.t("Pearls of Wisdom")}
                       </Link>
                       <Link to="/reports/skills-matrix" className="dropdown-item">
-                        {props.t("Applicant Skills")}
+                        <i className="bx bx-award me-2"></i>
+                        {props.t("Skills Matrix")}
+                      </Link>
+                      <div className="dropdown-divider"></div>
+                      
+                      <h6 className="dropdown-header">
+                        <i className="bx bx-group me-2"></i>
+                        {props.t("Community & Engagement")}
+                      </h6>
+                      <Link to="/reports/community-engagement" className="dropdown-item">
+                        <i className="bx bx-group me-2"></i>
+                        {props.t("Community Engagement")}
+                      </Link>
+                      <Link to="/reports/jumuah-audio-khutbah" className="dropdown-item">
+                        <i className="bx bx-microphone me-2"></i>
+                        {props.t("Jumuah Audio Khutbah")}
+                      </Link>
+                      <Link to="/reports/jumuah-khutbah-topic-submission" className="dropdown-item">
+                        <i className="bx bx-file-blank me-2"></i>
+                        {props.t("Jumuah Khutbah Topics")}
+                      </Link>
+                      <Link to="/reports/tree-requests" className="dropdown-item">
+                        <i className="bx bx-tree me-2"></i>
+                        {props.t("Tree Requests")}
+                      </Link>
+                      {/* home-visits report removed (table had File_ID) */}
+                      <div className="dropdown-divider"></div>
+                      
+                      <h6 className="dropdown-header">
+                        <i className="bx bx-buildings me-2"></i>
+                        {props.t("Infrastructure")}
+                      </h6>
+                      <Link to="/reports/borehole" className="dropdown-item">
+                        <i className="bx bx-water me-2"></i>
+                        {props.t("Borehole")}
+                      </Link>
+                      <div className="dropdown-divider"></div>
+                      
+                      <Link to="/reports/relationship-report" className="dropdown-item">
+                        <i className="bx bx-group me-2"></i>
+                        {props.t("Relationship Report")}
+                      </Link>
+                      <div className="dropdown-divider"></div>
+                      
+                      <h6 className="dropdown-header">
+                        <i className="bx bx-cog me-2"></i>
+                        {props.t("Administrative")}
+                      </h6>
+                      <Link to="/reports/tickets" className="dropdown-item">
+                        <i className="bx bx-ticket me-2"></i>
+                        {props.t("Tickets")}
                       </Link>
                     </div>
                   </li>

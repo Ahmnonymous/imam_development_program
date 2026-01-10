@@ -16,10 +16,7 @@ import UserProfile from "../pages/Authentication/user-profile";
 // Pages Calendar
 import Calendar from "../pages/Calendar/index";
 
-// // //Tasks
-import TasksList from "../pages/Tasks/tasks-list";
-import TasksCreate from "../pages/Tasks/tasks-create";
-import TasksKanban from "../pages/Tasks/tasks-kanban";
+// // //Tasks - Removed (had File_ID)
 
 // // //Projects
 import ProjectsGrid from "../pages/Projects/projects-grid";
@@ -54,25 +51,12 @@ import Logout from "../pages/Authentication/Logout";
 import Register from "../pages/Authentication/Register";
 import ForgetPwd from "../pages/Authentication/ForgetPassword";
 import Employees from "../pages/Employees/Employees";
-import ApplicantManagement from "../pages/Applicants/ApplicantManagement";
-import CreateApplicant from "../pages/Applicants/CreateApplicant";
 import ImamProfilesManagement from "../pages/ImamProfiles/ImamProfilesManagement";
 import CreateImamProfile from "../pages/ImamProfiles/CreateImamProfile";
 import ImamProfileRouteGuard from "./ImamProfileRouteGuard";
 import CreateImamProfileRouteGuard from "./CreateImamProfileRouteGuard";
-import SupplierManagement from "../pages/Suppliers/SupplierManagement";
 
-// Inventory
-import InventoryManagement from "../pages/Inventory/InventoryManagement";
 
-// Centers
-import CenterManagement from "../pages/Centers/CenterManagement";
-
-// Meetings
-import MeetingsManagement from "../pages/Meetings/MeetingsManagement";
-
-// Applicant Statistics
-import ApplicantStatistics from "../pages/ApplicantStatistics/index";
 
 // Lookups
 import Lookups from "../pages/Lookups/index";
@@ -88,14 +72,24 @@ import PolicyLibrary from "../pages/PolicyLibrary";
 
 // Reports
 import ReportsMenu from "../pages/Reports/ReportsMenu";
-import ApplicantDetailsReport from "../pages/Reports/ApplicantDetailsReport";
-import TotalFinancialAssistanceReport from "../pages/Reports/TotalFinancialAssistanceReport";
-import FinancialAssistanceReport from "../pages/Reports/FinancialAssistanceReport";
-import FoodAssistanceReport from "../pages/Reports/FoodAssistanceReport";
-import HomeVisitsReport from "../pages/Reports/HomeVisitsReport";
-import ApplicantProgramsReport from "../pages/Reports/ApplicantProgramsReport";
-import RelationshipReport from "../pages/Reports/RelationshipReport";
+// Reports for tables with File_ID removed: TotalFinancialAssistanceReport, FinancialAssistanceReport, FoodAssistanceReport, HomeVisitsReport, RelationshipReport
 import SkillsMatrixReport from "../pages/Reports/SkillsMatrixReport";
+import ImamDetailsReport from "../pages/Reports/ImamDetailsReport";
+import HardshipReliefReport from "../pages/Reports/HardshipReliefReport";
+import CommunityEngagementReport from "../pages/Reports/CommunityEngagementReport";
+import BoreholeReport from "../pages/Reports/BoreholeReport";
+import ContinuousProfessionalDevelopmentReport from "../pages/Reports/ContinuousProfessionalDevelopmentReport";
+import HigherEducationRequestReport from "../pages/Reports/HigherEducationRequestReport";
+import JumuahAudioKhutbahReport from "../pages/Reports/JumuahAudioKhutbahReport";
+import JumuahKhutbahTopicSubmissionReport from "../pages/Reports/JumuahKhutbahTopicSubmissionReport";
+import MedicalReimbursementReport from "../pages/Reports/MedicalReimbursementReport";
+import NewBabyBonusReport from "../pages/Reports/NewBabyBonusReport";
+import NewMuslimBonusReport from "../pages/Reports/NewMuslimBonusReport";
+import NikahBonusReport from "../pages/Reports/NikahBonusReport";
+import PearlsOfWisdomReport from "../pages/Reports/PearlsOfWisdomReport";
+import TicketsReport from "../pages/Reports/TicketsReport";
+import TreeRequestsReport from "../pages/Reports/TreeRequestsReport";
+import WaqfLoanReport from "../pages/Reports/WaqfLoanReport";
 
 // //  // Inner Authentication
 import Login1 from "../pages/AuthenticationInner/Login";
@@ -121,6 +115,7 @@ import DashboardSaas from "../pages/Dashboard-saas/index";
 import DashboardCrypto from "../pages/Dashboard-crypto/index";
 import Blog from "../pages/Dashboard-Blog/index";
 import DashboardJob from "../pages/DashboardJob/index";
+import ApplicantStatistics from "../pages/ApplicantStatistics/index";
 
 // //Crypto
 import CryptoWallet from "../pages/Crypto/CryptoWallet/crypto-wallet";
@@ -280,11 +275,6 @@ const authProtectedRoutes = [
   { path: "/invoices-detail", component: <InvoiceDetail /> },
   { path: "/invoices-detail/:id?", component: <InvoiceDetail /> },
 
-  //   // Tasks
-  { path: "/tasks-list", component: <TasksList /> },
-  { path: "/tasks-create", component: <TasksCreate /> },
-  { path: "/tasks-kanban", component: <TasksKanban /> },
-
   //   //Projects
   { path: "/projects-grid", component: <ProjectsGrid /> },
   { path: "/projects-list", component: <ProjectsList /> },
@@ -378,27 +368,13 @@ const authProtectedRoutes = [
   { path: "/unauthorized", component: <PagesUnauthorized /> },
 
 
-  // ✅ Applicants - All staff roles (1,2,3,4,5) can view
-  { path: "/applicants", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><ApplicantManagement /></ProtectedRoute> },
-  // ✅ Create Applicant - All except Org Executive (role 4) can create applicants
-  { path: "/applicants/create", component: <ProtectedRoute allowedRoles={[1, 2, 3, 5]}><CreateApplicant /></ProtectedRoute> },
 
   // ✅ Imam Profiles - All staff roles (1,2,3,4,5) can view, Imam User (6) only if approved
   { path: "/imam-profiles", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5, 6]}><ImamProfileRouteGuard><ImamProfilesManagement /></ImamProfileRouteGuard></ProtectedRoute> },
   // ✅ Create Imam Profile - All except Org Executive (role 4) can create, INCLUDING Imam User (6) but only if not approved
   { path: "/imam-profiles/create", component: <ProtectedRoute allowedRoles={[1, 2, 3, 5, 6]}><CreateImamProfileRouteGuard><CreateImamProfile /></CreateImamProfileRouteGuard></ProtectedRoute> },
 
-  // ✅ Suppliers - App Admin only
-  { path: "/suppliers", component: <ProtectedRoute allowedRoles={[1]}><SupplierManagement /></ProtectedRoute> },
 
-  // ✅ Inventory - App Admin only
-  { path: "/inventory", component: <ProtectedRoute allowedRoles={[1]}><InventoryManagement /></ProtectedRoute> },
-
-  // ✅ Centers - App Admin (1) and HQ (2) can view (HQ is read-only)
-  { path: "/centers", component: <ProtectedRoute allowedRoles={[1, 2]}><CenterManagement /></ProtectedRoute> },
-
-  // ✅ Meetings - App Admin, HQ, Org Admin (1,2,3)
-  { path: "/meetings", component: <ProtectedRoute allowedRoles={[1, 2, 3]}><MeetingsManagement /></ProtectedRoute> },
 
   // ✅ Lookups - App Admin, HQ, Org Admin (Org Executive and Caseworkers excluded from frontend)
   { path: "/lookups", component: <ProtectedRoute allowedRoles={[1, 2, 3]}><Lookups /></ProtectedRoute> },
@@ -409,17 +385,26 @@ const authProtectedRoutes = [
   { path: "/employees/profile/:id", component: <ProtectedRoute allowedRoles={[1, 2, 3]}><EmployeeProfile /></ProtectedRoute> },
   { path: "/lookups/:table", component: <ProtectedRoute allowedRoles={[1, 2, 3]}><LookupTableView /></ProtectedRoute> },
 
-  // ✅ Applicant Statistics (backward compatibility) - All staff
-  { path: "/applicant-statistics", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><ApplicantStatistics /></ProtectedRoute> },
 
   // ✅ Reports - All roles (Org Executive & Caseworker scoped to own center)
-  { path: "/reports/applicant-details", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><ApplicantDetailsReport /></ProtectedRoute> },
-  { path: "/reports/total-financial-assistance", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><TotalFinancialAssistanceReport /></ProtectedRoute> },
-  { path: "/reports/financial-assistance", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><FinancialAssistanceReport /></ProtectedRoute> },
-  { path: "/reports/food-assistance", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><FoodAssistanceReport /></ProtectedRoute> },
-  { path: "/reports/home-visits", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><HomeVisitsReport /></ProtectedRoute> },
-  { path: "/reports/applicant-programs", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><ApplicantProgramsReport /></ProtectedRoute> },
-  { path: "/reports/relationship-report", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><RelationshipReport /></ProtectedRoute> },
+  { path: "/reports/imam-details", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><ImamDetailsReport /></ProtectedRoute> },
+  { path: "/reports/hardship-relief", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><HardshipReliefReport /></ProtectedRoute> },
+  { path: "/reports/community-engagement", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><CommunityEngagementReport /></ProtectedRoute> },
+  { path: "/reports/borehole", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><BoreholeReport /></ProtectedRoute> },
+  { path: "/reports/continuous-professional-development", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><ContinuousProfessionalDevelopmentReport /></ProtectedRoute> },
+  { path: "/reports/higher-education-request", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><HigherEducationRequestReport /></ProtectedRoute> },
+  { path: "/reports/jumuah-audio-khutbah", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><JumuahAudioKhutbahReport /></ProtectedRoute> },
+  { path: "/reports/jumuah-khutbah-topic-submission", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><JumuahKhutbahTopicSubmissionReport /></ProtectedRoute> },
+  { path: "/reports/medical-reimbursement", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><MedicalReimbursementReport /></ProtectedRoute> },
+  { path: "/reports/new-baby-bonus", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><NewBabyBonusReport /></ProtectedRoute> },
+  { path: "/reports/new-muslim-bonus", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><NewMuslimBonusReport /></ProtectedRoute> },
+  { path: "/reports/nikah-bonus", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><NikahBonusReport /></ProtectedRoute> },
+  { path: "/reports/pearls-of-wisdom", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><PearlsOfWisdomReport /></ProtectedRoute> },
+  { path: "/reports/tickets", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><TicketsReport /></ProtectedRoute> },
+  { path: "/reports/tree-requests", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><TreeRequestsReport /></ProtectedRoute> },
+  { path: "/reports/waqf-loan", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><WaqfLoanReport /></ProtectedRoute> },
+  // Reports for tables with File_ID removed: total-financial-assistance, financial-assistance, food-assistance, home-visits
+  // relationship-report removed (table had File_ID)
   { path: "/reports/skills-matrix", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><SkillsMatrixReport /></ProtectedRoute> },
 
   //   // this route should be at the end of all other routes

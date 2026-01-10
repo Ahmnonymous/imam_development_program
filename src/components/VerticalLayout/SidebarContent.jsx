@@ -219,6 +219,114 @@ const SidebarContent = (props) => {
               </li>
             ) : null}
 
+            {/* Reports Dropdown */}
+            {canAccessNav("reports") && (
+              <li>
+                <Link to="/#" className="has-arrow">
+                  <i className="bx bx-file-find"></i>
+                  <span>{props.t("Reports")}</span>
+                </Link>
+                <ul className="sub-menu" aria-expanded="false">
+                  <li>
+                    <Link to="/reports/imam-details">
+                      <i className="bx bx-user"></i>
+                      <span>{props.t("Imam Details")}</span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/reports/hardship-relief">
+                      <i className="bx bx-heart"></i>
+                      <span>{props.t("Hardship Relief")}</span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/reports/community-engagement">
+                      <i className="bx bx-group"></i>
+                      <span>{props.t("Comm. Engagement")}</span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/reports/borehole">
+                      <i className="bx bx-droplet"></i>
+                      <span>{props.t("Borehole")}</span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/reports/continuous-professional-development">
+                      <i className="bx bx-book-open"></i>
+                      <span>{props.t("CPD")}</span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/reports/higher-education-request">
+                      <i className="bx bx-book"></i>
+                      <span>{props.t("Higher Education")}</span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/reports/jumuah-audio-khutbah">
+                      <i className="bx bx-music"></i>
+                      <span>{props.t("Jumuah Audio")}</span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/reports/jumuah-khutbah-topic-submission">
+                      <i className="bx bx-book"></i>
+                      <span>{props.t("Jumuah Topics")}</span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/reports/medical-reimbursement">
+                      <i className="bx bx-plus-medical"></i>
+                      <span>{props.t("Medical Reimb.")}</span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/reports/new-baby-bonus">
+                      <i className="bx bx-gift"></i>
+                      <span>{props.t("New Baby Bonus")}</span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/reports/new-muslim-bonus">
+                      <i className="bx bx-user-circle"></i>
+                      <span>{props.t("New Muslim Bonus")}</span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/reports/nikah-bonus">
+                      <i className="bx bx-heart"></i>
+                      <span>{props.t("Nikah Bonus")}</span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/reports/pearls-of-wisdom">
+                      <i className="bx bx-diamond"></i>
+                      <span>{props.t("Pearls of Wisdom")}</span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/reports/tickets">
+                      <i className="bx bx-help-circle"></i>
+                      <span>{props.t("Tickets")}</span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/reports/tree-requests">
+                      <i className="bx bx-box"></i>
+                      <span>{props.t("Tree Requests")}</span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/reports/waqf-loan">
+                      <i className="bx bx-money"></i>
+                      <span>{props.t("WAQF Loan")}</span>
+                    </Link>
+                  </li>
+                </ul>
+              </li>
+            )}
+
             {/* ✅ Admin Group - Lookup Setup (Second) */}
             {userType !== 6 && (
               <>
@@ -320,66 +428,6 @@ const SidebarContent = (props) => {
                 <span>{props.t("Applicant Details")}</span>
               </Link>
             </li> */}
-
-            {/* TEMPORARILY HIDDEN - Reports */}
-            {/* {canAccessNav("reports") && (
-              <li>
-                <Link to="/#" className="has-arrow ">
-                  <i className="bx bx-file-find"></i>
-                  <span>{props.t("Reports")}</span>
-                </Link>
-                <ul className="sub-menu" aria-expanded="false">
-                <li>
-                  <Link to="/reports/applicant-details">
-                    <i className="bx bx-user-plus"></i>
-                    {props.t("Applicant Details")}
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/reports/total-financial-assistance">
-                    <i className="bx bx-money"></i>
-                    {props.t("Total Assistance")}
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/reports/financial-assistance">
-                    <i className="bx bx-credit-card"></i>
-                    {props.t("Financial Assistance")}
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/reports/food-assistance">
-                    <i className="bx bx-home"></i>
-                    {props.t("Food Assistance")}
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/reports/home-visits">
-                    <i className="bx bx-car"></i>
-                    {props.t("Home Visits")}
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/reports/applicant-programs">
-                    <i className="bx bx-book-open"></i>
-                    {props.t("Applicant Programs")}
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/reports/relationship-report">
-                    <i className="bx bx-group"></i>
-                    {props.t("Relationship Report")}
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/reports/skills-matrix">
-                    <i className="bx bxs-graduation"></i>
-                    {props.t("Applicant Skills")}
-                  </Link>
-                </li>
-              </ul>
-              </li>
-            )} */}
           </ul>
         </div>
       </SimpleBar>

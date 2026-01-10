@@ -1,6 +1,6 @@
 -- PostgreSQL Schema for Welfare Application
--- Updated to implement recommendations: Supplier_Category table, TIMESTAMPTZ standardization, secure password storage,
--- Employee_ID relationships, validation, HSEQ status consistency, inventory triggers, and documentation.
+-- Updated to implement recommendations: TIMESTAMPTZ standardization, secure password storage,
+-- Employee_ID relationships, validation, HSEQ status consistency, and documentation.
 -- Removed set_created_updated_by_insert() and set_updated_by_at_timestamptz() triggers as they are handled by the application.
 -- Aligned code for consistent formatting and readability.
 
@@ -33,65 +33,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION update_financial_assessment_totals()
-RETURNS TRIGGER AS $$
-BEGIN
-    UPDATE Financial_Assessment fa
-    SET 
-        Total_Income = (SELECT COALESCE(SUM(Amount), 0) FROM Applicant_Income WHERE Financial_Assessment_ID = fa.ID),
-        Total_Expenses = (SELECT COALESCE(SUM(Amount), 0) FROM Applicant_Expense WHERE Financial_Assessment_ID = fa.ID),
-        Disposable_Income = (
-            (SELECT COALESCE(SUM(Amount), 0) FROM Applicant_Income WHERE Financial_Assessment_ID = fa.ID) -
-            (SELECT COALESCE(SUM(Amount), 0) FROM Applicant_Expense WHERE Financial_Assessment_ID = fa.ID)
-        )
-    WHERE fa.ID = COALESCE(NEW.Financial_Assessment_ID, OLD.Financial_Assessment_ID);
-    RETURN COALESCE(NEW, OLD);
-END;
-$$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION update_inventory_quantity()
-RETURNS TRIGGER AS $$
-DECLARE
-    delta DECIMAL(12,2);
-    item_id BIGINT;
-    trans_type VARCHAR(50);
-BEGIN
-    item_id := COALESCE(NEW.Item_ID, OLD.Item_ID);
-    trans_type := COALESCE(NEW.Transaction_Type, OLD.Transaction_Type);
-    
-    IF TG_OP = 'INSERT' THEN
-        delta := NEW.Quantity;
-    ELSIF TG_OP = 'UPDATE' THEN
-        delta := NEW.Quantity - COALESCE(OLD.Quantity, 0);
-    ELSIF TG_OP = 'DELETE' THEN
-        delta := -COALESCE(OLD.Quantity, 0);
-    END IF;
-
-    UPDATE Inventory_Items
-    SET Quantity = Quantity + 
-        CASE 
-            WHEN trans_type = 'IN' THEN delta
-            WHEN trans_type = 'OUT' THEN -delta
-            ELSE 0 
-        END
-    WHERE ID = item_id;
-
-    IF (SELECT Quantity FROM Inventory_Items WHERE ID = item_id) < 0 THEN
-        RAISE EXCEPTION 'Inventory quantity cannot be negative for item %', item_id;
-    END IF;
-    RETURN COALESCE(NEW, OLD);
-END;
-$$ LANGUAGE plpgsql;
 
 -- Lookup Tables
-CREATE TABLE Supplier_Category (
-    ID UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    Name VARCHAR(255) UNIQUE NOT NULL,
-    Created_By VARCHAR(255),
-    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    Updated_By VARCHAR(255),
-    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now()
-);
 
 CREATE TABLE Suburb (
     ID SERIAL PRIMARY KEY,
@@ -374,55 +318,6 @@ CREATE TABLE Hadith (
 );
 
 -- Main Tables
-CREATE TABLE Center_Detail (
-    ID SERIAL PRIMARY KEY,
-    Organisation_Name VARCHAR(255),
-    Date_of_Establishment DATE,
-    Contact_Number VARCHAR(255),
-    Email_Address VARCHAR(255),
-    Website_Link VARCHAR(255),
-    Address VARCHAR(255),
-    Area BIGINT,
-    Ameer VARCHAR(255),
-    Cell1 VARCHAR(255),
-    Cell2 VARCHAR(255),
-    Cell3 VARCHAR(255),
-    Contact1 VARCHAR(255),
-    Contact2 VARCHAR(255),
-    Contact3 VARCHAR(255),
-    Logo BYTEA,
-    Logo_Filename VARCHAR(255),
-    Logo_Mime VARCHAR(255),
-    Logo_Size INT,
-    NPO_Number VARCHAR(255),
-    Service_Rating_Email VARCHAR(255),
-    QR_Code_Service_URL BYTEA,
-    QR_Code_Service_URL_Filename VARCHAR(255),
-    QR_Code_Service_URL_Mime VARCHAR(255),
-    QR_Code_Service_URL_Size INT,
-    Created_By VARCHAR(255),
-    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    Updated_By VARCHAR(255),
-    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CONSTRAINT fk_area FOREIGN KEY (Area) REFERENCES Suburb(ID)
-);
-
-CREATE TABLE Center_Audits (
-    ID SERIAL PRIMARY KEY,
-    audit_date DATE,
-    audit_type VARCHAR(255),
-    findings VARCHAR(255),
-    recommendations VARCHAR(255),
-    attachments BYTEA,
-    Attachments_Filename VARCHAR(255),
-    Attachments_Mime VARCHAR(255),
-    Attachments_Size INT,
-    conducted_by VARCHAR(255),
-    Created_By VARCHAR(255),
-    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    Updated_By VARCHAR(255),
-    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now()
-);
 
 CREATE TABLE Training_Institutions (
     ID SERIAL PRIMARY KEY,
@@ -566,239 +461,9 @@ CREATE TABLE Employee_Skills (
     CONSTRAINT fk_training_outcome FOREIGN KEY (Training_Outcome) REFERENCES Training_Outcome(ID)
 );
 
-CREATE TABLE HSEQ_Toolbox_Meeting (
-    ID SERIAL PRIMARY KEY,
-    Meeting_Date DATE,
-    Conducted_By VARCHAR(40),
-    In_Attendance VARCHAR(1000),
-    Guests VARCHAR(1000),
-    Health_Discussions VARCHAR(1000),
-    Safety_Discussions VARCHAR(1000),
-    Quality_Discussions VARCHAR(1000),
-    Productivity_Discussions VARCHAR(1000),
-    Environment_Discussions VARCHAR(1000),
-    General_Discussion VARCHAR(1000),
-    Feedback VARCHAR(1000),
-    Created_By VARCHAR(255),
-    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    Updated_By VARCHAR(255),
-    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now()
-);
 
-CREATE TABLE HSEQ_Toolbox_Meeting_Tasks (
-    ID SERIAL PRIMARY KEY,
-    HSEQ_Toolbox_Meeting_ID BIGINT,
-    Task_Description VARCHAR(100),
-    Completion_Date DATE,
-    Responsible VARCHAR(40),
-    Status BIGINT,
-    Notes VARCHAR(400),
-    Created_By VARCHAR(255),
-    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    Updated_By VARCHAR(255),
-    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CONSTRAINT fk_hseq_toolbox_meeting_id FOREIGN KEY (HSEQ_Toolbox_Meeting_ID) REFERENCES HSEQ_Toolbox_Meeting(ID),
-    CONSTRAINT fk_status FOREIGN KEY (Status) REFERENCES Tasks_Status(ID)
-);
 
-CREATE TABLE Applicant_Details (
-    ID SERIAL PRIMARY KEY,
-    Name VARCHAR(255),
-    Surname VARCHAR(255),
-    ID_Number VARCHAR(255),
-    Race BIGINT,
-    Nationality BIGINT,
-    Nationality_Expiry_Date DATE,
-    Gender BIGINT,
-    Born_Religion_ID BIGINT,
-    Period_As_Muslim_ID BIGINT,
-    File_Number VARCHAR(255) UNIQUE,
-    File_Condition BIGINT,
-    File_Status BIGINT,
-    Date_Intake DATE,
-    Highest_Education_Level BIGINT,
-    Marital_Status BIGINT,
-    Employment_Status BIGINT,
-    Cell_Number VARCHAR(255),
-    Alternate_Number VARCHAR(255),
-    Email_Address VARCHAR(255),
-    Suburb BIGINT,
-    Street_Address VARCHAR(255),
-    Dwelling_Type BIGINT,
-    Flat_Name VARCHAR(255),
-    Flat_Number VARCHAR(255),
-    Dwelling_Status BIGINT,
-    Health BIGINT,
-    Skills BIGINT,
-    Signature BYTEA,
-    Signature_Filename VARCHAR(255),
-    Signature_Mime VARCHAR(255),
-    Signature_Size INT,
-    POPIA_Agreement VARCHAR(255),
-    Created_By VARCHAR(255),
-    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    Updated_By VARCHAR(255),
-    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CONSTRAINT fk_race FOREIGN KEY (Race) REFERENCES Race(ID),
-    CONSTRAINT fk_nationality FOREIGN KEY (Nationality) REFERENCES Nationality(ID),
-    CONSTRAINT fk_gender_app FOREIGN KEY (Gender) REFERENCES Gender(ID),
-    CONSTRAINT fk_file_condition FOREIGN KEY (File_Condition) REFERENCES File_Condition(ID),
-    CONSTRAINT fk_file_status FOREIGN KEY (File_Status) REFERENCES File_Status(ID),
-    CONSTRAINT fk_highest_education_level_app FOREIGN KEY (Highest_Education_Level) REFERENCES Education_Level(ID),
-    CONSTRAINT fk_marital_status FOREIGN KEY (Marital_Status) REFERENCES Marital_Status(ID),
-    CONSTRAINT fk_employment_status FOREIGN KEY (Employment_Status) REFERENCES Employment_Status(ID),
-    CONSTRAINT fk_suburb_app FOREIGN KEY (Suburb) REFERENCES Suburb(ID),
-    CONSTRAINT fk_dwelling_type FOREIGN KEY (Dwelling_Type) REFERENCES Dwelling_Type(ID),
-    CONSTRAINT fk_dwelling_status FOREIGN KEY (Dwelling_Status) REFERENCES Dwelling_Status(ID),
-    CONSTRAINT fk_health FOREIGN KEY (Health) REFERENCES Health_Conditions(ID),
-    CONSTRAINT fk_skills FOREIGN KEY (Skills) REFERENCES Skills(ID),
-    CONSTRAINT fk_born_religion FOREIGN KEY (Born_Religion_ID) REFERENCES Born_Religion(ID),
-    CONSTRAINT fk_period_as_muslim FOREIGN KEY (Period_As_Muslim_ID) REFERENCES Period_As_Muslim(ID)
-);
-
-CREATE TABLE Comments (
-    ID SERIAL PRIMARY KEY,
-    File_ID BIGINT,
-    Comment TEXT,
-    Comment_Date DATE,
-    Created_By VARCHAR(255),
-    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    Updated_By VARCHAR(255),
-    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CONSTRAINT fk_file_id FOREIGN KEY (File_ID) REFERENCES Applicant_Details(ID)
-);
-
-CREATE TABLE Tasks (
-    ID SERIAL PRIMARY KEY,
-    File_ID BIGINT,
-    Task_Description TEXT,
-    Date_Required DATE,
-    Status VARCHAR(255),
-    Created_By VARCHAR(255),
-    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    Updated_By VARCHAR(255),
-    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CONSTRAINT fk_file_id_task FOREIGN KEY (File_ID) REFERENCES Applicant_Details(ID)
-);
-
-CREATE TABLE Relationships (
-    ID SERIAL PRIMARY KEY,
-    File_ID BIGINT,
-    Relationship_Type BIGINT,
-    Name VARCHAR(255),
-    Surname VARCHAR(255),
-    ID_Number VARCHAR(255),
-    Date_of_Birth DATE,
-    Employment_Status BIGINT,
-    Gender BIGINT,
-    Highest_Education BIGINT,
-    Health_Condition BIGINT,
-    Created_By VARCHAR(255),
-    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    Updated_By VARCHAR(255),
-    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CONSTRAINT fk_file_id_rel FOREIGN KEY (File_ID) REFERENCES Applicant_Details(ID),
-    CONSTRAINT fk_relationship_type FOREIGN KEY (Relationship_Type) REFERENCES Relationship_Types(ID),
-    CONSTRAINT fk_employment_status_rel FOREIGN KEY (Employment_Status) REFERENCES Employment_Status(ID),
-    CONSTRAINT fk_gender_rel FOREIGN KEY (Gender) REFERENCES Gender(ID),
-    CONSTRAINT fk_highest_education_rel FOREIGN KEY (Highest_Education) REFERENCES Education_Level(ID),
-    CONSTRAINT fk_health_condition FOREIGN KEY (Health_Condition) REFERENCES Health_Conditions(ID)
-);
-
-CREATE TABLE Home_Visit (
-    ID SERIAL PRIMARY KEY,
-    File_ID BIGINT,
-    Visit_Date DATE,
-    Representative VARCHAR(255),
-    Comments TEXT,
-    Attachment_1 BYTEA,
-    Attachment_1_Filename VARCHAR(255),
-    Attachment_1_Mime VARCHAR(255),
-    Attachment_1_Size INT,
-    Attachment_2 BYTEA,
-    Attachment_2_Filename VARCHAR(255),
-    Attachment_2_Mime VARCHAR(255),
-    Attachment_2_Size INT,
-    Created_By VARCHAR(255),
-    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    Updated_By VARCHAR(255),
-    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CONSTRAINT fk_file_id_vis FOREIGN KEY (File_ID) REFERENCES Applicant_Details(ID)
-);
-
-CREATE TABLE Financial_Assistance (
-    ID SERIAL PRIMARY KEY,
-    File_ID BIGINT,
-    Assistance_Type BIGINT,
-    Financial_Amount DECIMAL(12,2),
-    Date_of_Assistance DATE,
-    Assisted_By BIGINT,
-    Sector VARCHAR(255),
-    Program VARCHAR(255),
-    Project VARCHAR(255),
-    Give_To VARCHAR(255),
-    Starting_Date DATE,
-    End_Date DATE,
-    Frequency VARCHAR(20),
-    Is_Recurring BOOLEAN DEFAULT false,
-    Is_Auto_Generated BOOLEAN DEFAULT false,
-    Recurring_Source_ID BIGINT,
-    Created_By VARCHAR(255),
-    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    Updated_By VARCHAR(255),
-    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CONSTRAINT fk_file_id_fin FOREIGN KEY (File_ID) REFERENCES Applicant_Details(ID),
-    CONSTRAINT fk_assistance_type FOREIGN KEY (Assistance_Type) REFERENCES Assistance_Types(ID),
-    CONSTRAINT fk_financial_assistance_assisted_by FOREIGN KEY (Assisted_By) REFERENCES Employee(ID),
-    CONSTRAINT fk_recurring_source_id FOREIGN KEY (Recurring_Source_ID) REFERENCES Financial_Assistance(ID) ON DELETE CASCADE
-);
-
-CREATE TABLE Recurring_Invoice_Log (
-    ID SERIAL PRIMARY KEY,
-    Applicant_ID BIGINT REFERENCES Applicant_Details(ID) ON DELETE CASCADE,
-    Financial_Aid_ID BIGINT REFERENCES Financial_Assistance(ID) ON DELETE CASCADE,
-    Source_Financial_Aid_ID BIGINT REFERENCES Financial_Assistance(ID) ON DELETE CASCADE,
-    Created_Date TIMESTAMPTZ NOT NULL DEFAULT now(),
-    Next_Run_Date DATE,
-    Frequency VARCHAR(20),
-    Created_By_System BOOLEAN DEFAULT true,
-    Created_By VARCHAR(255),
-    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    Updated_By VARCHAR(255),
-    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-CREATE TABLE Food_Assistance (
-    ID SERIAL PRIMARY KEY,
-    File_ID BIGINT,
-    Distributed_Date DATE,
-    Hamper_Type BIGINT,
-    Financial_Cost DECIMAL(12,2),
-    Assisted_By BIGINT,
-    Created_By VARCHAR(255),
-    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    Updated_By VARCHAR(255),
-    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CONSTRAINT fk_file_id_food FOREIGN KEY (File_ID) REFERENCES Applicant_Details(ID),
-    CONSTRAINT fk_hamper_type FOREIGN KEY (Hamper_Type) REFERENCES Hampers(ID),
-    CONSTRAINT fk_food_assistance_assisted_by FOREIGN KEY (Assisted_By) REFERENCES Employee(ID)
-);
-
-CREATE TABLE Attachments (
-    ID SERIAL PRIMARY KEY,
-    File_ID BIGINT,
-    Attachment_Name VARCHAR(255),
-    Attachment_Details VARCHAR(255),
-    File BYTEA,
-    File_Filename VARCHAR(255),
-    File_Mime VARCHAR(255),
-    File_Size INT,
-    Created_By VARCHAR(255),
-    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    Updated_By VARCHAR(255),
-    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CONSTRAINT fk_file_id_att FOREIGN KEY (File_ID) REFERENCES Applicant_Details(ID)
-);
+-- Tables with File_ID have been removed: Comments, Tasks, Relationships, Home_Visit, Financial_Assistance, Food_Assistance, Attachments, Recurring_Invoice_Log
 
 CREATE TABLE Programs (
     ID SERIAL PRIMARY KEY,
@@ -823,81 +488,12 @@ CREATE TABLE Programs (
     CONSTRAINT fk_training_level FOREIGN KEY (Training_Level) REFERENCES Training_Level(ID),
     CONSTRAINT fk_training_provider FOREIGN KEY (Training_Provider) REFERENCES Training_Institutions(ID),
     CONSTRAINT fk_program_outcome FOREIGN KEY (Program_Outcome) REFERENCES Training_Outcome(ID),
-    CONSTRAINT fk_person_trained FOREIGN KEY (Person_Trained_ID) REFERENCES Applicant_Details(ID),
     CONSTRAINT fk_means_of_communication FOREIGN KEY (Means_of_communication) REFERENCES Means_of_communication(ID)
 );
 
-CREATE TABLE Applicant_Income (
-    ID SERIAL PRIMARY KEY,
-    Financial_Assessment_ID BIGINT NOT NULL,
-    Income_Type_ID BIGINT NOT NULL,
-    Amount DECIMAL(12,2),
-    Description TEXT,
-    Created_By VARCHAR(255),
-    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    Updated_By VARCHAR(255),
-    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CONSTRAINT fk_income_type_id FOREIGN KEY (Income_Type_ID) REFERENCES Income_Type(ID)
-);
 
-CREATE TABLE Applicant_Expense (
-    ID SERIAL PRIMARY KEY,
-    Financial_Assessment_ID BIGINT NOT NULL,
-    Expense_Type_ID BIGINT NOT NULL,
-    Amount DECIMAL(12,2),
-    Description TEXT,
-    Created_By VARCHAR(255),
-    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    Updated_By VARCHAR(255),
-    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CONSTRAINT fk_expense_type_id FOREIGN KEY (Expense_Type_ID) REFERENCES Expense_Type(ID)
-);
 
-CREATE TABLE Financial_Assessment (
-    ID SERIAL PRIMARY KEY,
-    File_ID BIGINT NOT NULL,
-    Total_Income DECIMAL(12,2),
-    Total_Expenses DECIMAL(12,2),
-    Disposable_Income DECIMAL(12,2),
-    Created_By VARCHAR(255),
-    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    Updated_By VARCHAR(255),
-    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CONSTRAINT fk_file_id FOREIGN KEY (File_ID) REFERENCES Applicant_Details(ID) ON DELETE CASCADE
-);
 
-CREATE TRIGGER Financial_Assessment_update_totals
-    AFTER INSERT OR UPDATE OR DELETE ON Applicant_Income
-    FOR EACH ROW EXECUTE FUNCTION update_financial_assessment_totals();
-
-CREATE TRIGGER Applicant_Expense_update_totals
-    AFTER INSERT OR UPDATE OR DELETE ON Applicant_Expense
-    FOR EACH ROW EXECUTE FUNCTION update_financial_assessment_totals();
-
--- Ensure a minimal Financial_Assessment exists for every applicant
-CREATE OR REPLACE FUNCTION ensure_financial_assessment_for_applicant()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Create a placeholder assessment so that later income/expense rows
-    -- can automatically roll up via existing triggers
-    IF NOT EXISTS (
-        SELECT 1 FROM Financial_Assessment WHERE File_ID = NEW.ID
-    ) THEN
-        INSERT INTO Financial_Assessment (
-            File_ID, Total_Income, Total_Expenses, Disposable_Income, Created_By
-        ) VALUES (
-            NEW.ID, 
-            0, 0, 0, 
-            COALESCE(NEW.created_by, 'Admin')
-        );
-    END IF;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER Applicant_Details_create_financial_assessment
-    AFTER INSERT ON Applicant_Details
-    FOR EACH ROW EXECUTE FUNCTION ensure_financial_assessment_for_applicant();
 
 CREATE TABLE Service_Rating (
     ID UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -922,106 +518,7 @@ CREATE TABLE Service_Rating (
     Updated_At TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE TABLE Supplier_Profile (
-    ID UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    Name VARCHAR(255) NOT NULL,
-    Registration_No VARCHAR(100),
-    Contact_Person VARCHAR(255),
-    Contact_Email VARCHAR(255),
-    Contact_Phone VARCHAR(50),
-    Address TEXT,
-    Category_ID UUID,
-    Status VARCHAR(50),
-    Created_By VARCHAR(255),
-    Datestamp DATE DEFAULT CURRENT_DATE,
-    Updated_By VARCHAR(255),
-    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CONSTRAINT fk_category_id FOREIGN KEY (Category_ID) REFERENCES Supplier_Category(ID)
-);
 
-CREATE TABLE Supplier_Evaluation (
-    ID UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    Supplier_ID UUID NOT NULL,
-    Eval_Date DATE NOT NULL,
-    Quality_Score SMALLINT,
-    Delivery_Score SMALLINT,
-    Cost_Score SMALLINT,
-    OHS_Score SMALLINT,
-    Env_Score SMALLINT,
-    Quality_Wt NUMERIC(5,2),
-    Delivery_Wt NUMERIC(5,2),
-    Cost_Wt NUMERIC(5,2),
-    OHS_Wt NUMERIC(5,2),
-    Env_Wt NUMERIC(5,2),
-    Overall_Score NUMERIC(5,2),
-    Status VARCHAR(50),
-    Notes TEXT,
-    Expiry_Date DATE,
-    Created_By VARCHAR(255),
-    Datestamp DATE DEFAULT CURRENT_DATE,
-    Updated_By VARCHAR(255),
-    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CONSTRAINT fk_supplier_id FOREIGN KEY (Supplier_ID) REFERENCES Supplier_Profile(ID) ON DELETE CASCADE
-);
-
-CREATE TABLE Supplier_Document (
-    ID UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    Supplier_ID UUID NOT NULL,
-    Doc_Type VARCHAR(100) NOT NULL,
-    Issued_At DATE,
-    File BYTEA,
-    File_Filename VARCHAR(255),
-    File_Mime VARCHAR(255),
-    File_Size INT,
-    Description TEXT,
-    Created_By VARCHAR(255),
-    Datestamp DATE DEFAULT CURRENT_DATE,
-    Updated_By VARCHAR(255),
-    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CONSTRAINT fk_supplier_id_doc FOREIGN KEY (Supplier_ID) REFERENCES Supplier_Profile(ID) ON DELETE CASCADE
-);
-
-CREATE TABLE Inventory_Items (
-    ID SERIAL PRIMARY KEY,
-    Item_Name VARCHAR(255),
-    Description TEXT,
-    Hamper_Type BIGINT,
-    Quantity DECIMAL(12,2) DEFAULT 0,
-    Unit VARCHAR(50),
-    Min_Stock DECIMAL(12,2),
-    Cost_Per_Unit DECIMAL(12,2),
-    Supplier_ID UUID,
-    Created_By VARCHAR(255),
-    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    Updated_By VARCHAR(255),
-    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CONSTRAINT fk_hamper_type_inv FOREIGN KEY (Hamper_Type) REFERENCES Hampers(ID),
-    CONSTRAINT fk_supplier_id FOREIGN KEY (Supplier_ID) REFERENCES Supplier_Profile(ID)
-);
-
-CREATE TABLE Inventory_Transactions (
-    ID SERIAL PRIMARY KEY,
-    Item_ID BIGINT,
-    Transaction_Type VARCHAR(50),
-    Quantity DECIMAL(12,2),
-    Transaction_Date DATE,
-    Notes TEXT,
-    Employee_ID BIGINT,
-    Created_By VARCHAR(255),
-    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    Updated_By VARCHAR(255),
-    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CONSTRAINT fk_item_id FOREIGN KEY (Item_ID) REFERENCES Inventory_Items(ID),
-    CONSTRAINT fk_employee_id_trans FOREIGN KEY (Employee_ID) REFERENCES Employee(ID)
-);
-
-CREATE TRIGGER Inventory_Transactions_update_quantity
-    AFTER INSERT OR UPDATE ON Inventory_Transactions
-    FOR EACH ROW EXECUTE FUNCTION update_inventory_quantity();
-
-CREATE TRIGGER Inventory_Transactions_update_quantity_delete
-    AFTER DELETE ON Inventory_Transactions
-    FOR EACH ROW EXECUTE FUNCTION update_inventory_quantity();
 
 -- Secondary Features Tables
 CREATE TABLE Conversations (
@@ -1491,15 +988,6 @@ CREATE TABLE IF NOT EXISTS Borehole_Construction_Tasks_Lookup (
     Updated_At TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Supplier Lookup
-CREATE TABLE IF NOT EXISTS Supplier_Lookup (
-    ID BIGSERIAL PRIMARY KEY,
-    Name VARCHAR(255) UNIQUE NOT NULL,
-    Created_By VARCHAR(255),
-    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
-    Updated_By VARCHAR(255),
-    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now()
-);
 
 -- Employment Type Lookup (for Imam Profiles)
 CREATE TABLE IF NOT EXISTS Employment_Type (
@@ -2075,7 +1563,6 @@ CREATE TABLE IF NOT EXISTS borehole (
     status_id BIGINT NOT NULL DEFAULT 1,
     comment TEXT,
     datestamp TIMESTAMPTZ NOT NULL DEFAULT now(),
-    center_id BIGINT,
     Created_By VARCHAR(255),
     Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     Updated_By VARCHAR(255),
@@ -2085,8 +1572,7 @@ CREATE TABLE IF NOT EXISTS borehole (
     CONSTRAINT fk_borehole_electricity FOREIGN KEY (has_electricity) REFERENCES Yes_No(ID),
     CONSTRAINT fk_borehole_received_before FOREIGN KEY (received_borehole_before) REFERENCES Yes_No(ID),
     CONSTRAINT fk_borehole_water_source FOREIGN KEY (current_water_source) REFERENCES Water_Source(ID),
-    CONSTRAINT fk_borehole_status FOREIGN KEY (status_id) REFERENCES Status(ID),
-    CONSTRAINT fk_borehole_center_id FOREIGN KEY (center_id) REFERENCES Center_Detail(ID)
+    CONSTRAINT fk_borehole_status FOREIGN KEY (status_id) REFERENCES Status(ID)
 );
 
 -- Junction table for many-to-many relationship: Borehole to Water Usage Purposes
@@ -2616,40 +2102,18 @@ BEGIN
 END $$;
 
 -- Indexes
-CREATE INDEX HSEQ_Toolbox_Meeting_Tasks_i1 ON HSEQ_Toolbox_Meeting_Tasks (HSEQ_Toolbox_Meeting_ID);
 CREATE INDEX idx_service_rating_datestamp ON Service_Rating (Datestamp);
 CREATE INDEX idx_service_rating_recommend ON Service_Rating (Would_Recommend);
 CREATE INDEX idx_service_rating_positive ON Service_Rating (Positive_Impact);
-CREATE INDEX idx_supplier_evaluation_supplier ON Supplier_Evaluation (Supplier_ID);
-CREATE INDEX idx_supplier_document_supplier ON Supplier_Document (Supplier_ID);
-CREATE INDEX idx_applicant_details_file_number ON Applicant_Details (File_Number);
-CREATE INDEX idx_applicant_details_id_number ON Applicant_Details (ID_Number);
 CREATE INDEX idx_employee_id_number ON Employee (ID_Number);
 CREATE INDEX idx_employee_username ON Employee (Username);
-CREATE INDEX idx_financial_assistance_file_type ON Financial_Assistance (File_ID, Assistance_Type);
-CREATE INDEX idx_financial_assistance_assisted_by ON Financial_Assistance (Assisted_By);
-CREATE INDEX idx_financial_assistance_recurring_source ON Financial_Assistance (Recurring_Source_ID);
-CREATE INDEX idx_financial_assistance_recurring_flags ON Financial_Assistance (Is_Recurring, Is_Auto_Generated);
-CREATE INDEX idx_recurring_invoice_log_source ON Recurring_Invoice_Log (Source_Financial_Aid_ID);
-CREATE INDEX idx_food_assistance_file_id ON Food_Assistance (File_ID);
-CREATE INDEX idx_food_assistance_assisted_by ON Food_Assistance (Assisted_By);
-CREATE INDEX idx_home_visit_file_id ON Home_Visit (File_ID);
-CREATE INDEX idx_comments_file_id ON Comments (File_ID);
-CREATE INDEX idx_relationships_file_id ON Relationships (File_ID);
+-- Indexes for removed tables (Financial_Assistance, Food_Assistance, Home_Visit, Comments, Relationships, Recurring_Invoice_Log) have been removed
 CREATE INDEX idx_programs_person_trained_id ON Programs (Person_Trained_ID);
 CREATE INDEX idx_employee_appraisal_employee_id ON Employee_Appraisal (Employee_ID);
 CREATE INDEX idx_employee_initiative_employee_id ON Employee_Initiative (Employee_ID);
 CREATE INDEX idx_employee_skills_employee_id ON Employee_Skills (Employee_ID);
-CREATE INDEX idx_inventory_items_supplier_id ON Inventory_Items (Supplier_ID);
-CREATE INDEX idx_inventory_transactions_item_id ON Inventory_Transactions (Item_ID);
-CREATE INDEX idx_supplier_profile_category_id ON Supplier_Profile (Category_ID);
 CREATE INDEX idx_conversation_participants_conversation_id ON Conversation_Participants (Conversation_ID);
 CREATE INDEX idx_messages_conversation_id ON Messages (Conversation_ID);
-CREATE INDEX idx_financial_assessment_file_id ON Financial_Assessment (File_ID);
-CREATE INDEX idx_applicant_expense_assessment_id ON Applicant_Expense (Financial_Assessment_ID);
-CREATE INDEX idx_applicant_expense_type_id ON Applicant_Expense (Expense_Type_ID);
-CREATE INDEX idx_applicant_income_assessment_id ON Applicant_Income (Financial_Assessment_ID);
-CREATE INDEX idx_applicant_income_type_id ON Applicant_Income (Income_Type_ID);
 
 -- Imam Management System Indexes (created conditionally to ensure tables exist)
 DO $$
@@ -3366,10 +2830,6 @@ INSERT INTO Hadith (Hadith_Arabic, Hadith_English, Created_By, Updated_By) VALUE
     'admin'
 );
 
-INSERT INTO Supplier_Category (Name) VALUES
-    ('Food Supplier'),
-    ('Medical Supplier'),
-    ('Service Provider');
 
 INSERT INTO Training_Courses (Name) VALUES
     ('First Aid'),
@@ -3443,7 +2903,6 @@ UPDATE Tasks_Status SET Created_By = 'admin', Updated_By = 'admin', Updated_At =
 UPDATE Nationality SET Created_By = 'admin', Updated_By = 'admin', Updated_At = now();
 UPDATE Born_Religion SET Created_By = 'admin', Updated_By = 'admin', Updated_At = now();
 UPDATE Period_As_Muslim SET Created_By = 'admin', Updated_By = 'admin', Updated_At = now();
-UPDATE Supplier_Category SET Created_By = 'admin', Updated_By = 'admin', Updated_At = now();
 UPDATE Means_of_communication SET Created_By = 'admin', Updated_By = 'admin', Updated_At = now();
 UPDATE Training_Courses SET Created_By = 'admin', Updated_By = 'admin', Updated_At = now();
 UPDATE Training_Institutions SET Created_By = 'admin', Updated_By = 'admin', Updated_At = now();
@@ -3457,29 +2916,17 @@ UPDATE Relationship_Types SET Created_By = 'admin', Updated_By = 'admin', Update
 UPDATE Policy_Procedure_Type SET Created_By = 'admin', Updated_By = 'admin', Updated_At = now();
 UPDATE Policy_Procedure_Field SET Created_By = 'admin', Updated_By = 'admin', Updated_At = now();
 
--- ✅ Insert seed data: Center and Test Users
--- Insert into Center_Detail
-INSERT INTO Center_Detail (
-    Organisation_Name, Date_of_Establishment, Contact_Number, Email_Address, Address, Area, NPO_Number, Created_By
-) VALUES
-    ('Welfare Center Alpha', '2020-01-01', '+27123456789', 'center.alpha@example.com', '123 Main St, Soweto', 1, 'NPO-2020-001', 'admin');
-
--- Insert into Center_Audits
-INSERT INTO Center_Audits (
-    audit_date, audit_type, findings, recommendations, conducted_by, Created_By
-) VALUES
-    ('2024-01-15', 'Financial Audit', 'Compliant with regulations', 'Improve record-keeping', 'Auditor Jane', 'admin');
-
 -- Insert into Policy_and_Procedure
 INSERT INTO Policy_and_Procedure (
     Name, Description, Type, Date_Of_Publication, Status, Field, Created_By
 ) VALUES
     ('Employee Safety Policy', 'Safety guidelines for staff',
-     (SELECT ID FROM Policy_Procedure_Type WHERE Name = 'Health and Safety'),
+     (SELECT ID FROM Policy_Procedure_Type WHERE Name = 'Policy' LIMIT 1),
      '2023-06-01',
-     (SELECT ID FROM File_Status WHERE Name = 'Active'),
-     (SELECT ID FROM Policy_Procedure_Field WHERE Name = 'Compliance'),
-     'admin');
+     (SELECT ID FROM File_Status WHERE Name = 'Active' LIMIT 1),
+     (SELECT ID FROM Policy_Procedure_Field WHERE Name = 'Compliance' LIMIT 1),
+     'admin')
+ON CONFLICT DO NOTHING;
 
 -- ✅ Seed Test Users with proper role assignments
 -- User 1: App Admin
@@ -3551,57 +2998,7 @@ INSERT INTO Employee_Skills (
 ) VALUES
     (3, 1, 1, '2023-03-01', '2026-03-01', 2, 'system');
 
--- Insert into HSEQ_Toolbox_Meeting
-INSERT INTO HSEQ_Toolbox_Meeting (
-    Meeting_Date, Conducted_By, In_Attendance, Health_Discussions, Safety_Discussions, Created_By
-) VALUES
-    ('2024-03-10', 'John Manager', 'Team Alpha, Team Beta', 'Hygiene protocols', 'Fire safety measures', 'admin');
 
--- Insert into HSEQ_Toolbox_Meeting_Tasks
-INSERT INTO HSEQ_Toolbox_Meeting_Tasks (
-    HSEQ_Toolbox_Meeting_ID, Task_Description, Completion_Date, Responsible, Status, Notes, Created_By
-) VALUES
-    (1, 'Install fire extinguishers', '2024-04-01', 'Safety Officer', 3, 'Urgent task', 'admin');
-
--- Insert into Applicant_Details
-INSERT INTO Applicant_Details (
-    Name, Surname, ID_Number, Race, Nationality, Gender, Born_Religion_ID, Period_As_Muslim_ID, File_Number,
-    File_Condition, File_Status, Date_Intake, Highest_Education_Level, Marital_Status, Employment_Status,
-    Cell_Number, Email_Address, Suburb, Street_Address, Dwelling_Type, Dwelling_Status, Health, Skills, Created_By
-) VALUES
-    ('Ahmed', 'raza', '8705051234081', 2, 14, 1, 4, 1, 'APP-2024-001', 1, 1, '2024-01-10', 3, 2, 1,
-     '+27812345678', 'ahmed.raza@example.com', 1, '456 Oak St, Soweto', 1, 3, 1, 2, 'admin');
-
--- Insert into Comments
-INSERT INTO Comments (
-    File_ID, Comment, Comment_Date, Created_By
-) VALUES
-    (1, 'Initial assessment completed', '2024-01-11', 'admin');
-
--- Insert into Tasks
-INSERT INTO Tasks (
-    File_ID, Task_Description, Date_Required, Status, Created_By
-) VALUES
-    (1, 'Schedule home visit', '2024-02-15', 'In Progress', 'admin');
-
--- Insert into Relationships
-INSERT INTO Relationships (
-    File_ID, Relationship_Type, Name, Surname, ID_Number, Date_of_Birth, Employment_Status, Gender,
-    Highest_Education, Health_Condition, Created_By
-) VALUES
-    (1, 2, 'Aisha', 'raza', '1505051234082', '2015-05-05', 2, 2, 1, 1, 'admin');
-
--- Insert into Home_Visit
-INSERT INTO Home_Visit (
-    File_ID, Visit_Date, Representative, Comments, Created_By
-) VALUES
-    (1, '2024-02-20', 'Case Worker Jane', 'Stable living conditions', 'admin');
-
--- Insert into Financial_Assistance
-INSERT INTO Financial_Assistance (
-    File_ID, Assistance_Type, Financial_Amount, Date_of_Assistance, Created_By
-) VALUES
-    (1, 1, 1000.00, '2024-02-25', 'admin');
 
 -- Insert into Hampers
 INSERT INTO Hampers (Name, Created_By) VALUES
@@ -3609,26 +3006,6 @@ INSERT INTO Hampers (Name, Created_By) VALUES
     ('Emergency Food Hamper', 'admin'),
     ('Special Dietary Hamper', 'admin');
 
--- Insert into Food_Assistance
-INSERT INTO Food_Assistance (
-    File_ID, Distributed_Date, Hamper_Type, Financial_Cost, Created_By
-) VALUES
-    (1, '2024-02-28',
-     (SELECT ID FROM Hampers WHERE Name = 'Basic Food Hamper'),
-     250.00, 'admin');
-
--- Insert into Attachments
-INSERT INTO Attachments (
-    File_ID, Attachment_Name, Attachment_Details, Created_By
-) VALUES
-    (1, 'ID Document Scan', 'Applicant ID copy', 'admin');
-
--- Insert into Programs
-INSERT INTO Programs (
-    Person_Trained_ID, Program_Name, Means_of_communication, Date_of_program, Communicated_by,
-    Training_Level, Training_Provider, Program_Outcome, Created_By
-) VALUES
-    (1, 1, 1, '2024-03-01', 1, 1, 1, 2, 'admin');
 
 -- Insert into Service_Rating
 INSERT INTO Service_Rating (
@@ -3639,44 +3016,7 @@ INSERT INTO Service_Rating (
     (4, 5, 4, 3, 4, 5, 4, TRUE, 4, TRUE, 'Friendly staff', 'Faster response times', 
      'Great service overall', 'admin');
 
--- Insert into Supplier_Profile
-INSERT INTO Supplier_Profile (
-    Name, Registration_No, Contact_Person, Contact_Email, Contact_Phone, Address, 
-    Category_ID, Status, Created_By
-) VALUES
-    ('Fresh Foods Ltd', 'REG-2023-001', 'John Supplier', 'john@freshfoods.com', '+27123456780', 
-     '789 Market St, Sandton',
-     (SELECT ID FROM Supplier_Category WHERE Name = 'Food Supplier'), 'Active', 'admin');
 
--- Insert into Supplier_Evaluation
-INSERT INTO Supplier_Evaluation (
-    Supplier_ID, Eval_Date, Quality_Score, Delivery_Score, Cost_Score, OHS_Score, Env_Score,
-    Quality_Wt, Delivery_Wt, Cost_Wt, OHS_Wt, Env_Wt, Overall_Score, Status, Notes, Expiry_Date, Created_By
-) VALUES
-    ((SELECT ID FROM Supplier_Profile WHERE Name = 'Fresh Foods Ltd'), '2024-03-15', 4, 5, 3, 4, 4,
-     0.30, 0.25, 0.20, 0.15, 0.10, 4.10, 'Approved', 'Reliable supplier', '2025-03-15', 'admin');
-
--- Insert into Supplier_Document
-INSERT INTO Supplier_Document (
-    Supplier_ID, Doc_Type, Issued_At, Description, Created_By
-) VALUES
-    ((SELECT ID FROM Supplier_Profile WHERE Name = 'Fresh Foods Ltd'), 'Tax Clearance', 
-     '2024-01-01', 'Tax clearance certificate', 'admin');
-
--- Insert into Inventory_Items
-INSERT INTO Inventory_Items (
-    Item_Name, Description, Hamper_Type, Quantity, Unit, Min_Stock, Cost_Per_Unit, Supplier_ID, Created_By
-) VALUES
-    ('Rice 5kg', 'Long-grain white rice', 
-     (SELECT ID FROM Hampers WHERE Name = 'Basic Food Hamper'), 100.00, 'kg', 20.00, 15.00,
-     (SELECT ID FROM Supplier_Profile WHERE Name = 'Fresh Foods Ltd'), 'admin');
-
--- Insert into Inventory_Transactions
-INSERT INTO Inventory_Transactions (
-    Item_ID, Transaction_Type, Quantity, Transaction_Date, Notes, Employee_ID, Created_By
-) VALUES
-    ((SELECT ID FROM Inventory_Items WHERE Item_Name = 'Rice 5kg'), 'IN', 50.00, '2024-03-20', 
-     'Restock from supplier', 1, 'admin');
 
 -- Insert into Conversations
 INSERT INTO Conversations (
@@ -3695,7 +3035,7 @@ INSERT INTO Messages (
     Conversation_ID, Sender_ID, Message_Text, Read_Status, Created_By
 ) VALUES
     ((SELECT ID FROM Conversations WHERE Title = 'Team Coordination'), 1, 
-     'Please review the new applicant process.', 'Unread', 'admin');
+     'Please review the process.', 'Unread', 'admin');
 
 -- Insert into Folders
 INSERT INTO Folders (
@@ -4540,3 +3880,431 @@ BEGIN
 END $$;
 
 -- ============================================================
+-- ============================================================
+-- IMAM PROFILES SEED DATA
+-- ============================================================
+
+-- First, create additional employees for Imam Profiles (since employee_id must be unique)
+-- Employee 6: Imam User 1
+INSERT INTO Employee (
+    Name, Surname, Username, Password_Hash, User_Type, Suburb, Nationality, Race, Gender, 
+    Highest_Education_Level, Contact_Number, Emergency_Contact, Blood_Type, Department, HSEQ_Related, Created_By, Updated_By
+) VALUES (
+    'Ahmad', 'Hassan', 'imam1', '123456', 6,
+    1, 14, 1, 1, 3,
+    '+27123456790', '+27123456790', 1, NULL, NULL, 'system', 'system'
+) ON CONFLICT (Username) DO UPDATE SET Password_Hash = '123456';
+
+-- Employee 7: Imam User 2
+INSERT INTO Employee (
+    Name, Surname, Username, Password_Hash, User_Type, Suburb, Nationality, Race, Gender, 
+    Highest_Education_Level, Contact_Number, Emergency_Contact, Blood_Type, Department, HSEQ_Related, Created_By, Updated_By
+) VALUES (
+    'Muhammad', 'Ali', 'imam2', '123456', 6,
+    1, 14, 1, 1, 3,
+    '+27123456791', '+27123456791', 1, NULL, NULL, 'system', 'system'
+) ON CONFLICT (Username) DO UPDATE SET Password_Hash = '123456';
+
+-- Employee 8: Imam User 3
+INSERT INTO Employee (
+    Name, Surname, Username, Password_Hash, User_Type, Suburb, Nationality, Race, Gender, 
+    Highest_Education_Level, Contact_Number, Emergency_Contact, Blood_Type, Department, HSEQ_Related, Created_By, Updated_By
+) VALUES (
+    'Ibrahim', 'Abdullah', 'imam3', '123456', 6,
+    1, 14, 1, 1, 3,
+    '+27123456792', '+27123456792', 1, NULL, NULL, 'system', 'system'
+) ON CONFLICT (Username) DO UPDATE SET Password_Hash = '123456';
+
+-- Insert Language lookup data if not exists
+INSERT INTO Language (Name, Created_By, Updated_By)
+VALUES 
+    ('English', 'system', 'system'),
+    ('Arabic', 'system', 'system'),
+    ('Urdu', 'system', 'system'),
+    ('Afrikaans', 'system', 'system'),
+    ('Zulu', 'system', 'system')
+ON CONFLICT (Name) DO NOTHING;
+
+-- Insert Currency lookup data if not exists
+INSERT INTO Currency (Name, Code, Created_By, Updated_By)
+VALUES 
+    ('South African Rand', 'ZAR', 'system', 'system'),
+    ('US Dollar', 'USD', 'system', 'system'),
+    ('British Pound', 'GBP', 'system', 'system'),
+    ('Euro', 'EUR', 'system', 'system')
+ON CONFLICT (Name) DO NOTHING;
+
+-- Insert Imam Profiles (Master Table)
+INSERT INTO Imam_Profiles (
+    Name, Surname, Email, ID_Number, File_Number, Cell_Number, Contact_Number,
+    Title, DOB, Madhab, Race, Gender, Marital_Status, nationality_id, province_id, suburb_id,
+    status_id, employee_id, Employment_Type, Lead_Salah_In_Masjid, Teach_Maktab_Madrassah,
+    Do_Street_Dawah, Teaching_Frequency, Teach_Adults_Community_Classes, Average_Students_Taught_Daily,
+    Prayers_Lead_Daily, Jumuah_Prayers_Lead, Average_Fajr_Attendees, Average_Dhuhr_Attendees,
+    Average_Asr_Attendees, Average_Maghrib_Attendees, Average_Esha_Attendees,
+    English_Proficiency, Arabic_Proficiency, Quran_Reading_Ability, Public_Speaking_Khutbah_Skills,
+    Quran_Memorization, Additional_Weekly_Tasks, Acknowledge, Longitude, Latitude,
+    Created_By, Updated_By
+)
+SELECT 
+    'Ahmad', 'Hassan', 'ahmad.hassan@example.com', '8501015801081', 'IM-001',
+    '+27123456790', '+27123456790',
+    (SELECT ID FROM Title_Lookup WHERE Name = 'Imam' LIMIT 1),
+    '1985-01-15',
+    (SELECT ID FROM Madhab WHERE Name = 'Hanafi' LIMIT 1),
+    (SELECT ID FROM Race WHERE Name = 'African' LIMIT 1),
+    (SELECT ID FROM Gender WHERE Name = 'Male' LIMIT 1),
+    (SELECT ID FROM Marital_Status WHERE Name = 'Nikah' LIMIT 1),
+    (SELECT ID FROM Country WHERE Code = 'ZA' LIMIT 1),
+    (SELECT ID FROM Province WHERE Name = 'Gauteng' AND country_id = (SELECT ID FROM Country WHERE Code = 'ZA' LIMIT 1) LIMIT 1),
+    (SELECT ID FROM Suburb WHERE Name = 'Johannesburg' AND province_id = (SELECT ID FROM Province WHERE Name = 'Gauteng' AND country_id = (SELECT ID FROM Country WHERE Code = 'ZA' LIMIT 1) LIMIT 1) LIMIT 1),
+    (SELECT ID FROM Status WHERE Name = 'Approved' LIMIT 1),
+    (SELECT ID FROM Employee WHERE Username = 'imam1' LIMIT 1),
+    (SELECT ID FROM Employment_Type WHERE Name = 'Full Time' LIMIT 1),
+    (SELECT ID FROM Yes_No WHERE Name = 'Yes' LIMIT 1),
+    (SELECT ID FROM Yes_No WHERE Name = 'Yes' LIMIT 1),
+    (SELECT ID FROM Yes_No WHERE Name = 'Yes' LIMIT 1),
+    (SELECT ID FROM Teaching_Frequency WHERE Name = 'Daily' LIMIT 1),
+    (SELECT ID FROM Teach_Adults_Community_Classes WHERE Name = 'Yes' LIMIT 1),
+    (SELECT ID FROM Average_Students_Taught_Daily WHERE Name = 'Between 20 and 30' LIMIT 1),
+    (SELECT ID FROM Prayers_Lead_Daily WHERE Name = 'Leading 5 prayer a day' LIMIT 1),
+    (SELECT ID FROM Jumuah_Prayers_Lead WHERE Name = '1' LIMIT 1),
+    (SELECT ID FROM Average_Attendees WHERE Name = 'Between 20 and 30' LIMIT 1),
+    (SELECT ID FROM Average_Attendees WHERE Name = 'Between 30 and 50' LIMIT 1),
+    (SELECT ID FROM Average_Attendees WHERE Name = 'Between 20 and 30' LIMIT 1),
+    (SELECT ID FROM Average_Attendees WHERE Name = 'Between 30 and 50' LIMIT 1),
+    (SELECT ID FROM Average_Attendees WHERE Name = 'Between 50 and 100' LIMIT 1),
+    (SELECT ID FROM Proficiency WHERE Name = 'Proficient' LIMIT 1),
+    (SELECT ID FROM Proficiency WHERE Name = 'Advanced' LIMIT 1),
+    (SELECT ID FROM Proficiency WHERE Name = 'Advanced' LIMIT 1),
+    (SELECT ID FROM Proficiency WHERE Name = 'Proficient' LIMIT 1),
+    'Memorised 15 juz or more',
+    'Khateeb for Jumuah, Hifz/Hidth Teacher, Counselling Sessions (Individual/Marriage etc)',
+    true, 28.0473, -26.2041,
+    'system', 'system'
+WHERE NOT EXISTS (SELECT 1 FROM Imam_Profiles WHERE employee_id = (SELECT ID FROM Employee WHERE Username = 'imam1' LIMIT 1));
+
+INSERT INTO Imam_Profiles (
+    Name, Surname, Email, ID_Number, File_Number, Cell_Number, Contact_Number,
+    Title, DOB, Madhab, Race, Gender, Marital_Status, nationality_id, province_id, suburb_id,
+    status_id, employee_id, Employment_Type, Lead_Salah_In_Masjid, Teach_Maktab_Madrassah,
+    Do_Street_Dawah, Teaching_Frequency, Teach_Adults_Community_Classes, Average_Students_Taught_Daily,
+    Prayers_Lead_Daily, Jumuah_Prayers_Lead, Average_Fajr_Attendees, Average_Dhuhr_Attendees,
+    Average_Asr_Attendees, Average_Maghrib_Attendees, Average_Esha_Attendees,
+    English_Proficiency, Arabic_Proficiency, Quran_Reading_Ability, Public_Speaking_Khutbah_Skills,
+    Quran_Memorization, Additional_Weekly_Tasks, Acknowledge, Longitude, Latitude,
+    Created_By, Updated_By
+)
+SELECT 
+    'Muhammad', 'Ali', 'muhammad.ali@example.com', '8703055802082', 'IM-002',
+    '+27123456791', '+27123456791',
+    (SELECT ID FROM Title_Lookup WHERE Name = 'Sheikh' LIMIT 1),
+    '1987-03-05',
+    (SELECT ID FROM Madhab WHERE Name = 'Shafi''i' LIMIT 1),
+    (SELECT ID FROM Race WHERE Name = 'Asian' LIMIT 1),
+    (SELECT ID FROM Gender WHERE Name = 'Male' LIMIT 1),
+    (SELECT ID FROM Marital_Status WHERE Name = 'Nikah' LIMIT 1),
+    (SELECT ID FROM Country WHERE Code = 'ZA' LIMIT 1),
+    (SELECT ID FROM Province WHERE Name = 'Western Cape' AND country_id = (SELECT ID FROM Country WHERE Code = 'ZA' LIMIT 1) LIMIT 1),
+    (SELECT ID FROM Suburb WHERE Name = 'Cape Town' AND province_id = (SELECT ID FROM Province WHERE Name = 'Western Cape' AND country_id = (SELECT ID FROM Country WHERE Code = 'ZA' LIMIT 1) LIMIT 1) LIMIT 1),
+    (SELECT ID FROM Status WHERE Name = 'Approved' LIMIT 1),
+    (SELECT ID FROM Employee WHERE Username = 'imam2' LIMIT 1),
+    (SELECT ID FROM Employment_Type WHERE Name = 'Full Time' LIMIT 1),
+    (SELECT ID FROM Yes_No WHERE Name = 'Yes' LIMIT 1),
+    (SELECT ID FROM Yes_No WHERE Name = 'Yes' LIMIT 1),
+    (SELECT ID FROM Yes_No WHERE Name = 'No' LIMIT 1),
+    (SELECT ID FROM Teaching_Frequency WHERE Name = 'Few times a week' LIMIT 1),
+    (SELECT ID FROM Teach_Adults_Community_Classes WHERE Name = 'Occasionally' LIMIT 1),
+    (SELECT ID FROM Average_Students_Taught_Daily WHERE Name = 'Between 10 and 20' LIMIT 1),
+    (SELECT ID FROM Prayers_Lead_Daily WHERE Name = 'Leading 5 prayer a day' LIMIT 1),
+    (SELECT ID FROM Jumuah_Prayers_Lead WHERE Name = '1' LIMIT 1),
+    (SELECT ID FROM Average_Attendees WHERE Name = 'Between 10 and 20' LIMIT 1),
+    (SELECT ID FROM Average_Attendees WHERE Name = 'Between 20 and 30' LIMIT 1),
+    (SELECT ID FROM Average_Attendees WHERE Name = 'Between 10 and 20' LIMIT 1),
+    (SELECT ID FROM Average_Attendees WHERE Name = 'Between 20 and 30' LIMIT 1),
+    (SELECT ID FROM Average_Attendees WHERE Name = 'Between 30 and 50' LIMIT 1),
+    (SELECT ID FROM Proficiency WHERE Name = 'Advanced' LIMIT 1),
+    (SELECT ID FROM Proficiency WHERE Name = 'Advanced' LIMIT 1),
+    (SELECT ID FROM Proficiency WHERE Name = 'Advanced' LIMIT 1),
+    (SELECT ID FROM Proficiency WHERE Name = 'Advanced' LIMIT 1),
+    'Memorised 15 juz or more',
+    'Khateeb for Jumuah, Guest Khateeb for Jumuah at surrounding Masjid, Nikah duties',
+    true, 18.4232, -33.9249,
+    'system', 'system'
+WHERE NOT EXISTS (SELECT 1 FROM Imam_Profiles WHERE employee_id = (SELECT ID FROM Employee WHERE Username = 'imam2' LIMIT 1));
+
+INSERT INTO Imam_Profiles (
+    Name, Surname, Email, ID_Number, File_Number, Cell_Number, Contact_Number,
+    Title, DOB, Madhab, Race, Gender, Marital_Status, nationality_id, province_id, suburb_id,
+    status_id, employee_id, Employment_Type, Lead_Salah_In_Masjid, Teach_Maktab_Madrassah,
+    Do_Street_Dawah, Teaching_Frequency, Teach_Adults_Community_Classes, Average_Students_Taught_Daily,
+    Prayers_Lead_Daily, Jumuah_Prayers_Lead, Average_Fajr_Attendees, Average_Dhuhr_Attendees,
+    Average_Asr_Attendees, Average_Maghrib_Attendees, Average_Esha_Attendees,
+    English_Proficiency, Arabic_Proficiency, Quran_Reading_Ability, Public_Speaking_Khutbah_Skills,
+    Quran_Memorization, Additional_Weekly_Tasks, Acknowledge, Longitude, Latitude,
+    Created_By, Updated_By
+)
+SELECT 
+    'Ibrahim', 'Abdullah', 'ibrahim.abdullah@example.com', '8806105803083', 'IM-003',
+    '+27123456792', '+27123456792',
+    (SELECT ID FROM Title_Lookup WHERE Name = 'Moulana' LIMIT 1),
+    '1988-06-10',
+    (SELECT ID FROM Madhab WHERE Name = 'Hanafi' LIMIT 1),
+    (SELECT ID FROM Race WHERE Name = 'Coloured' LIMIT 1),
+    (SELECT ID FROM Gender WHERE Name = 'Male' LIMIT 1),
+    (SELECT ID FROM Marital_Status WHERE Name = 'Nikah' LIMIT 1),
+    (SELECT ID FROM Country WHERE Code = 'ZA' LIMIT 1),
+    (SELECT ID FROM Province WHERE Name = 'KwaZulu-Natal' AND country_id = (SELECT ID FROM Country WHERE Code = 'ZA' LIMIT 1) LIMIT 1),
+    (SELECT ID FROM Suburb WHERE Name = 'Durban' AND province_id = (SELECT ID FROM Province WHERE Name = 'KwaZulu-Natal' AND country_id = (SELECT ID FROM Country WHERE Code = 'ZA' LIMIT 1) LIMIT 1) LIMIT 1),
+    (SELECT ID FROM Status WHERE Name = 'Approved' LIMIT 1),
+    (SELECT ID FROM Employee WHERE Username = 'imam3' LIMIT 1),
+    (SELECT ID FROM Employment_Type WHERE Name = 'Part Time' LIMIT 1),
+    (SELECT ID FROM Yes_No WHERE Name = 'Yes' LIMIT 1),
+    (SELECT ID FROM Yes_No WHERE Name = 'Yes' LIMIT 1),
+    (SELECT ID FROM Yes_No WHERE Name = 'Yes' LIMIT 1),
+    (SELECT ID FROM Teaching_Frequency WHERE Name = 'Weekends' LIMIT 1),
+    (SELECT ID FROM Teach_Adults_Community_Classes WHERE Name = 'Yes' LIMIT 1),
+    (SELECT ID FROM Average_Students_Taught_Daily WHERE Name = 'Between 30 and 50' LIMIT 1),
+    (SELECT ID FROM Prayers_Lead_Daily WHERE Name = 'Leading 3 prayer a day' LIMIT 1),
+    (SELECT ID FROM Jumuah_Prayers_Lead WHERE Name = '1' LIMIT 1),
+    (SELECT ID FROM Average_Attendees WHERE Name = 'Between 30 and 50' LIMIT 1),
+    (SELECT ID FROM Average_Attendees WHERE Name = 'Between 50 and 100' LIMIT 1),
+    (SELECT ID FROM Average_Attendees WHERE Name = 'Between 30 and 50' LIMIT 1),
+    (SELECT ID FROM Average_Attendees WHERE Name = 'Between 50 and 100' LIMIT 1),
+    (SELECT ID FROM Average_Attendees WHERE Name = 'More than 100' LIMIT 1),
+    (SELECT ID FROM Proficiency WHERE Name = 'Intermediate' LIMIT 1),
+    (SELECT ID FROM Proficiency WHERE Name = 'Proficient' LIMIT 1),
+    (SELECT ID FROM Proficiency WHERE Name = 'Proficient' LIMIT 1),
+    (SELECT ID FROM Proficiency WHERE Name = 'Intermediate' LIMIT 1),
+    'Memorised 5 juz or less',
+    'Active in Street Dawah, Hospital visits, Food/Hamper distribution',
+    true, 31.0292, -29.8587,
+    'system', 'system'
+WHERE NOT EXISTS (SELECT 1 FROM Imam_Profiles WHERE employee_id = (SELECT ID FROM Employee WHERE Username = 'imam3' LIMIT 1));
+
+-- Insert Child Table Records: Jumuah Khutbah Topic Submission
+INSERT INTO Jumuah_Khutbah_Topic_Submission (
+    imam_profile_id, topic, masjid_name, town, attendance_count, language, acknowledge, status_id, comment, Created_By, Updated_By
+)
+SELECT 
+    (SELECT ID FROM Imam_Profiles WHERE File_Number = 'IM-001' LIMIT 1),
+    'The Importance of Unity in the Muslim Community',
+    'Al-Masjid Al-Awwal',
+    (SELECT ID FROM Suburb WHERE Name = 'Johannesburg' LIMIT 1),
+    150,
+    (SELECT ID FROM Language WHERE Name = 'English' LIMIT 1),
+    true,
+    (SELECT ID FROM Status WHERE Name = 'Approved' LIMIT 1),
+    'Excellent khutbah, well received by the community',
+    'system', 'system'
+WHERE EXISTS (SELECT 1 FROM Imam_Profiles WHERE File_Number = 'IM-001')
+AND NOT EXISTS (SELECT 1 FROM Jumuah_Khutbah_Topic_Submission WHERE imam_profile_id = (SELECT ID FROM Imam_Profiles WHERE File_Number = 'IM-001' LIMIT 1) AND topic = 'The Importance of Unity in the Muslim Community');
+
+INSERT INTO Jumuah_Khutbah_Topic_Submission (
+    imam_profile_id, topic, masjid_name, town, attendance_count, language, acknowledge, status_id, comment, Created_By, Updated_By
+)
+SELECT 
+    (SELECT ID FROM Imam_Profiles WHERE File_Number = 'IM-002' LIMIT 1),
+    'Patience and Perseverance in Times of Difficulty',
+    'Masjid Al-Noor',
+    (SELECT ID FROM Suburb WHERE Name = 'Cape Town' LIMIT 1),
+    200,
+    (SELECT ID FROM Language WHERE Name = 'Arabic' LIMIT 1),
+    true,
+    (SELECT ID FROM Status WHERE Name = 'Approved' LIMIT 1),
+    'Very inspiring message',
+    'system', 'system'
+WHERE EXISTS (SELECT 1 FROM Imam_Profiles WHERE File_Number = 'IM-002')
+AND NOT EXISTS (SELECT 1 FROM Jumuah_Khutbah_Topic_Submission WHERE imam_profile_id = (SELECT ID FROM Imam_Profiles WHERE File_Number = 'IM-002' LIMIT 1) AND topic = 'Patience and Perseverance in Times of Difficulty');
+
+-- Insert Child Table Records: Pearls of Wisdom
+INSERT INTO Pearls_Of_Wisdom (
+    imam_profile_id, resource_type, resource_title, author_speaker, heading_description,
+    pearl_one, pearl_two, pearl_three, acknowledge, status_id, comment, Created_By, Updated_By
+)
+SELECT 
+    (SELECT ID FROM Imam_Profiles WHERE File_Number = 'IM-001' LIMIT 1),
+    (SELECT ID FROM Resource_Type WHERE Name = 'Read a book' LIMIT 1),
+    'The Book of Guidance',
+    'Ibn Qayyim Al-Jawziyya',
+    'Wisdom on spiritual purification',
+    'True knowledge comes from understanding the heart',
+    'Patience is the key to success',
+    'Gratitude multiplies blessings',
+    true,
+    (SELECT ID FROM Status WHERE Name = 'Approved' LIMIT 1),
+    'Valuable insights shared',
+    'system', 'system'
+WHERE EXISTS (SELECT 1 FROM Imam_Profiles WHERE File_Number = 'IM-001')
+AND NOT EXISTS (SELECT 1 FROM Pearls_Of_Wisdom WHERE imam_profile_id = (SELECT ID FROM Imam_Profiles WHERE File_Number = 'IM-001' LIMIT 1) AND resource_title = 'The Book of Guidance');
+
+-- Insert Child Table Records: Medical Reimbursement
+INSERT INTO Medical_Reimbursement (
+    imam_profile_id, relationship_type, visit_type, visit_date, illness_description,
+    service_provider, amount, acknowledge, status_id, comment, Created_By, Updated_By
+)
+SELECT 
+    (SELECT ID FROM Imam_Profiles WHERE File_Number = 'IM-001' LIMIT 1),
+    (SELECT ID FROM Relationship_Types WHERE Name = 'Spouse' LIMIT 1),
+    (SELECT ID FROM Medical_Visit_Type WHERE Name = 'Doctor Consult' LIMIT 1),
+    '2024-03-15',
+    'Routine health checkup and consultation',
+    (SELECT ID FROM Medical_Service_Provider WHERE Name = 'Private Doctor' LIMIT 1),
+    850.00,
+    true,
+    (SELECT ID FROM Status WHERE Name = 'Approved' LIMIT 1),
+    'Reimbursement processed',
+    'system', 'system'
+WHERE EXISTS (SELECT 1 FROM Imam_Profiles WHERE File_Number = 'IM-001')
+AND NOT EXISTS (SELECT 1 FROM Medical_Reimbursement WHERE imam_profile_id = (SELECT ID FROM Imam_Profiles WHERE File_Number = 'IM-001' LIMIT 1) AND visit_date = '2024-03-15');
+
+-- Insert Child Table Records: Community Engagement
+INSERT INTO Community_Engagement (
+    imam_profile_id, engagement_type, people_count, engagement_date, acknowledge, status_id, comment, Created_By, Updated_By
+)
+SELECT 
+    (SELECT ID FROM Imam_Profiles WHERE File_Number = 'IM-001' LIMIT 1),
+    (SELECT ID FROM Community_Engagement_Type WHERE Name = 'Community Event' LIMIT 1),
+    250,
+    '2024-04-20',
+    true,
+    (SELECT ID FROM Status WHERE Name = 'Approved' LIMIT 1),
+    'Successful community outreach event',
+    'system', 'system'
+WHERE EXISTS (SELECT 1 FROM Imam_Profiles WHERE File_Number = 'IM-001')
+AND NOT EXISTS (SELECT 1 FROM Community_Engagement WHERE imam_profile_id = (SELECT ID FROM Imam_Profiles WHERE File_Number = 'IM-001' LIMIT 1) AND engagement_date = '2024-04-20');
+
+-- Insert Child Table Records: Nikah Bonus
+INSERT INTO Nikah_Bonus (
+    imam_profile_id, spouse_name, nikah_date, is_first_nikah, acknowledge, status_id, comment, Created_By, Updated_By
+)
+SELECT 
+    (SELECT ID FROM Imam_Profiles WHERE File_Number = 'IM-001' LIMIT 1),
+    'Fatima Hassan',
+    '2020-05-15',
+    (SELECT ID FROM Yes_No WHERE Name = 'Yes' LIMIT 1),
+    true,
+    (SELECT ID FROM Status WHERE Name = 'Approved' LIMIT 1),
+    'First nikah bonus approved',
+    'system', 'system'
+WHERE EXISTS (SELECT 1 FROM Imam_Profiles WHERE File_Number = 'IM-001')
+AND NOT EXISTS (SELECT 1 FROM Nikah_Bonus WHERE imam_profile_id = (SELECT ID FROM Imam_Profiles WHERE File_Number = 'IM-001' LIMIT 1) AND nikah_date = '2020-05-15');
+
+-- Insert Child Table Records: New Baby Bonus
+INSERT INTO New_Baby_Bonus (
+    imam_profile_id, spouse_name, baby_name, baby_gender, baby_dob, acknowledge, status_id, comment, Created_By, Updated_By
+)
+SELECT 
+    (SELECT ID FROM Imam_Profiles WHERE File_Number = 'IM-001' LIMIT 1),
+    'Fatima Hassan',
+    'Yusuf Hassan',
+    (SELECT ID FROM Gender WHERE Name = 'Male' LIMIT 1),
+    '2023-08-10',
+    true,
+    (SELECT ID FROM Status WHERE Name = 'Approved' LIMIT 1),
+    'New baby bonus approved',
+    'system', 'system'
+WHERE EXISTS (SELECT 1 FROM Imam_Profiles WHERE File_Number = 'IM-001')
+AND NOT EXISTS (SELECT 1 FROM New_Baby_Bonus WHERE imam_profile_id = (SELECT ID FROM Imam_Profiles WHERE File_Number = 'IM-001' LIMIT 1) AND baby_dob = '2023-08-10');
+
+-- Insert Child Table Records: Imam Financial Assistance
+INSERT INTO imam_financial_assistance (
+    imam_profile_id, assistance_type, amount_required, amount_required_currency,
+    reason_for_assistance, monthly_income, monthly_expenses, acknowledge, status_id, comment, Created_By, Updated_By
+)
+SELECT 
+    (SELECT ID FROM Imam_Profiles WHERE File_Number = 'IM-002' LIMIT 1),
+    'Medical Emergency',
+    5000.00,
+    (SELECT ID FROM Currency WHERE Code = 'ZAR' LIMIT 1),
+    'Emergency medical treatment for family member',
+    15000.00,
+    12000.00,
+    true,
+    (SELECT ID FROM Status WHERE Name = 'Pending' LIMIT 1),
+    'Under review',
+    'system', 'system'
+WHERE EXISTS (SELECT 1 FROM Imam_Profiles WHERE File_Number = 'IM-002')
+AND NOT EXISTS (SELECT 1 FROM imam_financial_assistance WHERE imam_profile_id = (SELECT ID FROM Imam_Profiles WHERE File_Number = 'IM-002' LIMIT 1) AND assistance_type = 'Medical Emergency');
+
+-- Insert Child Table Records: Educational Development
+INSERT INTO educational_development (
+    imam_profile_id, course_name, institution_name, course_type, start_date, end_date,
+    cost, cost_currency, funding_source, completion_status, certificate_obtained, acknowledge, status_id, comment, Created_By, Updated_By
+)
+SELECT 
+    (SELECT ID FROM Imam_Profiles WHERE File_Number = 'IM-002' LIMIT 1),
+    'Advanced Islamic Studies',
+    'International Islamic University',
+    'Master''s degree',
+    '2024-01-15',
+    '2026-01-15',
+    25000.00,
+    (SELECT ID FROM Currency WHERE Code = 'ZAR' LIMIT 1),
+    'Scholarship',
+    'In Progress',
+    false,
+    true,
+    (SELECT ID FROM Status WHERE Name = 'Approved' LIMIT 1),
+    'Educational development approved',
+    'system', 'system'
+WHERE EXISTS (SELECT 1 FROM Imam_Profiles WHERE File_Number = 'IM-002')
+AND NOT EXISTS (SELECT 1 FROM educational_development WHERE imam_profile_id = (SELECT ID FROM Imam_Profiles WHERE File_Number = 'IM-002' LIMIT 1) AND course_name = 'Advanced Islamic Studies');
+
+-- Insert Child Table Records: Borehole
+INSERT INTO borehole (
+    imam_profile_id, where_required, has_electricity, received_borehole_before,
+    current_water_source, distance_to_water_source, beneficiaries_count,
+    challenges_due_to_lack_of_water, motivation, acknowledge, status_id, comment, Created_By, Updated_By
+)
+SELECT 
+    (SELECT ID FROM Imam_Profiles WHERE File_Number = 'IM-003' LIMIT 1),
+    (SELECT ID FROM Borehole_Location WHERE Name = 'Masjid' LIMIT 1),
+    (SELECT ID FROM Yes_No WHERE Name = 'Yes' LIMIT 1),
+    (SELECT ID FROM Yes_No WHERE Name = 'No' LIMIT 1),
+    (SELECT ID FROM Water_Source WHERE Name = 'Municipal Water' LIMIT 1),
+    2.5,
+    500,
+    'Frequent water cuts affecting wudhu and daily activities',
+    'To ensure continuous water supply for masjid activities',
+    true,
+    (SELECT ID FROM Status WHERE Name = 'Pending' LIMIT 1),
+    'Borehole request under review',
+    'system', 'system'
+WHERE EXISTS (SELECT 1 FROM Imam_Profiles WHERE File_Number = 'IM-003')
+AND NOT EXISTS (SELECT 1 FROM borehole WHERE imam_profile_id = (SELECT ID FROM Imam_Profiles WHERE File_Number = 'IM-003' LIMIT 1));
+
+-- Insert into Borehole_Water_Usage_Purpose junction table
+INSERT INTO Borehole_Water_Usage_Purpose (borehole_id, water_usage_purpose_id, Created_By, Updated_By)
+SELECT 
+    (SELECT ID FROM borehole WHERE imam_profile_id = (SELECT ID FROM Imam_Profiles WHERE File_Number = 'IM-003' LIMIT 1) LIMIT 1),
+    (SELECT ID FROM Water_Usage_Purpose WHERE Name = 'Masjid (Wudhu, maintenace etc)' LIMIT 1),
+    'system', 'system'
+WHERE EXISTS (SELECT 1 FROM borehole WHERE imam_profile_id = (SELECT ID FROM Imam_Profiles WHERE File_Number = 'IM-003' LIMIT 1))
+AND NOT EXISTS (
+    SELECT 1 FROM Borehole_Water_Usage_Purpose 
+    WHERE borehole_id = (SELECT ID FROM borehole WHERE imam_profile_id = (SELECT ID FROM Imam_Profiles WHERE File_Number = 'IM-003' LIMIT 1) LIMIT 1)
+    AND water_usage_purpose_id = (SELECT ID FROM Water_Usage_Purpose WHERE Name = 'Masjid (Wudhu, maintenace etc)' LIMIT 1)
+);
+
+-- Insert Child Table Records: Imam Relationships
+INSERT INTO Imam_Relationships (
+    imam_profile_id, Relationship_Type, Name, Surname, ID_Number, Date_of_Birth,
+    Employment_Status, Gender, Highest_Education, Health_Condition, status_id, Created_By, Updated_By
+)
+SELECT 
+    (SELECT ID FROM Imam_Profiles WHERE File_Number = 'IM-001' LIMIT 1),
+    (SELECT ID FROM Relationship_Types WHERE Name = 'Spouse' LIMIT 1),
+    'Fatima',
+    'Hassan',
+    '9002155801082',
+    '1990-02-15',
+    (SELECT ID FROM Employment_Status WHERE Name = 'Full Time Employed' LIMIT 1),
+    (SELECT ID FROM Gender WHERE Name = 'Female' LIMIT 1),
+    (SELECT ID FROM Education_Level WHERE Name = 'Degree - NQF 7' LIMIT 1),
+    (SELECT ID FROM Health_Conditions WHERE Name = 'None' LIMIT 1),
+    (SELECT ID FROM Status WHERE Name = 'Approved' LIMIT 1),
+    'system', 'system'
+WHERE EXISTS (SELECT 1 FROM Imam_Profiles WHERE File_Number = 'IM-001')
+AND NOT EXISTS (SELECT 1 FROM Imam_Relationships WHERE imam_profile_id = (SELECT ID FROM Imam_Profiles WHERE File_Number = 'IM-001' LIMIT 1) AND Name = 'Fatima' AND Surname = 'Hassan');
+

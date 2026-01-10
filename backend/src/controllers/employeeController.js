@@ -194,25 +194,19 @@ const employeeController = {
       return res.status(context.error.status).json({ error: context.error.message });
     }
 
-    const { username, centerId } = context;
-    const params = [username];
-    let query = `
-      SELECT COUNT(*)::int AS count
-      FROM Applicant_Details
-      WHERE Created_By = $1
-    `;
-
-    if (centerId !== null) {
-      query += ' AND center_id = $2';
-      params.push(centerId);
-    }
-
+    const { username } = context;
+    // Applicant_Details table has been removed - use Imam_Profiles instead
     try {
-      const result = await pool.query(query, params);
+      const result = await pool.query(`
+        SELECT COUNT(*)::int AS count
+        FROM Imam_Profiles ip
+        INNER JOIN Employee e ON ip.employee_id = e.id
+        WHERE e.username = $1
+      `, [username]);
       buildCountResponse(res, result.rows[0]?.count);
     } catch (err) {
       console.error('[ERROR] EmployeeController.getTotalApplicants -', err.message);
-      res.status(500).json({ error: err.message || 'Failed to fetch total applicants' });
+      res.status(500).json({ error: err.message || 'Failed to fetch total imam profiles' });
     }
   },
 
@@ -222,25 +216,20 @@ const employeeController = {
       return res.status(context.error.status).json({ error: context.error.message });
     }
 
-    const { username, centerId } = context;
-    const params = [username];
-    let query = `
-      SELECT COUNT(*)::int AS count
-      FROM Home_Visit
-      WHERE Created_By = $1
-    `;
-
-    if (centerId !== null) {
-      query += ' AND center_id = $2';
-      params.push(centerId);
-    }
-
+    const { username } = context;
+    // Home_Visit table removed - use Community_Engagement from Imam Profiles instead
     try {
-      const result = await pool.query(query, params);
+      const result = await pool.query(`
+        SELECT COUNT(*)::int AS count
+        FROM Community_Engagement ce
+        INNER JOIN Imam_Profiles ip ON ce.imam_profile_id = ip.id
+        INNER JOIN Employee e ON ip.employee_id = e.id
+        WHERE e.username = $1
+      `, [username]);
       buildCountResponse(res, result.rows[0]?.count);
     } catch (err) {
       console.error('[ERROR] EmployeeController.getTotalHomeVisits -', err.message);
-      res.status(500).json({ error: err.message || 'Failed to fetch total home visits' });
+      res.status(500).json({ error: err.message || 'Failed to fetch total community engagements' });
     }
   },
 
