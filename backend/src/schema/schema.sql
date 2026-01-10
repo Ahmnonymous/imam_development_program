@@ -3890,30 +3890,30 @@ INSERT INTO Employee (
     Name, Surname, Username, Password_Hash, User_Type, Suburb, Nationality, Race, Gender, 
     Highest_Education_Level, Contact_Number, Emergency_Contact, Blood_Type, Department, HSEQ_Related, Created_By, Updated_By
 ) VALUES (
-    'Ahmad', 'Hassan', 'imam1', '123456', 6,
+    'Ahmad', 'Hassan', 'imam1', '12345', 6,
     1, 14, 1, 1, 3,
     '+27123456790', '+27123456790', 1, NULL, NULL, 'system', 'system'
-) ON CONFLICT (Username) DO UPDATE SET Password_Hash = '123456';
+) ON CONFLICT (Username) DO UPDATE SET Password_Hash = '12345';
 
 -- Employee 7: Imam User 2
 INSERT INTO Employee (
     Name, Surname, Username, Password_Hash, User_Type, Suburb, Nationality, Race, Gender, 
     Highest_Education_Level, Contact_Number, Emergency_Contact, Blood_Type, Department, HSEQ_Related, Created_By, Updated_By
 ) VALUES (
-    'Muhammad', 'Ali', 'imam2', '123456', 6,
+    'Muhammad', 'Ali', 'imam2', '12345', 6,
     1, 14, 1, 1, 3,
     '+27123456791', '+27123456791', 1, NULL, NULL, 'system', 'system'
-) ON CONFLICT (Username) DO UPDATE SET Password_Hash = '123456';
+) ON CONFLICT (Username) DO UPDATE SET Password_Hash = '12345';
 
 -- Employee 8: Imam User 3
 INSERT INTO Employee (
     Name, Surname, Username, Password_Hash, User_Type, Suburb, Nationality, Race, Gender, 
     Highest_Education_Level, Contact_Number, Emergency_Contact, Blood_Type, Department, HSEQ_Related, Created_By, Updated_By
 ) VALUES (
-    'Ibrahim', 'Abdullah', 'imam3', '123456', 6,
+    'Ibrahim', 'Abdullah', 'imam3', '12345', 6,
     1, 14, 1, 1, 3,
     '+27123456792', '+27123456792', 1, NULL, NULL, 'system', 'system'
-) ON CONFLICT (Username) DO UPDATE SET Password_Hash = '123456';
+) ON CONFLICT (Username) DO UPDATE SET Password_Hash = '12345';
 
 -- Insert Language lookup data if not exists
 INSERT INTO Language (Name, Created_By, Updated_By)
