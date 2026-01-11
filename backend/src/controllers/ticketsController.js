@@ -120,7 +120,13 @@ const ticketsController = {
       fields.updated_by = username;
       delete fields.created_by;
       
-      if (req.files && req.files.Media && req.files.Media.length > 0) {
+      // Remove file-related fields if no file is provided
+      if (!req.files || !req.files.Media || req.files.Media.length === 0) {
+        delete fields.media;
+        delete fields.media_filename;
+        delete fields.media_mime;
+        delete fields.media_size;
+      } else {
         const file = req.files.Media[0];
         const buffer = await fs.readFile(file.path);
         fields.media = buffer;
@@ -129,6 +135,13 @@ const ticketsController = {
         fields.media_size = file.size;
         await fs.unlink(file.path);
       }
+      
+      // Clean up undefined values
+      Object.keys(fields).forEach(key => {
+        if (fields[key] === undefined) {
+          delete fields[key];
+        }
+      });
       
       const data = await ticketsModel.update(req.params.id, fields); 
       if (!data) {

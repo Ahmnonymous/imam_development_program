@@ -56,7 +56,14 @@ const educationalDevelopmentController = {
       fields.updated_by = username;
       delete fields.created_by;
       
-      if (req.files && req.files.Certificate && req.files.Certificate.length > 0) {
+      // Remove file-related fields if no file is provided
+      if (!req.files || !req.files.Certificate || req.files.Certificate.length === 0) {
+        delete fields.certificate;
+        delete fields.certificate_filename;
+        delete fields.certificate_mime;
+        delete fields.certificate_size;
+        delete fields.certificate_updated_at;
+      } else {
         const file = req.files.Certificate[0];
         const buffer = await fs.readFile(file.path);
         fields.certificate = buffer;
@@ -66,6 +73,13 @@ const educationalDevelopmentController = {
         fields.certificate_updated_at = new Date().toISOString();
         await fs.unlink(file.path);
       }
+      
+      // Clean up undefined values
+      Object.keys(fields).forEach(key => {
+        if (fields[key] === undefined) {
+          delete fields[key];
+        }
+      });
       
       const data = await educationalDevelopmentModel.update(req.params.id, fields); 
       if (!data) {

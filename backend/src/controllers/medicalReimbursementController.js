@@ -67,7 +67,14 @@ const medicalReimbursementController = {
       fields.updated_by = username;
       delete fields.created_by;
       
-      if (req.files && req.files.Receipt && req.files.Receipt.length > 0) {
+      // Remove file-related fields if no file is provided
+      if (!req.files || !req.files.Receipt || req.files.Receipt.length === 0) {
+        delete fields.receipt;
+        delete fields.receipt_filename;
+        delete fields.receipt_mime;
+        delete fields.receipt_size;
+        delete fields.receipt_updated_at;
+      } else {
         const file = req.files.Receipt[0];
         const buffer = await fs.readFile(file.path);
         fields.receipt = buffer;
@@ -78,7 +85,13 @@ const medicalReimbursementController = {
         await fs.unlink(file.path);
       }
       
-      if (req.files && req.files.Supporting_Docs && req.files.Supporting_Docs.length > 0) {
+      if (!req.files || !req.files.Supporting_Docs || req.files.Supporting_Docs.length === 0) {
+        delete fields.supporting_docs;
+        delete fields.supporting_docs_filename;
+        delete fields.supporting_docs_mime;
+        delete fields.supporting_docs_size;
+        delete fields.supporting_docs_updated_at;
+      } else {
         const file = req.files.Supporting_Docs[0];
         const buffer = await fs.readFile(file.path);
         fields.supporting_docs = buffer;
@@ -88,6 +101,13 @@ const medicalReimbursementController = {
         fields.supporting_docs_updated_at = new Date().toISOString();
         await fs.unlink(file.path);
       }
+      
+      // Clean up undefined values
+      Object.keys(fields).forEach(key => {
+        if (fields[key] === undefined) {
+          delete fields[key];
+        }
+      });
       
       const data = await medicalReimbursementModel.update(req.params.id, fields); 
       if (!data) {

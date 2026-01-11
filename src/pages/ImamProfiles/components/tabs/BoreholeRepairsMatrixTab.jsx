@@ -70,7 +70,12 @@ const BoreholeRepairsMatrixTab = ({ boreholeId, boreholeRepairsMatrix, lookupDat
   const onSubmit = async (data) => {
     try {
       const formData = new FormData();
-      formData.append("borehole_id", boreholeId);
+      
+      if (!editItem) {
+        // Only send borehole_id when creating, not when updating
+        formData.append("borehole_id", boreholeId);
+      }
+      
       formData.append("component", data.component || "");
       formData.append("supplier", data.supplier ? parseInt(data.supplier) : "");
       formData.append("warranty", data.warranty || "");
@@ -167,50 +172,76 @@ const BoreholeRepairsMatrixTab = ({ boreholeId, boreholeRepairsMatrix, lookupDat
         },
       },
       {
-        header: "Attachments",
-        accessorKey: "attachments",
+        header: "Task",
+        accessorKey: "task",
         enableSorting: false,
         enableColumnFilter: false,
         cell: (cell) => {
           const row = cell.row.original;
           const hasTask = row.task && (row.task === "exists" || row.task_filename);
-          const hasInvoice = row.invoice && (row.invoice === "exists" || row.invoice_filename);
-          const hasPartsImage = row.parts_image && (row.parts_image === "exists" || row.parts_image_filename);
           
-          if (!hasTask && !hasInvoice && !hasPartsImage) return "-";
+          if (!hasTask) return "-";
           
           return (
-            <div className="d-flex gap-2 justify-content-center">
-              {hasTask && (
-                <a
-                  href={`${API_STREAM_BASE_URL}/boreholeRepairsMatrix/${row.id}/view-task`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title="View Task"
-                >
-                  <i className="bx bx-file text-primary" style={{ cursor: "pointer", fontSize: "16px" }}></i>
-                </a>
-              )}
-              {hasInvoice && (
-                <a
-                  href={`${API_STREAM_BASE_URL}/boreholeRepairsMatrix/${row.id}/view-invoice`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title="View Invoice"
-                >
-                  <i className="bx bx-file text-success" style={{ cursor: "pointer", fontSize: "16px" }}></i>
-                </a>
-              )}
-              {hasPartsImage && (
-                <a
-                  href={`${API_STREAM_BASE_URL}/boreholeRepairsMatrix/${row.id}/view-parts-image`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title="View Parts Image"
-                >
-                  <i className="bx bx-image text-info" style={{ cursor: "pointer", fontSize: "16px" }}></i>
-                </a>
-              )}
+            <div className="d-flex justify-content-center">
+              <a
+                href={`${API_STREAM_BASE_URL}/boreholeRepairsMatrix/${row.id}/view-task`}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="View Task"
+              >
+                <i className="bx bx-file text-primary" style={{ cursor: "pointer", fontSize: "16px" }}></i>
+              </a>
+            </div>
+          );
+        },
+      },
+      {
+        header: "Invoice",
+        accessorKey: "invoice",
+        enableSorting: false,
+        enableColumnFilter: false,
+        cell: (cell) => {
+          const row = cell.row.original;
+          const hasInvoice = row.invoice && (row.invoice === "exists" || row.invoice_filename);
+          
+          if (!hasInvoice) return "-";
+          
+          return (
+            <div className="d-flex justify-content-center">
+              <a
+                href={`${API_STREAM_BASE_URL}/boreholeRepairsMatrix/${row.id}/view-invoice`}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="View Invoice"
+              >
+                <i className="bx bx-file text-success" style={{ cursor: "pointer", fontSize: "16px" }}></i>
+              </a>
+            </div>
+          );
+        },
+      },
+      {
+        header: "Parts Image",
+        accessorKey: "parts_image",
+        enableSorting: false,
+        enableColumnFilter: false,
+        cell: (cell) => {
+          const row = cell.row.original;
+          const hasPartsImage = row.parts_image && (row.parts_image === "exists" || row.parts_image_filename);
+          
+          if (!hasPartsImage) return "-";
+          
+          return (
+            <div className="d-flex justify-content-center">
+              <a
+                href={`${API_STREAM_BASE_URL}/boreholeRepairsMatrix/${row.id}/view-parts-image`}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="View Parts Image"
+              >
+                <i className="bx bx-image text-info" style={{ cursor: "pointer", fontSize: "16px" }}></i>
+              </a>
             </div>
           );
         },
@@ -225,6 +256,23 @@ const BoreholeRepairsMatrixTab = ({ boreholeId, boreholeRepairsMatrix, lookupDat
       {
         header: "Created On",
         accessorKey: "created_at",
+        enableSorting: true,
+        enableColumnFilter: false,
+        cell: (cell) => {
+          const v = cell.getValue();
+          return v ? new Date(v).toLocaleDateString() : "-";
+        },
+      },
+      {
+        header: "Updated By",
+        accessorKey: "updated_by",
+        enableSorting: true,
+        enableColumnFilter: false,
+        cell: (cell) => cell.getValue() || "-",
+      },
+      {
+        header: "Updated On",
+        accessorKey: "updated_at",
         enableSorting: true,
         enableColumnFilter: false,
         cell: (cell) => {
@@ -486,18 +534,33 @@ const BoreholeRepairsMatrixTab = ({ boreholeId, boreholeRepairsMatrix, lookupDat
               />
             </FormGroup>
           </ModalBody>
-          <ModalFooter>
-            {editItem && (
-              <Button color="danger" onClick={handleDelete} disabled={isSubmitting}>
-                <i className="bx bx-trash me-1"></i> Delete
+          <ModalFooter className="d-flex justify-content-between">
+            <div>
+              {editItem && !isOrgExecutive && (
+                <Button color="danger" onClick={handleDelete} type="button" disabled={isSubmitting}>
+                  <i className="bx bx-trash me-1"></i> Delete
+                </Button>
+              )}
+            </div>
+            <div>
+              <Button color="light" onClick={toggleModal} disabled={isSubmitting} className="me-2">
+                <i className="bx bx-x me-1"></i> Cancel
               </Button>
-            )}
-            <Button color="secondary" onClick={toggleModal} disabled={isSubmitting}>
-              Cancel
-            </Button>
-            <Button color="primary" type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Saving..." : editItem ? "Update" : "Create"}
-            </Button>
+              {!isOrgExecutive && (
+                <Button color="success" type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" role="status" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <i className="bx bx-save me-1"></i> Save
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
           </ModalFooter>
         </Form>
       </Modal>

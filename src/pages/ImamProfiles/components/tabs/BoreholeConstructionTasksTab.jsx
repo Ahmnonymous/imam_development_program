@@ -71,7 +71,12 @@ const BoreholeConstructionTasksTab = ({ boreholeId, boreholeConstructionTasks, l
   const onSubmit = async (data) => {
     try {
       const formData = new FormData();
-      formData.append("borehole_id", boreholeId);
+      
+      if (!editItem) {
+        // Only send borehole_id when creating, not when updating
+        formData.append("borehole_id", boreholeId);
+      }
+      
       formData.append("task", data.task ? parseInt(data.task) : "");
       formData.append("appointed_supplier", data.appointed_supplier ? parseInt(data.appointed_supplier) : "");
       formData.append("appointed_date", data.appointed_date || "");
@@ -211,6 +216,23 @@ const BoreholeConstructionTasksTab = ({ boreholeId, boreholeConstructionTasks, l
       {
         header: "Created On",
         accessorKey: "created_at",
+        enableSorting: true,
+        enableColumnFilter: false,
+        cell: (cell) => {
+          const v = cell.getValue();
+          return v ? new Date(v).toLocaleDateString() : "-";
+        },
+      },
+      {
+        header: "Updated By",
+        accessorKey: "updated_by",
+        enableSorting: true,
+        enableColumnFilter: false,
+        cell: (cell) => cell.getValue() || "-",
+      },
+      {
+        header: "Updated On",
+        accessorKey: "updated_at",
         enableSorting: true,
         enableColumnFilter: false,
         cell: (cell) => {
@@ -436,18 +458,33 @@ const BoreholeConstructionTasksTab = ({ boreholeId, boreholeConstructionTasks, l
               />
             </FormGroup>
           </ModalBody>
-          <ModalFooter>
-            {editItem && (
-              <Button color="danger" onClick={handleDelete} disabled={isSubmitting}>
-                <i className="bx bx-trash me-1"></i> Delete
+          <ModalFooter className="d-flex justify-content-between">
+            <div>
+              {editItem && !isOrgExecutive && (
+                <Button color="danger" onClick={handleDelete} type="button" disabled={isSubmitting}>
+                  <i className="bx bx-trash me-1"></i> Delete
+                </Button>
+              )}
+            </div>
+            <div>
+              <Button color="light" onClick={toggleModal} disabled={isSubmitting} className="me-2">
+                <i className="bx bx-x me-1"></i> Cancel
               </Button>
-            )}
-            <Button color="secondary" onClick={toggleModal} disabled={isSubmitting}>
-              Cancel
-            </Button>
-            <Button color="primary" type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Saving..." : editItem ? "Update" : "Create"}
-            </Button>
+              {!isOrgExecutive && (
+                <Button color="success" type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" role="status" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <i className="bx bx-save me-1"></i> Save
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
           </ModalFooter>
         </Form>
       </Modal>

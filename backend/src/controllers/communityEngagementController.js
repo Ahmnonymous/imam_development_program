@@ -56,7 +56,14 @@ const communityEngagementController = {
       fields.updated_by = username;
       delete fields.created_by;
       
-      if (req.files && req.files.Engagement_Image && req.files.Engagement_Image.length > 0) {
+      // Remove file-related fields if no file is provided
+      if (!req.files || !req.files.Engagement_Image || req.files.Engagement_Image.length === 0) {
+        delete fields.engagement_image;
+        delete fields.engagement_image_filename;
+        delete fields.engagement_image_mime;
+        delete fields.engagement_image_size;
+        delete fields.engagement_image_updated_at;
+      } else {
         const file = req.files.Engagement_Image[0];
         const buffer = await fs.readFile(file.path);
         fields.engagement_image = buffer;
@@ -66,6 +73,13 @@ const communityEngagementController = {
         fields.engagement_image_updated_at = new Date().toISOString();
         await fs.unlink(file.path);
       }
+      
+      // Clean up undefined values
+      Object.keys(fields).forEach(key => {
+        if (fields[key] === undefined) {
+          delete fields[key];
+        }
+      });
       
       const data = await communityEngagementModel.update(req.params.id, fields); 
       if (!data) {

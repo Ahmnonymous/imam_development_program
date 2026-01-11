@@ -158,7 +158,14 @@ const boreholeController = {
         }
       }
       
-      if (req.files && req.files.Current_Water_Source_Image && req.files.Current_Water_Source_Image.length > 0) {
+      // Remove file-related fields if no file is provided
+      if (!req.files || !req.files.Current_Water_Source_Image || req.files.Current_Water_Source_Image.length === 0) {
+        delete fields.current_water_source_image;
+        delete fields.current_water_source_image_filename;
+        delete fields.current_water_source_image_mime;
+        delete fields.current_water_source_image_size;
+        delete fields.current_water_source_image_updated_at;
+      } else {
         const file = req.files.Current_Water_Source_Image[0];
         const buffer = await fs.readFile(file.path);
         fields.current_water_source_image = buffer;
@@ -169,7 +176,13 @@ const boreholeController = {
         await fs.unlink(file.path);
       }
       
-      if (req.files && req.files.Masjid_Area_Image && req.files.Masjid_Area_Image.length > 0) {
+      if (!req.files || !req.files.Masjid_Area_Image || req.files.Masjid_Area_Image.length === 0) {
+        delete fields.masjid_area_image;
+        delete fields.masjid_area_image_filename;
+        delete fields.masjid_area_image_mime;
+        delete fields.masjid_area_image_size;
+        delete fields.masjid_area_image_updated_at;
+      } else {
         const file = req.files.Masjid_Area_Image[0];
         const buffer = await fs.readFile(file.path);
         fields.masjid_area_image = buffer;
@@ -179,6 +192,13 @@ const boreholeController = {
         fields.masjid_area_image_updated_at = new Date().toISOString();
         await fs.unlink(file.path);
       }
+      
+      // Clean up undefined values
+      Object.keys(fields).forEach(key => {
+        if (fields[key] === undefined) {
+          delete fields[key];
+        }
+      });
       
       const data = await boreholeModel.update(req.params.id, fields); 
       if (!data) {

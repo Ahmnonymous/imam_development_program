@@ -94,9 +94,7 @@ const boreholeRepairsMatrixModel = {
       const { setClause, values } = buildUpdateFragments(fields, {
         quote: false,
       });
-      const query = `UPDATE ${tableName} SET ${setClause} WHERE id = ${
-        values.length + 1
-      } RETURNING *`;
+      const query = `UPDATE ${tableName} SET ${setClause} WHERE id = $${values.length + 1} RETURNING *`;
       const res = await pool.query(query, [...values, id]);
       if (res.rowCount === 0) return null;
       return res.rows[0];

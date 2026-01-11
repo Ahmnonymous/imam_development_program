@@ -19,11 +19,17 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
+// ✅ View file endpoints - optional auth (allow viewing without token)
+// These must be defined BEFORE the generic /:id route to ensure proper matching
+router.get('/:id/view-invoice', optionalAuthMiddleware, boreholeConstructionTasksController.viewInvoice);
+
+// ✅ All other endpoints - require authentication, RBAC, and tenant filtering
 router.use(authMiddleware);
 router.use(roleMiddleware());
 router.use(filterMiddleware);
 
 router.get('/', boreholeConstructionTasksController.getAll);
+// Generic /:id route must be last to avoid matching specific routes
 router.get('/:id', boreholeConstructionTasksController.getById);
 router.post('/', upload.fields([{ name: 'Invoice' }]), boreholeConstructionTasksController.create);
 router.put('/:id', upload.fields([{ name: 'Invoice' }]), boreholeConstructionTasksController.update);

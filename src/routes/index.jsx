@@ -55,6 +55,7 @@ import ImamProfilesManagement from "../pages/ImamProfiles/ImamProfilesManagement
 import CreateImamProfile from "../pages/ImamProfiles/CreateImamProfile";
 import ImamProfileRouteGuard from "./ImamProfileRouteGuard";
 import CreateImamProfileRouteGuard from "./CreateImamProfileRouteGuard";
+import BoreholeManagement from "../pages/BoreholeManagement/BoreholeManagement";
 
 
 
@@ -373,6 +374,8 @@ const authProtectedRoutes = [
   { path: "/imam-profiles", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5, 6]}><ImamProfileRouteGuard><ImamProfilesManagement /></ImamProfileRouteGuard></ProtectedRoute> },
   // ✅ Create Imam Profile - All except Org Executive (role 4) can create, INCLUDING Imam User (6) but only if not approved
   { path: "/imam-profiles/create", component: <ProtectedRoute allowedRoles={[1, 2, 3, 5, 6]}><CreateImamProfileRouteGuard><CreateImamProfile /></CreateImamProfileRouteGuard></ProtectedRoute> },
+  // ✅ Borehole Management - All staff roles (1,2,3,4,5) can view
+  { path: "/borehole-management", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><BoreholeManagement /></ProtectedRoute> },
 
 
 

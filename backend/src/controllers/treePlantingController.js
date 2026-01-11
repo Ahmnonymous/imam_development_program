@@ -56,7 +56,14 @@ const treePlantingController = {
       fields.updated_by = username;
       delete fields.created_by;
       
-      if (req.files && req.files.Planting_Image && req.files.Planting_Image.length > 0) {
+      // Remove file-related fields if no file is provided
+      if (!req.files || !req.files.Planting_Image || req.files.Planting_Image.length === 0) {
+        delete fields.planting_image;
+        delete fields.planting_image_filename;
+        delete fields.planting_image_mime;
+        delete fields.planting_image_size;
+        delete fields.planting_image_updated_at;
+      } else {
         const file = req.files.Planting_Image[0];
         const buffer = await fs.readFile(file.path);
         fields.planting_image = buffer;
@@ -66,6 +73,13 @@ const treePlantingController = {
         fields.planting_image_updated_at = new Date().toISOString();
         await fs.unlink(file.path);
       }
+      
+      // Clean up undefined values
+      Object.keys(fields).forEach(key => {
+        if (fields[key] === undefined) {
+          delete fields[key];
+        }
+      });
       
       const data = await treePlantingModel.update(req.params.id, fields); 
       if (!data) {

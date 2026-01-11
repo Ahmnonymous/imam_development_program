@@ -87,8 +87,13 @@ const imamProfilesController = {
       fields.updated_by = username;
       delete fields.created_by;
       
-      // Handle Masjid_Image file upload
-      if (req.files && req.files.Masjid_Image && req.files.Masjid_Image.length > 0) {
+      // Remove file-related fields if no file is provided
+      if (!req.files || !req.files.Masjid_Image || req.files.Masjid_Image.length === 0) {
+        delete fields.masjid_image;
+        delete fields.masjid_image_filename;
+        delete fields.masjid_image_mime;
+        delete fields.masjid_image_size;
+      } else {
         const file = req.files.Masjid_Image[0];
         const buffer = await fs.readFile(file.path);
         fields.masjid_image = buffer;
@@ -97,6 +102,13 @@ const imamProfilesController = {
         fields.masjid_image_size = file.size;
         await fs.unlink(file.path);
       }
+      
+      // Clean up undefined values
+      Object.keys(fields).forEach(key => {
+        if (fields[key] === undefined) {
+          delete fields[key];
+        }
+      });
       
       const data = await imamProfilesModel.update(req.params.id, fields); 
       if (!data) {

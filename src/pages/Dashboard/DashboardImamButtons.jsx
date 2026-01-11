@@ -14,6 +14,13 @@ import MuslimBonusModal from "./modals/MuslimBonusModal";
 import BabyBonusModal from "./modals/BabyBonusModal";
 import RelationshipsModal from "./modals/RelationshipsModal";
 import BoreholeModal from "./modals/BoreholeModal";
+import FinancialAssistanceModal from "./modals/FinancialAssistanceModal";
+import EducationalDevelopmentModal from "./modals/EducationalDevelopmentModal";
+import TreePlantingModal from "./modals/TreePlantingModal";
+import WAQFLoanModal from "./modals/WAQFLoanModal";
+import HardshipReliefModal from "./modals/HardshipReliefModal";
+import HigherEducationRequestModal from "./modals/HigherEducationRequestModal";
+import TicketsModal from "./modals/TicketsModal";
 
 const DashboardImamButtons = () => {
   const { userType } = useRole();
@@ -30,6 +37,13 @@ const DashboardImamButtons = () => {
     babyBonus: false,
     relationships: false,
     borehole: false,
+    financialAssistance: false,
+    educationalDevelopment: false,
+    treePlanting: false,
+    waqfLoan: false,
+    hardshipRelief: false,
+    higherEducationRequest: false,
+    tickets: false,
   });
 
   useEffect(() => {
@@ -173,6 +187,40 @@ const DashboardImamButtons = () => {
         isOpen={modals.borehole}
         toggle={() => closeModal("borehole")}
         imamProfileId={imamProfile.id}
+      />
+      <FinancialAssistanceModal
+        isOpen={modals.financialAssistance}
+        toggle={() => closeModal("financialAssistance")}
+        imamProfileId={imamProfile.id}
+      />
+      <EducationalDevelopmentModal
+        isOpen={modals.educationalDevelopment}
+        toggle={() => closeModal("educationalDevelopment")}
+        imamProfileId={imamProfile.id}
+      />
+      <TreePlantingModal
+        isOpen={modals.treePlanting}
+        toggle={() => closeModal("treePlanting")}
+        imamProfileId={imamProfile.id}
+      />
+      <WAQFLoanModal
+        isOpen={modals.waqfLoan}
+        toggle={() => closeModal("waqfLoan")}
+        imamProfileId={imamProfile.id}
+      />
+      <HardshipReliefModal
+        isOpen={modals.hardshipRelief}
+        toggle={() => closeModal("hardshipRelief")}
+        imamProfileId={imamProfile.id}
+      />
+      <HigherEducationRequestModal
+        isOpen={modals.higherEducationRequest}
+        toggle={() => closeModal("higherEducationRequest")}
+        imamProfileId={imamProfile.id}
+      />
+      <TicketsModal
+        isOpen={modals.tickets}
+        toggle={() => closeModal("tickets")}
       />
     </>
   );

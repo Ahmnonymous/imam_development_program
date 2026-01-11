@@ -219,6 +219,16 @@ const SidebarContent = (props) => {
               </li>
             ) : null}
 
+            {/* ✅ Borehole Management - All staff roles (1,2,3,4,5) */}
+            {userType !== 6 && (
+              <li>
+                <Link to="/borehole-management">
+                  <i className="bx bx-droplet"></i>
+                  <span>{props.t("Borehole Management")}</span>
+                </Link>
+              </li>
+            )}
+
             {/* Reports Dropdown */}
             {canAccessNav("reports") && (
               <li>

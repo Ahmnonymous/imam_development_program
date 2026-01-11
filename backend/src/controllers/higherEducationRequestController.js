@@ -185,7 +185,13 @@ const higherEducationRequestController = {
       fields.updated_by = username;
       delete fields.created_by;
       
-      if (req.files && req.files.Course_Brochure && req.files.Course_Brochure.length > 0) {
+      // Remove file-related fields if no file is provided
+      if (!req.files || !req.files.Course_Brochure || req.files.Course_Brochure.length === 0) {
+        delete fields.course_brochure;
+        delete fields.course_brochure_filename;
+        delete fields.course_brochure_mime;
+        delete fields.course_brochure_size;
+      } else {
         const file = req.files.Course_Brochure[0];
         const buffer = await fs.readFile(file.path);
         fields.course_brochure = buffer;
@@ -195,7 +201,12 @@ const higherEducationRequestController = {
         await fs.unlink(file.path);
       }
       
-      if (req.files && req.files.Quotation && req.files.Quotation.length > 0) {
+      if (!req.files || !req.files.Quotation || req.files.Quotation.length === 0) {
+        delete fields.quotation;
+        delete fields.quotation_filename;
+        delete fields.quotation_mime;
+        delete fields.quotation_size;
+      } else {
         const file = req.files.Quotation[0];
         const buffer = await fs.readFile(file.path);
         fields.quotation = buffer;
@@ -205,7 +216,12 @@ const higherEducationRequestController = {
         await fs.unlink(file.path);
       }
       
-      if (req.files && req.files.Motivation_Letter && req.files.Motivation_Letter.length > 0) {
+      if (!req.files || !req.files.Motivation_Letter || req.files.Motivation_Letter.length === 0) {
+        delete fields.motivation_letter;
+        delete fields.motivation_letter_filename;
+        delete fields.motivation_letter_mime;
+        delete fields.motivation_letter_size;
+      } else {
         const file = req.files.Motivation_Letter[0];
         const buffer = await fs.readFile(file.path);
         fields.motivation_letter = buffer;
@@ -214,6 +230,13 @@ const higherEducationRequestController = {
         fields.motivation_letter_size = file.size;
         await fs.unlink(file.path);
       }
+      
+      // Clean up undefined values
+      Object.keys(fields).forEach(key => {
+        if (fields[key] === undefined) {
+          delete fields[key];
+        }
+      });
       
       const data = await higherEducationRequestModel.update(req.params.id, fields); 
       if (!data) {
