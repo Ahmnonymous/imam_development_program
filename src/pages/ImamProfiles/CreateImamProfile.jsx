@@ -26,6 +26,7 @@ import axiosApi from "../../helpers/api_helper";
 import { API_BASE_URL } from "../../helpers/url_helper";
 import { getAuditName } from "../../helpers/userStorage";
 import { useRole } from "../../helpers/useRole";
+import MapPicker from "../../components/Common/MapPicker";
 
 const CreateImamProfile = () => {
   document.title = "Create Imam Profile | IDP";
@@ -131,6 +132,10 @@ const CreateImamProfile = () => {
     reValidateMode: "onChange",
     shouldUnregister: false,
   });
+
+  // Watch Masjid_Image to show/hide map
+  const masjidImage = watch("Masjid_Image");
+  const showMap = masjidImage && masjidImage.length > 0;
 
   const formatDateForInput = (dateValue) => {
     if (!dateValue) return "";
@@ -1635,16 +1640,40 @@ const CreateImamProfile = () => {
                               onChange={(e) => {
                                 const files = e.target.files;
                                 onChange(files);
+                                
+                                // Try to extract EXIF data from image if available
+                                if (files && files.length > 0) {
+                                  const file = files[0];
+                                  // Note: EXIF extraction would require a library like exif-js
+                                  // For now, we'll rely on manual pin placement
+                                }
                               }}
                               {...field}
                             />
                           )}
                         />
-                        <small className="text-muted">Please upload an image of the Masjid. Longitude and latitude will be extracted from the image metadata if available.</small>
+                        <small className="text-muted">
+                          Please upload an image of the Masjid. After uploading, use the map below to place a pin at the masjid location.
+                        </small>
                       </FormGroup>
                     </Col>
 
-                    {/* Longitude and Latitude */}
+                    {/* Map Picker - Show when masjid image is uploaded */}
+                    {showMap && (
+                      <Col md={12}>
+                        <MapPicker
+                          latitude={watch("Latitude")}
+                          longitude={watch("Longitude")}
+                          onLocationChange={(lat, lng) => {
+                            setValue("Latitude", lat.toString(), { shouldValidate: true });
+                            setValue("Longitude", lng.toString(), { shouldValidate: true });
+                          }}
+                          showMap={showMap}
+                        />
+                      </Col>
+                    )}
+
+                    {/* Longitude and Latitude - Visible inputs for manual entry (especially if map fails) */}
                     <Col md={6}>
                       <FormGroup>
                         <Label for="Longitude">Longitude</Label>
@@ -1656,12 +1685,14 @@ const CreateImamProfile = () => {
                               id="Longitude"
                               type="number"
                               step="any"
-                              placeholder="Enter longitude"
+                              placeholder="Enter longitude (e.g., 28.2293)"
                               {...field}
                             />
                           )}
                         />
-                        <small className="text-muted">Will be extracted from image if available</small>
+                        <small className="text-muted" style={{ fontSize: "0.75rem" }}>
+                          Enter the longitude coordinate of the masjid location
+                        </small>
                       </FormGroup>
                     </Col>
 
@@ -1676,12 +1707,14 @@ const CreateImamProfile = () => {
                               id="Latitude"
                               type="number"
                               step="any"
-                              placeholder="Enter latitude"
+                              placeholder="Enter latitude (e.g., -25.7479)"
                               {...field}
                             />
                           )}
                         />
-                        <small className="text-muted">Will be extracted from image if available</small>
+                        <small className="text-muted" style={{ fontSize: "0.75rem" }}>
+                          Enter the latitude coordinate of the masjid location
+                        </small>
                       </FormGroup>
                     </Col>
 
