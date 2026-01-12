@@ -540,6 +540,8 @@ CREATE TABLE Conversation_Participants (
     Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     Updated_By VARCHAR(255),
     Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    deleted_at TIMESTAMPTZ NULL,
+    last_restored_at TIMESTAMPTZ NULL,
     CONSTRAINT fk_conversation_id FOREIGN KEY (Conversation_ID) REFERENCES Conversations(ID),
     CONSTRAINT fk_employee_id FOREIGN KEY (Employee_ID) REFERENCES Employee(ID)
 );
@@ -561,6 +563,50 @@ CREATE TABLE Messages (
     CONSTRAINT fk_conversation_id_msg FOREIGN KEY (Conversation_ID) REFERENCES Conversations(ID),
     CONSTRAINT fk_sender_id FOREIGN KEY (Sender_ID) REFERENCES Employee(ID)
 );
+
+-- Per-Participant Message Read Status Tracking
+-- Tracks read status per participant per message
+-- This allows each participant to have their own read status
+-- Critical for Announcement conversations where read_status
+-- should be tracked individually for each participant
+CREATE TABLE IF NOT EXISTS Message_Read_Status (
+    ID SERIAL PRIMARY KEY,
+    Message_ID BIGINT NOT NULL,
+    Employee_ID BIGINT NOT NULL,
+    Read_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    Created_By VARCHAR(255),
+    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    Updated_By VARCHAR(255),
+    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT fk_message_read_status_message FOREIGN KEY (Message_ID) REFERENCES Messages(ID) ON DELETE CASCADE,
+    CONSTRAINT fk_message_read_status_employee FOREIGN KEY (Employee_ID) REFERENCES Employee(ID) ON DELETE CASCADE,
+    CONSTRAINT uq_message_read_status_unique UNIQUE (Message_ID, Employee_ID)
+);
+
+-- Add indexes for better query performance
+CREATE INDEX IF NOT EXISTS idx_message_read_status_message 
+ON Message_Read_Status(Message_ID);
+
+CREATE INDEX IF NOT EXISTS idx_message_read_status_employee 
+ON Message_Read_Status(Employee_ID);
+
+CREATE INDEX IF NOT EXISTS idx_message_read_status_message_employee 
+ON Message_Read_Status(Message_ID, Employee_ID);
+
+-- Add indexes for Conversation_Participants
+CREATE INDEX IF NOT EXISTS idx_conversation_participants_deleted_at 
+ON Conversation_Participants(conversation_id, employee_id, deleted_at);
+
+CREATE INDEX IF NOT EXISTS idx_conversation_participants_last_restored_at 
+ON Conversation_Participants(conversation_id, employee_id, last_restored_at);
+
+-- Add comments for documentation
+COMMENT ON TABLE Message_Read_Status IS 'Tracks per-participant read status for messages. Each participant can have their own read status independent of others.';
+COMMENT ON COLUMN Message_Read_Status.Message_ID IS 'Reference to the message that was read';
+COMMENT ON COLUMN Message_Read_Status.Employee_ID IS 'Reference to the employee who read the message';
+COMMENT ON COLUMN Message_Read_Status.Read_At IS 'Timestamp when the message was read by this participant';
+COMMENT ON COLUMN Conversation_Participants.deleted_at IS 'Timestamp when user deleted/hid this conversation. NULL means conversation is visible. When new messages arrive, this is set to NULL to restore the conversation.';
+COMMENT ON COLUMN Conversation_Participants.last_restored_at IS 'Timestamp when conversation was last restored after being deleted. Used to filter messages - only messages after this timestamp are shown (like WhatsApp behavior).';
 
 CREATE TABLE Folders (
     ID SERIAL PRIMARY KEY,
@@ -2939,66 +2985,6 @@ INSERT INTO Employee (
     '+27123456789', '+27123456789', 1, NULL, NULL, 'system', 'system'
 );
 
--- User 2: HQ User
-INSERT INTO Employee (
-    Name, Surname, Username, Password_Hash, User_Type, Suburb, Nationality, Race, Gender, 
-    Highest_Education_Level, Contact_Number, Emergency_Contact, Blood_Type, Department, HSEQ_Related, Created_By, Updated_By
-) VALUES (
-    'HQ', 'User', 'hquser', '12345', 2,
-    1, 14, 1, 1, 3,
-    '+27123456780', '+27123456780', 1, NULL, NULL, 'system', 'system'
-);
-
--- User 3: Org Admin
-INSERT INTO Employee (
-    Name, Surname, Username, Password_Hash, User_Type, Suburb, Nationality, Race, Gender, 
-    Highest_Education_Level, Contact_Number, Emergency_Contact, Blood_Type, Department, HSEQ_Related, Created_By, Updated_By
-) VALUES (
-    'Org', 'Admin', 'orgadmin', '12345', 3,
-    1, 14, 1, 1, 3,
-    '+27123456781', '+27123456781', 1, NULL, NULL, 'system', 'system'
-);
-
--- User 4: Org Executive
-INSERT INTO Employee (
-    Name, Surname, Username, Password_Hash, User_Type, Suburb, Nationality, Race, Gender, 
-    Highest_Education_Level, Contact_Number, Emergency_Contact, Blood_Type, Department, HSEQ_Related, Created_By, Updated_By
-) VALUES (
-    'Org', 'Executive', 'orgexeuser', '12345', 4,
-    1, 14, 1, 1, 3,
-    '+27123456782', '+27123456782', 1, NULL, NULL, 'system', 'system'
-);
-
--- User 5: Org Caseworker
-INSERT INTO Employee (
-    Name, Surname, Username, Password_Hash, User_Type, Suburb, Nationality, Race, Gender, 
-    Highest_Education_Level, Contact_Number, Emergency_Contact, Blood_Type, Department, HSEQ_Related, Created_By, Updated_By
-) VALUES (
-    'Org', 'Caseworker', 'orgcaseuser', '12345', 5,
-    1, 14, 1, 1, 3,
-    '+27123456783', '+27123456783', 1, NULL, NULL, 'system', 'system'
-);
-
--- Insert into Employee_Appraisal (for orgadmin user)
-INSERT INTO Employee_Appraisal (
-    Employee_ID, Positions, Attendance, Job_Knowledge_Skills, Quality_of_Work, Initiative_And_Motivation,
-    Teamwork, General_Conduct, Discipline, Special_Task, Overall_Comments, Room_for_Improvement, Created_By
-) VALUES
-    (3, 'Org Admin', 'Excellent', 'Proficient', 'High Quality', 'Proactive', 'Collaborative', 'Professional', 'Good', 'None', 'Excellent performance', 'Continue training', 'system');
-
--- Insert into Employee_Initiative (for orgadmin user)
-INSERT INTO Employee_Initiative (
-    Employee_ID, Idea, Details, Idea_Date, Status, Created_By
-) VALUES
-    (3, 'Streamline Application Process', 'Automate data entry', '2024-02-01', 'Under Review', 'system');
-
--- Insert into Employee_Skills (for orgadmin user)
-INSERT INTO Employee_Skills (
-    Employee_ID, Course, Institution, Date_Conducted, Date_Expired, Training_Outcome, Created_By
-) VALUES
-    (3, 1, 1, '2023-03-01', '2026-03-01', 2, 'system');
-
-
 
 -- Insert into Hampers
 INSERT INTO Hampers (Name, Created_By) VALUES
@@ -3015,27 +3001,6 @@ INSERT INTO Service_Rating (
 ) VALUES
     (4, 5, 4, 3, 4, 5, 4, TRUE, 4, TRUE, 'Friendly staff', 'Faster response times', 
      'Great service overall', 'admin');
-
-
-
--- Insert into Conversations
-INSERT INTO Conversations (
-    Title, Type, Created_By
-) VALUES
-    ('Team Coordination', 'Group', 'admin');
-
--- Insert into Conversation_Participants
-INSERT INTO Conversation_Participants (
-    Conversation_ID, Employee_ID, Joined_Date, Created_By
-) VALUES
-    ((SELECT ID FROM Conversations WHERE Title = 'Team Coordination'), 1, '2024-03-21', 'admin');
-
--- Insert into Messages
-INSERT INTO Messages (
-    Conversation_ID, Sender_ID, Message_Text, Read_Status, Created_By
-) VALUES
-    ((SELECT ID FROM Conversations WHERE Title = 'Team Coordination'), 1, 
-     'Please review the process.', 'Unread', 'admin');
 
 -- Insert into Folders
 INSERT INTO Folders (

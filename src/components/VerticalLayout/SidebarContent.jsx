@@ -23,8 +23,9 @@ const SidebarContent = (props) => {
   const path = useLocation();
   
   // ✅ Get user role information
-  const { canAccessNav, canEditModule, userType } = useRole();
+  const { canAccessNav, canEditModule, userType, isImamUser } = useRole();
   const [imamProfileStatus, setImamProfileStatus] = useState(null);
+  const [hasConversations, setHasConversations] = useState(false); // For Imam Users to check if they have conversations
 
   const activateParentDropdown = useCallback((item) => {
     item.classList.add("active");
@@ -172,6 +173,23 @@ const SidebarContent = (props) => {
     checkImamProfileStatus();
   }, [userType, path.pathname]); // Re-check when path changes
 
+  // Check if Imam User has conversations (for showing Chat menu item)
+  useEffect(() => {
+    const checkConversations = async () => {
+      if (isImamUser) {
+        try {
+          const response = await axiosApi.get(`${API_BASE_URL}/conversations`);
+          const conversations = response.data || [];
+          setHasConversations(conversations.length > 0);
+        } catch (error) {
+          // On error, don't show Chat menu
+          setHasConversations(false);
+        }
+      }
+    };
+    checkConversations();
+  }, [isImamUser, path.pathname]); // Re-check when path changes
+
   function scrollElement(item) {
     if (item) {
       const currentPosition = item.offsetTop;
@@ -218,6 +236,16 @@ const SidebarContent = (props) => {
                 </Link>
               </li>
             ) : null}
+
+            {/* ✅ Chat - Separate navigation for Imam Users (only if they have conversations) */}
+            {isImamUser && hasConversations && (
+              <li>
+                <Link to="/chat">
+                  <i className="bx bx-chat"></i>
+                  <span>{props.t("Chat")}</span>
+                </Link>
+              </li>
+            )}
 
             {/* ✅ Borehole Management - All staff roles (1,2,3,4,5) */}
             {userType !== 6 && (
@@ -353,7 +381,7 @@ const SidebarContent = (props) => {
               </>
             )}
 
-            {/* ✅ Personal Group - File Management, Chat, Policy & Procedure (Third) */}
+            {/* ✅ Personal Group - File Management, Chat, Policy & Procedure (Third) - For non-Imam Users */}
             {userType !== 6 && (
               <>
                 <li className="menu-title">

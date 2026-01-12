@@ -21,6 +21,9 @@ const NewConversationModal = ({
   currentUser,
   onSubmit,
   showAlert,
+  isAppAdmin,
+  isImamUser,
+  userType,
 }) => {
   const {
     control,
@@ -40,15 +43,28 @@ const NewConversationModal = ({
 
   const handleFormSubmit = async (data) => {
     try {
-      if (data.type === "Group" && (!data.participants || data.participants.length === 0)) {
-        showAlert("Please select at least one participant for a group conversation", "warning");
+      const participantCount = data.participants ? data.participants.length : 0;
+      
+      if (data.type === "Group") {
+        if (participantCount === 0) {
+          showAlert("Please select at least one participant for a group conversation", "warning");
+          return;
+        }
+        if (participantCount === 1) {
+          showAlert("A group conversation requires at least 2 participants. Please create a Direct conversation instead for one-on-one messaging.", "warning");
+          return;
+        }
+      }
+
+      if (data.type === "Direct" && participantCount !== 1) {
+        showAlert("Please select exactly one participant for a direct conversation", "warning");
         return;
       }
 
       const participantIds = data.participants ? data.participants.map(p => p.value) : [];
       
       await onSubmit({
-        title: data.title,
+        title: data.type === "Direct" ? "" : data.title, // Empty title for Direct conversations
         type: data.type,
         participants: participantIds,
       });
@@ -60,13 +76,67 @@ const NewConversationModal = ({
     }
   };
 
-  // Filter out current user from the employee list
+  // Determine if current user can create Announcements (only App Admin)
+  const canCreateAnnouncement = isAppAdmin;
+  
+  // ✅ IDP Chat Rules:
+  // - App Admin (ID 1) can select any employee (Admins and Imams)
+  // - Imam User (ID 6) can only select Admins (user_type = 1), NOT other Imams
   const employeeOptions = employees
-    .filter(employee => employee.id != currentUser?.id) // Use loose equality to handle string/number mismatch
+    .filter(employee => {
+      // Exclude current user
+      if (employee.id == currentUser?.id) return false; // Use loose equality to handle string/number mismatch
+      
+      // ✅ Imam User restriction: Can only select Admins, not other Imams
+      if (isImamUser) {
+        const empUserType = employee.user_type || employee.User_Type || employee.userType;
+        // Only allow App Admin (user_type = 1)
+        if (empUserType != 1 && empUserType !== "1") {
+          return false; // Imam User cannot select other Imams
+        }
+      }
+      
+      // App Admin can select anyone (already filtered by fetchEmployees)
+      return true;
+    })
     .map(employee => ({
       value: employee.id,
       label: `${employee.name} ${employee.surname}`,
     }));
+
+  // Get computed styles for theme-aware colors
+  const getComputedStyle = () => {
+    if (typeof window !== 'undefined' && document.documentElement) {
+      const root = document.documentElement;
+      const isDark = root.getAttribute('data-bs-theme') === 'dark';
+      return {
+        controlBg: isDark ? '#212529' : '#fff',
+        menuBg: isDark ? '#212529' : '#fff',
+        inputColor: isDark ? '#fff' : '#000',
+        placeholderColor: isDark ? '#adb5bd' : '#6c757d',
+        multiValueBg: isDark ? '#495057' : '#e7f3ff',
+        multiValueLabelColor: isDark ? '#fff' : '#0066cc',
+        multiValueRemoveBg: isDark ? '#6c757d' : '#cfe2ff',
+        multiValueRemoveColor: isDark ? '#fff' : '#0066cc',
+        borderColor: isDark ? '#495057' : '#ced4da',
+        hoverBg: isDark ? '#343a40' : '#f8f9fa',
+      };
+    }
+    return {
+      controlBg: '#fff',
+      menuBg: '#fff',
+      inputColor: '#000',
+      placeholderColor: '#6c757d',
+      multiValueBg: '#e7f3ff',
+      multiValueLabelColor: '#0066cc',
+      multiValueRemoveBg: '#cfe2ff',
+      multiValueRemoveColor: '#0066cc',
+      borderColor: '#ced4da',
+      hoverBg: '#f8f9fa',
+    };
+  };
+
+  const themeColors = getComputedStyle();
 
   return (
     <Modal isOpen={isOpen} toggle={toggle} centered backdrop="static" size="md">
@@ -77,27 +147,7 @@ const NewConversationModal = ({
 
       <Form onSubmit={handleSubmit(handleFormSubmit)}>
         <ModalBody>
-          <FormGroup>
-            <Label for="title">
-              Conversation Title <span className="text-danger">*</span>
-            </Label>
-            <Controller
-              name="title"
-              control={control}
-              rules={{ required: "Title is required" }}
-              render={({ field }) => (
-                <Input
-                  id="title"
-                  type="text"
-                  placeholder="Enter conversation title"
-                  invalid={!!errors.title}
-                  {...field}
-                />
-              )}
-            />
-            {errors.title && <FormFeedback>{errors.title.message}</FormFeedback>}
-          </FormGroup>
-
+          {/* Type field first */}
           <FormGroup>
             <Label for="type">
               Conversation Type <span className="text-danger">*</span>
@@ -110,7 +160,7 @@ const NewConversationModal = ({
                 <Input id="type" type="select" invalid={!!errors.type} {...field}>
                   <option value="Group">Group</option>
                   <option value="Direct">Direct</option>
-                  <option value="Announcement">Announcement</option>
+                  {canCreateAnnouncement && <option value="Announcement">Announcement</option>}
                 </Input>
               )}
             />
@@ -118,9 +168,33 @@ const NewConversationModal = ({
             <small className="text-muted">
               {conversationType === "Group" && "Group chat with multiple participants"}
               {conversationType === "Direct" && "One-on-one conversation"}
-              {conversationType === "Announcement" && "Broadcast messages to all"}
+              {conversationType === "Announcement" && "Broadcast messages to all Admins"}
             </small>
           </FormGroup>
+
+          {/* Title field - only show for Group and Announcement, not Direct */}
+          {conversationType !== "Direct" && (
+            <FormGroup>
+              <Label for="title">
+                Conversation Title <span className="text-danger">*</span>
+              </Label>
+              <Controller
+                name="title"
+                control={control}
+                rules={{ required: conversationType !== "Direct" ? "Title is required" : false }}
+                render={({ field }) => (
+                  <Input
+                    id="title"
+                    type="text"
+                    placeholder="Enter conversation title"
+                    invalid={!!errors.title}
+                    {...field}
+                  />
+                )}
+              />
+              {errors.title && <FormFeedback>{errors.title.message}</FormFeedback>}
+            </FormGroup>
+          )}
 
           {conversationType === "Group" && (
             <FormGroup>
@@ -130,19 +204,119 @@ const NewConversationModal = ({
               <Controller
                 name="participants"
                 control={control}
-                render={({ field }) => (
-                  <Select
-                    {...field}
-                    isMulti
-                    options={employeeOptions}
-                    className="react-select-container"
-                    classNamePrefix="react-select"
-                    placeholder="Select participants..."
-                  />
+                rules={{
+                  required: "Please select participants for the group conversation",
+                  validate: (value) => {
+                    const count = value ? value.length : 0;
+                    if (count === 0) {
+                      return "Please select at least 2 participants for a group conversation";
+                    }
+                    if (count === 1) {
+                      return "A group conversation requires at least 2 participants. Please use Direct conversation for one-on-one messaging.";
+                    }
+                    return true;
+                  }
+                }}
+                render={({ field, fieldState }) => (
+                  <div>
+                    <Select
+                      {...field}
+                      isMulti
+                      options={employeeOptions}
+                      className="react-select-container"
+                      classNamePrefix="react-select"
+                      placeholder="Select participants..."
+                      styles={{
+                        control: (base, state) => ({
+                          ...base,
+                          backgroundColor: themeColors.controlBg,
+                          borderColor: fieldState.error 
+                            ? '#dc3545' 
+                            : state.isFocused 
+                            ? '#86b7fe' 
+                            : themeColors.borderColor,
+                          boxShadow: fieldState.error
+                            ? '0 0 0 0.25rem rgba(220, 53, 69, 0.25)'
+                            : state.isFocused 
+                            ? '0 0 0 0.25rem rgba(13, 110, 253, 0.25)' 
+                            : 'none',
+                          '&:hover': {
+                            borderColor: fieldState.error 
+                              ? '#dc3545' 
+                              : state.isFocused 
+                              ? '#86b7fe' 
+                              : themeColors.borderColor,
+                          },
+                        }),
+                      menu: (base) => ({
+                        ...base,
+                        backgroundColor: themeColors.menuBg,
+                        borderColor: themeColors.borderColor,
+                        zIndex: 9999,
+                      }),
+                      menuList: (base) => ({
+                        ...base,
+                        backgroundColor: themeColors.menuBg,
+                        padding: 0,
+                      }),
+                      input: (base) => ({
+                        ...base,
+                        color: themeColors.inputColor,
+                      }),
+                      placeholder: (base) => ({
+                        ...base,
+                        color: themeColors.placeholderColor,
+                      }),
+                      singleValue: (base) => ({
+                        ...base,
+                        color: themeColors.inputColor,
+                      }),
+                      multiValue: (base) => ({
+                        ...base,
+                        backgroundColor: themeColors.multiValueBg,
+                      }),
+                      multiValueLabel: (base) => ({
+                        ...base,
+                        color: themeColors.multiValueLabelColor,
+                      }),
+                      multiValueRemove: (base) => ({
+                        ...base,
+                        backgroundColor: themeColors.multiValueRemoveBg,
+                        color: themeColors.multiValueRemoveColor,
+                        '&:hover': {
+                          backgroundColor: themeColors.multiValueRemoveBg,
+                          color: themeColors.multiValueRemoveColor,
+                          opacity: 0.8,
+                        },
+                      }),
+                      option: (base, state) => ({
+                        ...base,
+                        backgroundColor: state.isSelected
+                          ? '#0d6efd'
+                          : state.isFocused
+                          ? themeColors.hoverBg
+                          : themeColors.menuBg,
+                        color: state.isSelected ? '#fff' : themeColors.inputColor,
+                        '&:active': {
+                          backgroundColor: '#0d6efd',
+                          color: '#fff',
+                        },
+                      }),
+                    }}
+                    />
+                  </div>
                 )}
               />
+              {errors.participants && (
+                <FormFeedback className="d-block" style={{ display: 'block !important' }}>
+                  {errors.participants.message}
+                </FormFeedback>
+              )}
               <small className="text-muted">
-                Select employees to add to this conversation
+                {isImamUser 
+                  ? "Select at least 2 Admins to add to this group conversation (Imam Users cannot chat with other Imams)"
+                  : "Select at least 2 employees to add to this group conversation"
+                }
               </small>
             </FormGroup>
           )}
@@ -155,19 +329,86 @@ const NewConversationModal = ({
               <Controller
                 name="participants"
                 control={control}
+                rules={{ 
+                  validate: (value) => {
+                    if (!value || value.length === 0) {
+                      return "Please select one participant";
+                    }
+                    if (value.length > 1) {
+                      return "Please select only one participant for direct conversation";
+                    }
+                    return true;
+                  }
+                }}
                 render={({ field }) => (
                   <Select
                     {...field}
-                    isMulti
+                    isMulti={false}
                     options={employeeOptions}
                     className="react-select-container"
                     classNamePrefix="react-select"
                     placeholder="Select one person..."
+                    onChange={(selected) => {
+                      // Convert single selection to array format for consistency
+                      field.onChange(selected ? [selected] : []);
+                    }}
+                    value={field.value && field.value.length > 0 ? field.value[0] : null}
+                    styles={{
+                      control: (base, state) => ({
+                        ...base,
+                        backgroundColor: themeColors.controlBg,
+                        borderColor: state.isFocused ? '#86b7fe' : themeColors.borderColor,
+                        boxShadow: state.isFocused ? '0 0 0 0.25rem rgba(13, 110, 253, 0.25)' : 'none',
+                        '&:hover': {
+                          borderColor: state.isFocused ? '#86b7fe' : themeColors.borderColor,
+                        },
+                      }),
+                      menu: (base) => ({
+                        ...base,
+                        backgroundColor: themeColors.menuBg,
+                        borderColor: themeColors.borderColor,
+                        zIndex: 9999,
+                      }),
+                      menuList: (base) => ({
+                        ...base,
+                        backgroundColor: themeColors.menuBg,
+                        padding: 0,
+                      }),
+                      input: (base) => ({
+                        ...base,
+                        color: themeColors.inputColor,
+                      }),
+                      placeholder: (base) => ({
+                        ...base,
+                        color: themeColors.placeholderColor,
+                      }),
+                      singleValue: (base) => ({
+                        ...base,
+                        color: themeColors.inputColor,
+                      }),
+                      option: (base, state) => ({
+                        ...base,
+                        backgroundColor: state.isSelected
+                          ? '#0d6efd'
+                          : state.isFocused
+                          ? themeColors.hoverBg
+                          : themeColors.menuBg,
+                        color: state.isSelected ? '#fff' : themeColors.inputColor,
+                        '&:active': {
+                          backgroundColor: '#0d6efd',
+                          color: '#fff',
+                        },
+                      }),
+                    }}
                   />
                 )}
               />
+              {errors.participants && <FormFeedback>{errors.participants.message}</FormFeedback>}
               <small className="text-muted">
-                Select one person for direct messaging
+                {isImamUser 
+                  ? "Select one Admin for direct messaging (Imam Users cannot chat with other Imams)"
+                  : "Select one person for direct messaging"
+                }
               </small>
             </FormGroup>
           )}
@@ -205,4 +446,3 @@ const NewConversationModal = ({
 };
 
 export default NewConversationModal;
-

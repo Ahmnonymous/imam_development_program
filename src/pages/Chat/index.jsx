@@ -26,7 +26,7 @@ const Chat = () => {
   // Alert state
   const [alert, setAlert] = useState(null);
 
-  const { user: currentUser, isGlobalAdmin } = useRole();
+  const { user: currentUser, isAppAdmin, isImamUser, userType } = useRole();
 
   // Meta title
   document.title = "Chat | IDP";
@@ -37,10 +37,16 @@ const Chat = () => {
     fetchEmployees();
   }, []);
 
-  // Fetch messages when conversation changes
+  // Fetch messages when conversation changes and mark as read
   useEffect(() => {
-    if (currentConversation) {
+    if (currentConversation && currentUser?.id) {
       fetchMessages(currentConversation.id);
+      // Mark as read after a short delay to ensure messages are loaded
+      // Per-participant tracking now handles announcements correctly
+      const timer = setTimeout(() => {
+        markConversationAsRead(currentConversation.id);
+      }, 500);
+      return () => clearTimeout(timer);
     }
   }, [currentConversation]);
 
@@ -49,14 +55,12 @@ const Chat = () => {
       setLoading(true);
       const response = await axiosApi.get(`${API_BASE_URL}/conversations`);
       
-      // ✅ Backend now handles filtering - App Admin sees all, others see only their center
-      // No frontend filtering needed (backend enforces it)
+      // ✅ Backend now handles filtering correctly:
+      // - Filters by participant (user must be in Conversation_Participants)
+      // - No center filtering (IDP doesn't have centers)
       setConversations(response.data);
       
-      // Set first conversation as active if none selected
-      if (!currentConversation && response.data.length > 0) {
-        setCurrentConversation(response.data[0]);
-      }
+      // ✅ User must manually select a conversation - no auto-selection
     } catch (error) {
       console.error("Error fetching conversations:", error);
       showAlert("Failed to load conversations", "danger");
@@ -69,8 +73,25 @@ const Chat = () => {
     try {
       const response = await axiosApi.get(`${API_BASE_URL}/employee`);
 
-      // All employees are available (center_id removed)
-      setEmployees(response.data);
+      // ✅ IDP Chat Rules:
+      // - App Admin (ID 1) can see all employees (Admins and Imams)
+      // - Imam User (ID 6) can only see Admins (not other Imams)
+      let filteredEmployees;
+      if (isAppAdmin) {
+        // App Admin sees all employees
+        filteredEmployees = response.data;
+      } else if (isImamUser) {
+        // Imam User can only see Admins (user_type = 1)
+        filteredEmployees = response.data.filter(employee => {
+          const empUserType = employee.user_type || employee.User_Type || employee.userType;
+          return empUserType == 1 || empUserType === "1"; // Only App Admin
+        });
+      } else {
+        // Fallback: show all
+        filteredEmployees = response.data;
+      }
+
+      setEmployees(filteredEmployees);
     } catch (error) {
       console.error("Error fetching employees:", error);
     }
@@ -79,24 +100,38 @@ const Chat = () => {
   const fetchMessages = async (conversationId) => {
     try {
       setMessagesLoading(true);
-      const response = await axiosApi.get(`${API_BASE_URL}/messages`);
+      // ✅ Pass conversation_id as query parameter - backend will filter by participant
+      const response = await axiosApi.get(`${API_BASE_URL}/messages${conversationId ? `?conversation_id=${conversationId}` : ''}`);
       
-      // Filter messages for this conversation (handle both string and number IDs)
-      const conversationMessages = response.data.filter(
-        m => m.conversation_id == conversationId
-      );
-
+      // Backend now handles filtering by participant, so we can use the response directly
       // Sort by created_at
-      conversationMessages.sort((a, b) => 
+      const sortedMessages = response.data.sort((a, b) => 
         new Date(a.created_at) - new Date(b.created_at)
       );
 
-      setMessages(conversationMessages);
+      setMessages(sortedMessages);
     } catch (error) {
       console.error("Error fetching messages:", error);
       showAlert("Failed to load messages", "danger");
     } finally {
       setMessagesLoading(false);
+    }
+  };
+
+  const markConversationAsRead = async (conversationId) => {
+    try {
+      if (!conversationId || !currentUser?.id) return;
+      
+      await axiosApi.post(`${API_BASE_URL}/messages/conversation/${conversationId}/mark-read`);
+      
+      // Refresh conversations to update unread counts after marking as read
+      // Use a small delay to ensure the database update is complete
+      setTimeout(() => {
+        fetchConversations();
+      }, 300);
+    } catch (error) {
+      console.error("Error marking conversation as read:", error);
+      // Don't show alert for this - it's a background operation
     }
   };
 
@@ -192,6 +227,11 @@ const Chat = () => {
 
       // Refresh messages from server to get the actual ID and any server-side updates
       await fetchMessages(currentConversation.id);
+      
+      // ✅ Refresh conversation list to show restored conversations
+      // When a message is sent, the backend restores deleted conversations,
+      // so we need to refresh the list to see them appear
+      await fetchConversations();
     } catch (error) {
       console.error("Error sending message:", error);
       showAlert("Failed to send message", "danger");
@@ -201,6 +241,12 @@ const Chat = () => {
   };
 
   const handleCreateConversation = async (conversationData) => {
+    // ✅ Prevent Imam Users from creating conversations
+    if (isImamUser && !isAppAdmin) {
+      showAlert("Imam Users cannot create conversations. Please contact an Admin.", "warning");
+      return;
+    }
+
     try {
       const payload = {
         title: conversationData.title,
@@ -211,15 +257,51 @@ const Chat = () => {
       const response = await axiosApi.post(`${API_BASE_URL}/conversations`, payload);
       const newConversation = response.data;
 
-      // Add participants
-      if (conversationData.participants && conversationData.participants.length > 0) {
-        for (const employeeId of conversationData.participants) {
+      const creatorId = currentUser?.id;
+      
+      // For Announcement conversations: Auto-add all eligible users (App Admin only)
+      // Imam Users are excluded from Announcements
+      if (conversationData.type === "Announcement") {
+        // Get all App Admins (user_type = 1)
+        const eligibleEmployees = employees.filter(employee => {
+          const empUserType = employee.user_type || employee.User_Type || employee.userType;
+          return empUserType == 1 || empUserType === "1"; // Only App Admin
+        });
+
+        // Add all eligible employees as participants
+        for (const employee of eligibleEmployees) {
           await axiosApi.post(`${API_BASE_URL}/conversationParticipants`, {
             conversation_id: newConversation.id,
-            employee_id: employeeId,
+            employee_id: employee.id,
             joined_date: new Date().toISOString().split('T')[0],
             created_by: getAuditName(),
           });
+        }
+      } else {
+        // For Direct and Group conversations: Add creator and selected participants
+        // ✅ Always add the creator as a participant so they can see the conversation
+        if (creatorId) {
+          await axiosApi.post(`${API_BASE_URL}/conversationParticipants`, {
+            conversation_id: newConversation.id,
+            employee_id: creatorId,
+            joined_date: new Date().toISOString().split('T')[0],
+            created_by: getAuditName(),
+          });
+        }
+
+        // Add other participants
+        if (conversationData.participants && conversationData.participants.length > 0) {
+          for (const employeeId of conversationData.participants) {
+            // Skip if the participant is the same as the creator (already added above)
+            if (employeeId == creatorId) continue;
+            
+            await axiosApi.post(`${API_BASE_URL}/conversationParticipants`, {
+              conversation_id: newConversation.id,
+              employee_id: employeeId,
+              joined_date: new Date().toISOString().split('T')[0],
+              created_by: getAuditName(),
+            });
+          }
         }
       }
 
@@ -292,6 +374,7 @@ const Chat = () => {
                   onDeleteConversation={handleDeleteConversation}
                   loading={loading}
                   currentUser={currentUser}
+                  canCreateConversation={isAppAdmin} // Only App Admin can create conversations
                 />
 
                 {/* Message Area - Main Content */}
@@ -299,6 +382,7 @@ const Chat = () => {
                   conversation={currentConversation}
                   messages={messages}
                   onSendMessage={handleSendMessage}
+                  onDeleteConversation={handleDeleteConversation}
                   loading={messagesLoading}
                   currentUser={currentUser}
                 />
@@ -306,15 +390,20 @@ const Chat = () => {
             </Col>
           </Row>
 
-          {/* Modals */}
-          <NewConversationModal
-            isOpen={newConversationModal}
-            toggle={() => setNewConversationModal(!newConversationModal)}
-            employees={employees}
-            currentUser={currentUser}
-            onSubmit={handleCreateConversation}
-            showAlert={showAlert}
-          />
+          {/* Modals - Only show for App Admin */}
+          {isAppAdmin && (
+            <NewConversationModal
+              isOpen={newConversationModal}
+              toggle={() => setNewConversationModal(!newConversationModal)}
+              employees={employees}
+              currentUser={currentUser}
+              onSubmit={handleCreateConversation}
+              showAlert={showAlert}
+              isAppAdmin={isAppAdmin}
+              isImamUser={isImamUser}
+              userType={userType}
+            />
+          )}
         </Container>
       </div>
     </React.Fragment>
@@ -322,4 +411,3 @@ const Chat = () => {
 };
 
 export default Chat;
-

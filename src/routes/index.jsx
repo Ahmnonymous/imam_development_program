@@ -6,6 +6,7 @@ import ProtectedRoute from "./ProtectedRoute";
 
 // Pages Component
 import Chat from "../pages/Chat";
+import ChatRouteGuard from "./ChatRouteGuard";
 
 // // File Manager
 import FileManager from "../pages/FileManager/index";
@@ -236,8 +237,8 @@ const authProtectedRoutes = [
   { path: "/crypto-orders", component: <CryptoOrders /> },
   { path: "/crypto-kyc-application", component: <CryptoKYCApplication /> },
 
-  // ✅ Chat - All roles except Org Executive (roles 1,2,3,5)
-  { path: "/chat", component: <ProtectedRoute allowedRoles={[1, 2, 3, 5]}><Chat /></ProtectedRoute> },
+  // ✅ Chat - App Admin (1) always has access, Imam User (6) only if they have conversations
+  { path: "/chat", component: <ProtectedRoute allowedRoles={[1, 6]}><ChatRouteGuard><Chat /></ChatRouteGuard></ProtectedRoute> },
 
   // ✅ Policy Library - All users (roles 1,2,3,4,5)
   { path: "/policy-library", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><PolicyLibrary /></ProtectedRoute> },

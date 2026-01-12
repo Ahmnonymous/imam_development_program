@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Input, Button, Spinner, UncontrolledDropdown, DropdownToggle, DropdownMenu, DropdownItem } from "reactstrap";
+import { Input, Button, Spinner } from "reactstrap";
 import SimpleBar from "simplebar-react";
 import { Link } from "react-router-dom";
 import { useRole } from "../../helpers/useRole";
@@ -11,9 +11,10 @@ const ConversationList = ({
   onCreateConversation,
   onDeleteConversation,
   loading,
-  currentUser
+  currentUser,
+  canCreateConversation = true // Default to true for backward compatibility
 }) => {
-  const { isOrgExecutive } = useRole(); // Read-only check
+  const { isImamUser } = useRole();
   const [searchTerm, setSearchTerm] = useState("");
 
   // Filter conversations based on search
@@ -36,18 +37,58 @@ const ConversationList = ({
     if (!dateString) return "";
     const date = new Date(dateString);
     const now = new Date();
-    const diffTime = Math.abs(now - date);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const messageDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    
+    // Calculate difference in days
+    const diffTime = today - messageDate;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    // If today, show time in 12-hour format (e.g., "03:25 PM")
     if (diffDays === 0) {
-      return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-    } else if (diffDays === 1) {
-      return "Yesterday";
-    } else if (diffDays < 7) {
-      return date.toLocaleDateString('en-US', { weekday: 'short' });
-    } else {
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      return date.toLocaleTimeString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: true 
+      });
     }
+    
+    // Yesterday
+    if (diffDays === 1) {
+      return "Yesterday";
+    }
+    
+    // 2-6 days ago
+    if (diffDays >= 2 && diffDays < 7) {
+      return `${diffDays} days ago`;
+    }
+    
+    // Calculate weeks
+    const diffWeeks = Math.floor(diffDays / 7);
+    if (diffWeeks === 1) {
+      return "1 week ago";
+    }
+    if (diffWeeks >= 2 && diffWeeks < 4) {
+      return `${diffWeeks} weeks ago`;
+    }
+    
+    // Calculate months
+    const diffMonths = Math.floor(diffDays / 30);
+    if (diffMonths === 1) {
+      return "1 month ago";
+    }
+    if (diffMonths >= 2 && diffMonths < 12) {
+      return `${diffMonths} months ago`;
+    }
+    
+    // For very old dates, show the actual date
+    const diffYears = Math.floor(diffDays / 365);
+    if (diffYears >= 1) {
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+    
+    // Fallback
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
   return (
@@ -63,17 +104,18 @@ const ConversationList = ({
                 {currentUser?.name || "User"}
               </p>
             </div>
-            <div>
-              {/* Org Executive can create conversations */}
-              <Button
-                color="primary"
-                size="sm"
-                onClick={onCreateConversation}
-                title="New Conversation"
-              >
-                <i className="bx bx-plus"></i>
-              </Button>
-            </div>
+            {canCreateConversation && (
+              <div>
+                <Button
+                  color="primary"
+                  size="sm"
+                  onClick={onCreateConversation}
+                  title="New Conversation"
+                >
+                  <i className="bx bx-plus"></i>
+                </Button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -101,79 +143,78 @@ const ConversationList = ({
             <div className="text-center py-5">
               <i className="bx bx-chat display-4 text-muted mb-3 d-block"></i>
               <h5 className="text-muted">No conversations found</h5>
-              <p className="text-muted">Start a new conversation</p>
-              <Button color="primary" size="sm" onClick={onCreateConversation}>
-                <i className="bx bx-plus me-1"></i>
-                New Conversation
-              </Button>
+              <p className="text-muted">
+                {canCreateConversation 
+                  ? "Start a new conversation" 
+                  : "You don't have any conversations yet. An Admin will need to add you to a conversation."}
+              </p>
+              {canCreateConversation && (
+                <Button color="primary" size="sm" onClick={onCreateConversation}>
+                  <i className="bx bx-plus me-1"></i>
+                  New Conversation
+                </Button>
+              )}
             </div>
           ) : (
-            <SimpleBar style={{ maxHeight: "calc(100vh - 400px)" }}>
-              <ul className="list-unstyled chat-list">
+            <SimpleBar style={{ maxHeight: "calc(100vh - 400px)", position: 'relative' }}>
+              <ul className="list-unstyled chat-list" style={{ position: 'relative' }}>
                 {filteredConversations.map((conversation) => (
                   <li
                     key={conversation.id}
                     className={currentConversation?.id === conversation.id ? "active" : ""}
+                    style={{ position: 'relative', overflow: 'hidden' }}
                   >
-                    <Link
-                      to="#"
-                      onClick={() => onConversationSelect(conversation)}
-                      className="d-block"
-                    >
-                      <div className="d-flex align-items-start">
-                        <div className="avatar-xs me-3 align-self-center">
+                    <div className="d-flex align-items-start" style={{ position: 'relative', width: '100%', padding: '12px', overflow: 'hidden' }}>
+                      <Link
+                        to="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          onConversationSelect(conversation);
+                        }}
+                        className="d-flex align-items-start flex-grow-1"
+                        style={{ textDecoration: 'none', color: 'inherit', minWidth: 0, overflow: 'hidden' }}
+                      >
+                        <div className="avatar-xs me-3 align-self-center flex-shrink-0">
                           <span className="avatar-title rounded-circle bg-primary text-white">
                             <i className={`bx ${getConversationIcon(conversation.type)}`}></i>
                           </span>
                         </div>
 
-                        <div className="flex-grow-1 overflow-hidden">
-                          <h5 className="text-truncate font-size-14 mb-1">
-                            {conversation.title || "Untitled Conversation"}
-                          </h5>
-                          <p className="text-truncate mb-0 text-muted">
-                            <i className={`bx ${getConversationIcon(conversation.type)} me-1`}></i>
-                            {conversation.type || "Chat"}
-                          </p>
-                        </div>
-
-                         <div className="text-end">
-                           <p className="text-muted font-size-11 mb-1">
-                             {formatDate(conversation.updated_at)}
-                           </p>
-                          {/* Org Executive can delete conversations */}
-                          <UncontrolledDropdown 
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                            }}
-                          >
-                              <DropdownToggle 
-                                tag="button"
-                                className="btn btn-link text-muted p-0 font-size-16"
-                                style={{ border: 'none', background: 'none' }}
+                        <div className="flex-grow-1 overflow-hidden" style={{ minWidth: 0 }}>
+                          <div className="d-flex align-items-center gap-2 mb-1">
+                            <h5 className="text-truncate font-size-14 mb-0">
+                              {conversation.type === "Direct" 
+                                ? (conversation.participant_names || "Unknown User")
+                                : (conversation.title || "Untitled Conversation")
+                              }
+                            </h5>
+                            {(conversation.unread_count && Number(conversation.unread_count) > 0) && (
+                              <span 
+                                className="badge rounded-pill d-flex align-items-center justify-content-center flex-shrink-0" 
+                                style={{ 
+                                  backgroundColor: '#28a745', 
+                                  color: 'white',
+                                  fontSize: '0.65rem', 
+                                  minWidth: '18px',
+                                  height: '18px',
+                                  padding: '0 6px',
+                                  fontWeight: '600',
+                                  lineHeight: '1'
+                                }}
                               >
-                                <i className="bx bx-dots-vertical-rounded"></i>
-                              </DropdownToggle>
-                              <DropdownMenu end>
-                                <DropdownItem
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    if (window.confirm("Are you sure you want to delete this conversation?")) {
-                                      onDeleteConversation(conversation.id);
-                                    }
-                                  }}
-                                  className="text-danger"
-                                >
-                                  <i className="bx bx-trash me-2"></i>
-                                  Delete
-                                </DropdownItem>
-                              </DropdownMenu>
-                            </UncontrolledDropdown>
-                         </div>
-                      </div>
-                    </Link>
+                                {Number(conversation.unread_count) > 99 ? '99+' : Number(conversation.unread_count)}
+                              </span>
+                            )}
+                          </div>
+                          <div className="d-flex align-items-center gap-2">
+                            <p className="text-truncate mb-0 text-muted font-size-12">
+                              <i className={`bx ${getConversationIcon(conversation.type)} me-1`}></i>
+                              {conversation.type || "Chat"} - {formatDate(conversation.updated_at)}
+                            </p>
+                          </div>
+                        </div>
+                      </Link>
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -186,4 +227,3 @@ const ConversationList = ({
 };
 
 export default ConversationList;
-

@@ -3,13 +3,22 @@ import { Card, Input, Button, Row, Col, Spinner, UncontrolledTooltip } from "rea
 import SimpleBar from "simplebar-react";
 import { useRole } from "../../helpers/useRole";
 import { API_BASE_URL, API_STREAM_BASE_URL } from "../../helpers/url_helper";
+import DeleteModal from "../../components/Common/DeleteModal";
+import { getAuditName } from "../../helpers/userStorage";
 
-const MessageArea = ({ conversation, messages, onSendMessage, loading, currentUser }) => {
-  const { isOrgExecutive } = useRole(); // Read-only check
+const MessageArea = ({ conversation, messages, onSendMessage, loading, currentUser, onDeleteConversation }) => {
+  const { isImamUser } = useRole();
   const [messageText, setMessageText] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
+  const [deleteModal, setDeleteModal] = useState({ show: false });
   const scrollRef = useRef(null);
   const fileInputRef = useRef(null);
+  const messageInputRef = useRef(null);
+
+  // Check if this is an Announcement conversation and if current user is the initiator
+  const isAnnouncement = conversation?.type === "Announcement";
+  const isInitiator = isAnnouncement && conversation?.created_by === getAuditName();
+  const canSendMessage = !isAnnouncement || isInitiator; // Can send if not announcement OR if initiator
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -18,6 +27,16 @@ const MessageArea = ({ conversation, messages, onSendMessage, loading, currentUs
       scrollElement.scrollTop = scrollElement.scrollHeight;
     }
   }, [messages]);
+
+  // Auto-focus message input when conversation changes
+  useEffect(() => {
+    if (conversation && messageInputRef.current) {
+      // Small delay to ensure the input is rendered
+      setTimeout(() => {
+        messageInputRef.current?.focus();
+      }, 100);
+    }
+  }, [conversation]);
 
   const handleSend = () => {
     if (messageText.trim() || selectedFile) {
@@ -34,7 +53,7 @@ const MessageArea = ({ conversation, messages, onSendMessage, loading, currentUs
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey && canSendMessage) {
       e.preventDefault();
       handleSend();
     }
@@ -117,14 +136,42 @@ const MessageArea = ({ conversation, messages, onSendMessage, loading, currentUs
     <div className="w-100 user-chat">
       <Card>
         {/* Header */}
-        <div className="p-4 border-bottom" style={{ flexShrink: 0 }}>
-          <Row>
-            <Col md={8} xs={9}>
-              <h5 className="font-size-15 mb-1">{conversation.title || "Conversation"}</h5>
-              <p className="text-muted mb-0">
-                <i className={`bx ${conversation.type === "Group" ? "bx-group" : "bx-chat"} me-1`}></i>
-                {conversation.type || "Chat"}
-              </p>
+        <div className="p-4 border-bottom" style={{ flexShrink: 0, position: 'relative', paddingRight: '16px' }}>
+          <Row className="align-items-center">
+            <Col md={10} xs={10}>
+              <h5 className="font-size-18 mb-1">
+                {conversation.type === "Direct" 
+                  ? (conversation.participant_names || "Unknown User")
+                  : (conversation.title || "Conversation")
+                }
+              </h5>
+            </Col>
+            <Col md={2} xs={2} className="text-end" style={{ paddingRight: 0 }}>
+              {/* Delete button - positioned at the end */}
+              <button
+                className="btn d-flex align-items-center gap-1"
+                style={{ 
+                  borderRadius: '20px',
+                  backgroundColor: '#ffebee',
+                  color: '#c62828',
+                  border: 'none',
+                  padding: '6px 12px',
+                  fontSize: '0.875rem',
+                  fontWeight: '500',
+                  marginRight: 0
+                }}
+                onClick={() => setDeleteModal({ show: true })}
+                title="Delete conversation"
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#ffcdd2';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#ffebee';
+                }}
+              >
+                <i className="bx bx-trash"></i>
+                <span>Delete</span>
+              </button>
             </Col>
           </Row>
         </div>
@@ -230,7 +277,13 @@ const MessageArea = ({ conversation, messages, onSendMessage, loading, currentUs
                                   </small>
                                   {isMine && (
                                     <i 
-                                      className={`bx bx-check-double ${message.read_status === "Read" ? "text-primary" : "text-secondary"}`} 
+                                      className={`bx bx-check-double ${
+                                        // For Group/Announcement: show blue tick only when all participants have read
+                                        // For Direct: show blue tick when the other person has read (using all_read_by_participants or read_status)
+                                        (conversation.type === "Group" || conversation.type === "Announcement")
+                                          ? (message.all_read_by_participants === true ? "text-primary" : "text-secondary")
+                                          : (message.all_read_by_participants === true || message.read_status === "Read" ? "text-primary" : "text-secondary")
+                                      }`} 
                                       style={{ fontSize: "14px", marginLeft: "2px" }}
                                     ></i>
                                   )}
@@ -272,17 +325,24 @@ const MessageArea = ({ conversation, messages, onSendMessage, loading, currentUs
             </div>
           )}
 
-          {/* Input Area - WhatsApp Style - Org Executive can send messages */}
+          {/* Input Area - WhatsApp Style */}
           <div className="p-2 chat-input-section border-top bg-body" style={{ flexShrink: 0 }}>
+            {isAnnouncement && !isInitiator && (
+              <div className="alert alert-info mb-2 py-2" style={{ fontSize: "0.875rem" }}>
+                <i className="bx bx-info-circle me-1"></i>
+                This is an announcement conversation. Only the initiator can send messages.
+              </div>
+            )}
             <Row className="g-2 align-items-end">
               <Col className="col-auto">
-                <label htmlFor="fileInput" style={{ cursor: "pointer", marginBottom: 0 }}>
+                <label htmlFor="fileInput" style={{ cursor: canSendMessage ? "pointer" : "not-allowed", marginBottom: 0 }}>
                   <Button
                     color="light"
                     className="btn-icon rounded-circle d-flex align-items-center justify-content-center"
                     style={{ width: "38px", height: "38px", padding: 0 }}
                     type="button"
-                    onClick={() => document.getElementById('fileInput').click()}
+                    onClick={() => canSendMessage && document.getElementById('fileInput').click()}
+                    disabled={!canSendMessage}
                   >
                     <i className="bx bx-paperclip font-size-18 text-muted" id="AttachTooltip"></i>
                   </Button>
@@ -296,23 +356,27 @@ const MessageArea = ({ conversation, messages, onSendMessage, loading, currentUs
                   id="fileInput"
                   className="d-none"
                   onChange={handleFileChange}
+                  disabled={!canSendMessage}
                 />
               </Col>
               <Col>
                 <Input
+                  innerRef={messageInputRef}
                   type="textarea"
                   rows="1"
                   value={messageText}
-                  onChange={(e) => setMessageText(e.target.value)}
+                  onChange={(e) => canSendMessage && setMessageText(e.target.value)}
                   onKeyPress={handleKeyPress}
                   className="chat-input"
-                  placeholder="Type a message..."
+                  placeholder={isAnnouncement && !isInitiator ? "Read-only: Only the initiator can send messages" : "Type a message..."}
+                  disabled={!canSendMessage}
                   style={{ 
                     resize: "none", 
                     borderRadius: "20px",
                     fontSize: "0.875rem",
                     padding: "8px 16px",
-                    minHeight: "38px"
+                    minHeight: "38px",
+                    opacity: canSendMessage ? 1 : 0.6
                   }}
                 />
               </Col>
@@ -321,7 +385,7 @@ const MessageArea = ({ conversation, messages, onSendMessage, loading, currentUs
                   type="button"
                   color="primary"
                   onClick={handleSend}
-                  disabled={!messageText.trim() && !selectedFile}
+                  disabled={(!messageText.trim() && !selectedFile) || !canSendMessage}
                   className="rounded-circle d-flex align-items-center justify-content-center"
                   style={{ width: "38px", height: "38px", padding: 0 }}
                 >
@@ -364,6 +428,18 @@ const MessageArea = ({ conversation, messages, onSendMessage, loading, currentUs
           color: var(--bs-secondary-color) !important;
         }
       `}</style>
+
+      {/* Delete Confirmation Modal */}
+      <DeleteModal
+        show={deleteModal.show}
+        onDeleteClick={() => {
+          if (onDeleteConversation && conversation?.id) {
+            onDeleteConversation(conversation.id);
+            setDeleteModal({ show: false });
+          }
+        }}
+        onCloseClick={() => setDeleteModal({ show: false })}
+      />
     </div>
   );
 };

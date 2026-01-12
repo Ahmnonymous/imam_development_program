@@ -3,9 +3,8 @@
 const conversationParticipantsController = {
   getAll: async (req, res) => {
     try {
-      // ✅ App Admin (center_id=null) sees all, others see only their center
-      const centerId = req.center_id || req.user?.center_id || null;
-      const data = await conversationParticipantsModel.getAll(centerId);
+      // ✅ IDP doesn't have centers - no filtering needed
+      const data = await conversationParticipantsModel.getAll();
       res.json(data);
     } catch(err) {
       res.status(500).json({error: err.message});
@@ -14,9 +13,8 @@ const conversationParticipantsController = {
   
   getById: async (req, res) => {
     try {
-      // ✅ App Admin (center_id=null) sees all, others see only their center
-      const centerId = req.center_id || req.user?.center_id || null;
-      const data = await conversationParticipantsModel.getById(req.params.id, centerId);
+      // ✅ IDP doesn't have centers - no filtering needed
+      const data = await conversationParticipantsModel.getById(req.params.id);
       if(!data) return res.status(404).json({error: 'Not found'});
       res.json(data);
     } catch(err) {
@@ -35,9 +33,8 @@ const conversationParticipantsController = {
   
   update: async (req, res) => {
     try {
-      // ✅ App Admin (center_id=null) can update all, others only their center
-      const centerId = req.center_id || req.user?.center_id || null;
-      const data = await conversationParticipantsModel.update(req.params.id, req.body, centerId);
+      // ✅ IDP doesn't have centers - no filtering needed
+      const data = await conversationParticipantsModel.update(req.params.id, req.body);
       if (!data) {
         return res.status(404).json({ error: "Not found" });
       }
@@ -49,9 +46,8 @@ const conversationParticipantsController = {
   
   delete: async (req, res) => {
     try {
-      // ✅ App Admin (center_id=null) can delete all, others only their center
-      const centerId = req.center_id || req.user?.center_id || null;
-      const deleted = await conversationParticipantsModel.delete(req.params.id, centerId);
+      // ✅ IDP doesn't have centers - no filtering needed
+      const deleted = await conversationParticipantsModel.delete(req.params.id);
       if (!deleted) {
         return res.status(404).json({ error: "Not found" });
       }
