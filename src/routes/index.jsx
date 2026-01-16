@@ -391,8 +391,8 @@ const authProtectedRoutes = [
   { path: "/employees/profile/:id", component: <ProtectedRoute allowedRoles={[1, 2, 3]}><EmployeeProfile /></ProtectedRoute> },
   { path: "/lookups/:table", component: <ProtectedRoute allowedRoles={[1, 2, 3]}><LookupTableView /></ProtectedRoute> },
   
-  // ✅ Email Template Settings - App Admin only
-  { path: "/email-templates", component: <ProtectedRoute allowedRoles={[1]}><EmailTemplateSettings /></ProtectedRoute> },
+  // ✅ Email Template Settings - App Admin only (HIDDEN FOR NOW)
+  // { path: "/email-templates", component: <ProtectedRoute allowedRoles={[1]}><EmailTemplateSettings /></ProtectedRoute> },
 
 
   // ✅ Reports - All roles (Org Executive & Caseworker scoped to own center)

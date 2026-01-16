@@ -378,15 +378,15 @@ const SidebarContent = (props) => {
                     <span>{props.t("Lookup Setup")}</span>
                   </Link>
                 </li>
-                {/* ✅ Email Template Settings - App Admin only */}
-                {userType === 1 && (
+                {/* ✅ Email Template Settings - App Admin only (HIDDEN FOR NOW) */}
+                {/* {userType === 1 && (
                   <li>
                     <Link to="/email-templates">
                       <i className="bx bx-envelope"></i>
                       <span>{props.t("Email Templates")}</span>
                     </Link>
                   </li>
-                )}
+                )} */}
               </>
             )}
 
