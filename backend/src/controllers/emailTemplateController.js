@@ -82,7 +82,7 @@ const emailTemplateController = {
       if (req.file && data.id) {
         // Use production URL in production, localhost in development
         const API_BASE_URL = process.env.NODE_ENV === 'production' 
-          ? (process.env.API_BASE_URL || process.env.PRODUCTION_API_URL || 'https://api.imamdp.org')
+          ? (process.env.API_BASE_URL || process.env.PRODUCTION_API_URL || 'https://imamportal.com')
           : (process.env.API_BASE_URL || 'http://localhost:5000');
         const showLink = `${API_BASE_URL}/api/emailTemplates/${data.id}/view-image`;
         const updatedData = await emailTemplateModel.update(data.id, { background_image_show_link: showLink });

@@ -202,7 +202,10 @@ class EmailService {
       
       console.log(`✅ Postmark client initialized`);
       const emailFrom = process.env.EMAIL_FROM || 'noreply@imamdp.org';
-      const API_BASE_URL = process.env.API_BASE_URL || process.env.PRODUCTION_API_URL || 'https://api.imamdp.org';
+      // Use environment variable or detect production URL dynamically
+      const API_BASE_URL = process.env.API_BASE_URL 
+        || process.env.PRODUCTION_API_URL 
+        || (process.env.NODE_ENV === 'production' ? 'https://imamportal.com' : 'http://localhost:5000');
 
       // Process each template and send emails
       const allResults = [];
@@ -222,6 +225,13 @@ class EmailService {
             const urlPath = imageUrl.replace(/^https?:\/\/[^\/]+/, '');
             imageUrl = `${API_BASE_URL}${urlPath}`;
             console.log(`📧 Replaced localhost image URL with production URL: ${imageUrl}`);
+          }
+          
+          // Replace incorrect API URLs (e.g., api.imamdp.org) with correct production URL
+          if (imageUrl.includes('api.imamdp.org') || imageUrl.includes('api.imamportal.com')) {
+            const urlPath = imageUrl.replace(/^https?:\/\/[^\/]+/, '');
+            imageUrl = `${API_BASE_URL}${urlPath}`;
+            console.log(`📧 Replaced incorrect API URL with production URL: ${imageUrl}`);
           }
           
           // Ensure the URL is absolute
@@ -410,13 +420,26 @@ class EmailService {
         // Handle background image
         if (template.background_image_show_link) {
           let imageUrl = template.background_image_show_link;
-          const API_BASE_URL = process.env.API_BASE_URL || process.env.PRODUCTION_API_URL || 'https://api.imamdp.org';
+          // Use environment variable or detect production URL dynamically
+          const API_BASE_URL = process.env.API_BASE_URL 
+            || process.env.PRODUCTION_API_URL 
+            || (process.env.NODE_ENV === 'production' ? 'https://imamportal.com' : 'http://localhost:5000');
           
+          // Replace localhost URLs with production URL for email delivery
           if (imageUrl.includes('localhost') || imageUrl.includes('127.0.0.1')) {
             const urlPath = imageUrl.replace(/^https?:\/\/[^\/]+/, '');
             imageUrl = `${API_BASE_URL}${urlPath}`;
+            console.log(`📧 Replaced localhost image URL with production URL: ${imageUrl}`);
           }
           
+          // Replace incorrect API URLs (e.g., api.imamdp.org) with correct production URL
+          if (imageUrl.includes('api.imamdp.org') || imageUrl.includes('api.imamportal.com')) {
+            const urlPath = imageUrl.replace(/^https?:\/\/[^\/]+/, '');
+            imageUrl = `${API_BASE_URL}${urlPath}`;
+            console.log(`📧 Replaced incorrect API URL with production URL: ${imageUrl}`);
+          }
+          
+          // Ensure the URL is absolute
           if (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
             if (imageUrl.startsWith('/')) {
               imageUrl = `${API_BASE_URL}${imageUrl}`;
@@ -428,7 +451,10 @@ class EmailService {
           htmlContent = htmlContent.replace(/\{\{background_image\}\}/g, imageUrl);
           htmlContent = htmlContent.replace(/\(\(background_image\)\)/g, imageUrl);
         } else if (template.background_image && template.id) {
-          const API_BASE_URL = process.env.API_BASE_URL || process.env.PRODUCTION_API_URL || 'https://api.imamdp.org';
+          // Use environment variable or detect production URL dynamically
+          const API_BASE_URL = process.env.API_BASE_URL 
+            || process.env.PRODUCTION_API_URL 
+            || (process.env.NODE_ENV === 'production' ? 'https://imamportal.com' : 'http://localhost:5000');
           const imageUrl = `${API_BASE_URL}/api/emailTemplates/${template.id}/view-image`;
           htmlContent = htmlContent.replace(/\{\{background_image\}\}/g, imageUrl);
           htmlContent = htmlContent.replace(/\(\(background_image\)\)/g, imageUrl);
