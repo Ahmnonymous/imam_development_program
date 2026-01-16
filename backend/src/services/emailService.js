@@ -220,21 +220,22 @@ class EmailService {
         if (currentTemplate.background_image_show_link) {
           let imageUrl = currentTemplate.background_image_show_link;
           
-          // Replace localhost URLs with production URL for email delivery
-          if (imageUrl.includes('localhost') || imageUrl.includes('127.0.0.1')) {
-            const urlPath = imageUrl.replace(/^https?:\/\/[^\/]+/, '');
+          // Always replace any non-production URLs with production URL for email delivery
+          // This ensures emails always use the correct production URL regardless of what's stored in DB
+          const isLocalhost = imageUrl.includes('localhost') || imageUrl.includes('127.0.0.1');
+          const isWrongDomain = imageUrl.includes('api.imamdp.org') || 
+                               imageUrl.includes('api.imamportal.com') ||
+                               (imageUrl.includes('imamportal.com') && !imageUrl.startsWith('https://imamportal.com'));
+          
+          if (isLocalhost || isWrongDomain) {
+            // Extract the path from the URL
+            const urlMatch = imageUrl.match(/https?:\/\/[^\/]+(\/.*)/);
+            const urlPath = urlMatch ? urlMatch[1] : '/api/emailTemplates/' + currentTemplate.id + '/view-image';
             imageUrl = `${API_BASE_URL}${urlPath}`;
-            console.log(`📧 Replaced localhost image URL with production URL: ${imageUrl}`);
+            console.log(`📧 Replaced image URL from "${currentTemplate.background_image_show_link}" to "${imageUrl}"`);
           }
           
-          // Replace incorrect API URLs (e.g., api.imamdp.org) with correct production URL
-          if (imageUrl.includes('api.imamdp.org') || imageUrl.includes('api.imamportal.com')) {
-            const urlPath = imageUrl.replace(/^https?:\/\/[^\/]+/, '');
-            imageUrl = `${API_BASE_URL}${urlPath}`;
-            console.log(`📧 Replaced incorrect API URL with production URL: ${imageUrl}`);
-          }
-          
-          // Ensure the URL is absolute
+          // Ensure the URL is absolute and uses production domain
           if (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
             if (imageUrl.startsWith('/')) {
               imageUrl = `${API_BASE_URL}${imageUrl}`;
@@ -243,9 +244,30 @@ class EmailService {
             }
           }
           
+          // Final check: if URL still contains localhost or wrong domain, force replace
+          if (imageUrl.includes('localhost') || imageUrl.includes('127.0.0.1') || 
+              (imageUrl.includes('imamportal.com') && !imageUrl.startsWith('https://imamportal.com'))) {
+            const urlMatch = imageUrl.match(/https?:\/\/[^\/]+(\/.*)/);
+            const urlPath = urlMatch ? urlMatch[1] : '/api/emailTemplates/' + currentTemplate.id + '/view-image';
+            imageUrl = `${API_BASE_URL}${urlPath}`;
+            console.log(`📧 Force replaced image URL to production: ${imageUrl}`);
+          }
+          
+          // Replace variables in HTML content
           htmlContent = htmlContent.replace(/\{\{background_image\}\}/g, imageUrl);
           htmlContent = htmlContent.replace(/\(\(background_image\)\)/g, imageUrl);
-          console.log(`📧 Using image URL in email: ${imageUrl}`);
+          
+          // Also replace any localhost URLs that might be directly embedded in the HTML (safety net)
+          htmlContent = htmlContent.replace(
+            /https?:\/\/localhost:\d+\/api\/emailTemplates\/(\d+)\/view-image/g,
+            `${API_BASE_URL}/api/emailTemplates/$1/view-image`
+          );
+          htmlContent = htmlContent.replace(
+            /https?:\/\/127\.0\.0\.1:\d+\/api\/emailTemplates\/(\d+)\/view-image/g,
+            `${API_BASE_URL}/api/emailTemplates/$1/view-image`
+          );
+          
+          console.log(`📧 Final image URL used in email: ${imageUrl}`);
         } else {
           // If no show_link but image exists, generate it
           if (currentTemplate.background_image && currentTemplate.id) {
@@ -425,21 +447,21 @@ class EmailService {
             || process.env.PRODUCTION_API_URL 
             || (process.env.NODE_ENV === 'production' ? 'https://imamportal.com' : 'http://localhost:5000');
           
-          // Replace localhost URLs with production URL for email delivery
-          if (imageUrl.includes('localhost') || imageUrl.includes('127.0.0.1')) {
-            const urlPath = imageUrl.replace(/^https?:\/\/[^\/]+/, '');
+          // Always replace any non-production URLs with production URL for email delivery
+          const isLocalhost = imageUrl.includes('localhost') || imageUrl.includes('127.0.0.1');
+          const isWrongDomain = imageUrl.includes('api.imamdp.org') || 
+                               imageUrl.includes('api.imamportal.com') ||
+                               (imageUrl.includes('imamportal.com') && !imageUrl.startsWith('https://imamportal.com'));
+          
+          if (isLocalhost || isWrongDomain) {
+            // Extract the path from the URL
+            const urlMatch = imageUrl.match(/https?:\/\/[^\/]+(\/.*)/);
+            const urlPath = urlMatch ? urlMatch[1] : '/api/emailTemplates/' + template.id + '/view-image';
             imageUrl = `${API_BASE_URL}${urlPath}`;
-            console.log(`📧 Replaced localhost image URL with production URL: ${imageUrl}`);
+            console.log(`📧 Replaced image URL from "${template.background_image_show_link}" to "${imageUrl}"`);
           }
           
-          // Replace incorrect API URLs (e.g., api.imamdp.org) with correct production URL
-          if (imageUrl.includes('api.imamdp.org') || imageUrl.includes('api.imamportal.com')) {
-            const urlPath = imageUrl.replace(/^https?:\/\/[^\/]+/, '');
-            imageUrl = `${API_BASE_URL}${urlPath}`;
-            console.log(`📧 Replaced incorrect API URL with production URL: ${imageUrl}`);
-          }
-          
-          // Ensure the URL is absolute
+          // Ensure the URL is absolute and uses production domain
           if (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
             if (imageUrl.startsWith('/')) {
               imageUrl = `${API_BASE_URL}${imageUrl}`;
@@ -448,8 +470,27 @@ class EmailService {
             }
           }
           
+          // Final check: if URL still contains localhost or wrong domain, force replace
+          if (imageUrl.includes('localhost') || imageUrl.includes('127.0.0.1') || 
+              (imageUrl.includes('imamportal.com') && !imageUrl.startsWith('https://imamportal.com'))) {
+            const urlMatch = imageUrl.match(/https?:\/\/[^\/]+(\/.*)/);
+            const urlPath = urlMatch ? urlMatch[1] : '/api/emailTemplates/' + template.id + '/view-image';
+            imageUrl = `${API_BASE_URL}${urlPath}`;
+            console.log(`📧 Force replaced image URL to production: ${imageUrl}`);
+          }
+          
           htmlContent = htmlContent.replace(/\{\{background_image\}\}/g, imageUrl);
           htmlContent = htmlContent.replace(/\(\(background_image\)\)/g, imageUrl);
+          
+          // Also replace any localhost URLs that might be directly embedded in the HTML (safety net)
+          htmlContent = htmlContent.replace(
+            /https?:\/\/localhost:\d+\/api\/emailTemplates\/(\d+)\/view-image/g,
+            `${API_BASE_URL}/api/emailTemplates/$1/view-image`
+          );
+          htmlContent = htmlContent.replace(
+            /https?:\/\/127\.0\.0\.1:\d+\/api\/emailTemplates\/(\d+)\/view-image/g,
+            `${API_BASE_URL}/api/emailTemplates/$1/view-image`
+          );
         } else if (template.background_image && template.id) {
           // Use environment variable or detect production URL dynamically
           const API_BASE_URL = process.env.API_BASE_URL 
