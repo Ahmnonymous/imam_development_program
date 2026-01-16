@@ -1,4 +1,5 @@
 const jumuahKhutbahTopicSubmissionModel = require('../models/jumuahKhutbahTopicSubmissionModel');
+const { afterCreate } = require('../utils/modelHelpers');
 
 const jumuahKhutbahTopicSubmissionController = {
   getAll: async (req, res) => { 
@@ -29,10 +30,14 @@ const jumuahKhutbahTopicSubmissionController = {
       fields.created_by = username;
       fields.updated_by = username;
       
-      const data = await jumuahKhutbahTopicSubmissionModel.create(fields); 
+      const data = await jumuahKhutbahTopicSubmissionModel.create(fields);
+      
+      // Automatically trigger email based on template configuration
+      afterCreate('Jumuah_Khutbah_Topic', data);
+      
       res.status(201).json(data); 
     } catch(err){ 
-      res.status(500).json({error: "Error creating record in Jumuah_Khutbah_Topic_Submission: " + err.message}); 
+      res.status(500).json({error: "Error creating record in Jumuah_Khutbah_Topic: " + err.message}); 
     } 
   },
   
@@ -50,7 +55,7 @@ const jumuahKhutbahTopicSubmissionController = {
       }
       res.json(data); 
     } catch(err){ 
-      res.status(500).json({error: "Error updating record in Jumuah_Khutbah_Topic_Submission: " + err.message}); 
+      res.status(500).json({error: "Error updating record in Jumuah_Khutbah_Topic: " + err.message}); 
     } 
   },
   

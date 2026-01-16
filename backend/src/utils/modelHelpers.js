@@ -46,9 +46,32 @@ const scopeQuery = (
   return applyCenterFilter(query, {}, { skip: true });
 };
 
+/**
+ * Helper function for controllers to automatically trigger emails after create/update
+ * Usage: afterCreate(tableName, data) or afterUpdate(tableName, data, oldData)
+ * Note: Lazy require to avoid circular dependency (emailHook -> imamProfilesModel -> modelHelpers)
+ */
+function afterCreate(tableName, data) {
+  if (data && data.id) {
+    // Lazy require to avoid circular dependency
+    const { triggerEmailHook } = require("./emailHook");
+    triggerEmailHook(tableName, 'CREATE', data);
+  }
+}
+
+function afterUpdate(tableName, data, oldData = null) {
+  if (data && data.id) {
+    // Lazy require to avoid circular dependency
+    const { triggerEmailHook } = require("./emailHook");
+    triggerEmailHook(tableName, 'UPDATE', data, oldData);
+  }
+}
+
 module.exports = {
   buildInsertFragments,
   buildUpdateFragments,
   scopeQuery,
+  afterCreate,
+  afterUpdate,
 };
 

@@ -21,7 +21,7 @@ const imamRelationshipsController = {
     } 
   },
   
-  create: async (req, res) => { 
+  create: async (req, res) => {
     try {
       const fields = { ...req.body };
       
@@ -29,14 +29,25 @@ const imamRelationshipsController = {
       fields.created_by = username;
       fields.updated_by = username;
       
-      const data = await imamRelationshipsModel.create(fields); 
+      // Convert empty strings to null for nullable bigint fields
+      const bigintFields = ['Relationship_Type', 'Employment_Status', 'Gender', 'Highest_Education', 'Health_Condition'];
+      bigintFields.forEach(fieldName => {
+        if (fields[fieldName] === '' || fields[fieldName] === undefined) {
+          fields[fieldName] = null;
+        } else if (fields[fieldName] !== null && typeof fields[fieldName] === 'string') {
+          const parsed = parseInt(fields[fieldName], 10);
+          fields[fieldName] = isNaN(parsed) ? null : parsed;
+        }
+      });
+      
+      const data = await imamRelationshipsModel.create(fields);
       res.status(201).json(data); 
     } catch(err){ 
       res.status(500).json({error: err.message}); 
     } 
   },
   
-  update: async (req, res) => { 
+  update: async (req, res) => {
     try {
       const fields = { ...req.body };
       
@@ -44,7 +55,18 @@ const imamRelationshipsController = {
       fields.updated_by = username;
       delete fields.created_by;
       
-      const data = await imamRelationshipsModel.update(req.params.id, fields); 
+      // Convert empty strings to null for nullable bigint fields
+      const bigintFields = ['Relationship_Type', 'Employment_Status', 'Gender', 'Highest_Education', 'Health_Condition'];
+      bigintFields.forEach(fieldName => {
+        if (fields[fieldName] === '' || fields[fieldName] === undefined) {
+          fields[fieldName] = null;
+        } else if (fields[fieldName] !== null && typeof fields[fieldName] === 'string') {
+          const parsed = parseInt(fields[fieldName], 10);
+          fields[fieldName] = isNaN(parsed) ? null : parsed;
+        }
+      });
+      
+      const data = await imamRelationshipsModel.update(req.params.id, fields);
       if (!data) {
         return res.status(404).json({ error: "Not found" });
       }

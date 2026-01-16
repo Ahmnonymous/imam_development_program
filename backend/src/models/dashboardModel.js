@@ -17,7 +17,7 @@ const METRIC_DEFINITIONS = [
   {
     key: 'jumuahKhutbah',
     label: ' Jumuah Khutbah',
-    table: 'Jumuah_Khutbah_Topic_Submission',
+    table: 'Jumuah_Khutbah_Topic',
     alias: 'jk',
     // icon: 'bx-message',
   },
@@ -234,7 +234,7 @@ const dashboardModel = {
             COUNT(*)::INTEGER as total_imams,
             COUNT(CASE WHEN ip.status_id = (SELECT id FROM Status WHERE name = 'Approved' LIMIT 1) THEN 1 END)::INTEGER as approved_imams,
             COUNT(CASE WHEN ip.created_at >= DATE_TRUNC('month', CURRENT_DATE) THEN 1 END)::INTEGER as new_this_month,
-            (SELECT COUNT(*)::INTEGER FROM Jumuah_Khutbah_Topic_Submission jk WHERE jk.status_id = (SELECT id FROM Status WHERE name = 'Approved' LIMIT 1)) AS total_jumuah_khutbah,
+            (SELECT COUNT(*)::INTEGER FROM Jumuah_Khutbah_Topic jk WHERE jk.status_id = (SELECT id FROM Status WHERE name = 'Approved' LIMIT 1)) AS total_jumuah_khutbah,
             (SELECT COUNT(*)::INTEGER FROM Community_Engagement ce WHERE ce.status_id = (SELECT id FROM Status WHERE name = 'Approved' LIMIT 1)) AS total_community_engagement,
             (SELECT COUNT(*)::INTEGER FROM Medical_Reimbursement mr WHERE mr.status_id = (SELECT id FROM Status WHERE name = 'Approved' LIMIT 1)) AS total_medical_reimbursement
           FROM Imam_Profiles ip
@@ -281,7 +281,7 @@ const dashboardModel = {
             SELECT 
               date_trunc('month', jk.created_at) AS month_start,
               COUNT(*)::INTEGER AS value
-            FROM Jumuah_Khutbah_Topic_Submission jk
+            FROM Jumuah_Khutbah_Topic jk
             WHERE jk.created_at >= date_trunc('month', CURRENT_DATE) - INTERVAL '7 months'
             GROUP BY 1
           ) counts ON counts.month_start = months.month_start

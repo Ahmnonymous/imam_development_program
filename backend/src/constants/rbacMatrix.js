@@ -66,7 +66,7 @@ const MODULE_ROUTE_MAP = [
     prefixes: [
       "/api/imamprofiles",
       "/api/pearlsofwisdom",
-      "/api/jumuahkhutbahtopicsubmission",
+      "/api/jumuahkhutbahtopic",
       "/api/medicalreimbursement",
       "/api/communityengagement",
       "/api/nikahbonus",

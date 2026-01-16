@@ -60,10 +60,10 @@ const JumuahKhutbahTopicSubmissionTab = ({ imamProfileId, jumuahKhutbahTopicSubm
         updated_by: getAuditName(),
       };
       if (editItem) {
-        await axiosApi.put(`${API_BASE_URL}/jumuahKhutbahTopicSubmission/${editItem.id}`, payload);
+        await axiosApi.put(`${API_BASE_URL}/jumuahKhutbahTopic/${editItem.id}`, payload);
         showAlert("Khutbah topic updated successfully", "success");
       } else {
-        await axiosApi.post(`${API_BASE_URL}/jumuahKhutbahTopicSubmission`, payload);
+        await axiosApi.post(`${API_BASE_URL}/jumuahKhutbahTopic`, payload);
         showAlert("Khutbah topic created successfully", "success");
       }
       onUpdate();
@@ -81,7 +81,7 @@ const JumuahKhutbahTopicSubmissionTab = ({ imamProfileId, jumuahKhutbahTopicSubm
       type: "khutbah topic", 
       message: "This khutbah topic will be permanently removed from the system." 
     }, async () => {
-      await axiosApi.delete(`${API_BASE_URL}/jumuahKhutbahTopicSubmission/${editItem.id}`);
+      await axiosApi.delete(`${API_BASE_URL}/jumuahKhutbahTopic/${editItem.id}`);
       showAlert("Khutbah topic deleted successfully", "success");
       onUpdate();
       if (modalOpen) {
@@ -92,7 +92,7 @@ const JumuahKhutbahTopicSubmissionTab = ({ imamProfileId, jumuahKhutbahTopicSubm
 
   const handleApprove = async (item) => {
     try {
-      await axiosApi.put(`${API_BASE_URL}/jumuahKhutbahTopicSubmission/${item.id}`, {
+      await axiosApi.put(`${API_BASE_URL}/jumuahKhutbahTopic/${item.id}`, {
         status_id: 2,
         updated_by: getAuditName()
       });
@@ -105,7 +105,7 @@ const JumuahKhutbahTopicSubmissionTab = ({ imamProfileId, jumuahKhutbahTopicSubm
 
   const handleDecline = async (item) => {
     try {
-      await axiosApi.put(`${API_BASE_URL}/jumuahKhutbahTopicSubmission/${item.id}`, {
+      await axiosApi.put(`${API_BASE_URL}/jumuahKhutbahTopic/${item.id}`, {
         status_id: 3,
         updated_by: getAuditName()
       });

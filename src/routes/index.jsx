@@ -51,6 +51,7 @@ import Login from "../pages/Authentication/Login";
 import Logout from "../pages/Authentication/Logout";
 import Register from "../pages/Authentication/Register";
 import ForgetPwd from "../pages/Authentication/ForgetPassword";
+import ResetPassword from "../pages/Authentication/ResetPassword";
 import Employees from "../pages/Employees/Employees";
 import ImamProfilesManagement from "../pages/ImamProfiles/ImamProfilesManagement";
 import CreateImamProfile from "../pages/ImamProfiles/CreateImamProfile";
@@ -68,6 +69,7 @@ import Programs from "../pages/Lookups/Programs";
 import EmployeeDetails from "../pages/Lookups/EmployeeDetails";
 import EmployeeProfile from "../pages/Employees/EmployeeProfile";
 import PolicyAndProcedure from "../pages/Lookups/PolicyAndProcedure";
+import EmailTemplateSettings from "../pages/EmailTemplates/EmailTemplateSettings";
 
 // Policy Library
 import PolicyLibrary from "../pages/PolicyLibrary";
@@ -388,6 +390,9 @@ const authProtectedRoutes = [
   { path: "/lookups/Employees", component: <ProtectedRoute allowedRoles={[1, 2, 3]}><EmployeeDetails /></ProtectedRoute> }, // App Admin, HQ, and Org Admin
   { path: "/employees/profile/:id", component: <ProtectedRoute allowedRoles={[1, 2, 3]}><EmployeeProfile /></ProtectedRoute> },
   { path: "/lookups/:table", component: <ProtectedRoute allowedRoles={[1, 2, 3]}><LookupTableView /></ProtectedRoute> },
+  
+  // ✅ Email Template Settings - App Admin only
+  { path: "/email-templates", component: <ProtectedRoute allowedRoles={[1]}><EmailTemplateSettings /></ProtectedRoute> },
 
 
   // ✅ Reports - All roles (Org Executive & Caseworker scoped to own center)
@@ -398,7 +403,7 @@ const authProtectedRoutes = [
   { path: "/reports/continuous-professional-development", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><ContinuousProfessionalDevelopmentReport /></ProtectedRoute> },
   { path: "/reports/higher-education-request", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><HigherEducationRequestReport /></ProtectedRoute> },
   { path: "/reports/jumuah-audio-khutbah", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><JumuahAudioKhutbahReport /></ProtectedRoute> },
-  { path: "/reports/jumuah-khutbah-topic-submission", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><JumuahKhutbahTopicSubmissionReport /></ProtectedRoute> },
+  { path: "/reports/jumuah-khutbah-topic", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><JumuahKhutbahTopicSubmissionReport /></ProtectedRoute> },
   { path: "/reports/medical-reimbursement", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><MedicalReimbursementReport /></ProtectedRoute> },
   { path: "/reports/new-baby-bonus", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><NewBabyBonusReport /></ProtectedRoute> },
   { path: "/reports/new-muslim-bonus", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><NewMuslimBonusReport /></ProtectedRoute> },
@@ -420,6 +425,7 @@ const publicRoutes = [
   { path: "/logout", component: <Logout /> },
   { path: "/login", component: <Login /> },
   { path: "/forgot-password", component: <ForgetPwd /> },
+  { path: "/reset-password", component: <ResetPassword /> },
   { path: "/register", component: <Register /> },
 
   { path: "/pages-maintenance", component: <PagesMaintenance /> },

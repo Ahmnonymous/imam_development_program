@@ -308,7 +308,7 @@ const SidebarContent = (props) => {
                     </Link>
                   </li>
                   <li>
-                    <Link to="/reports/jumuah-khutbah-topic-submission">
+                    <Link to="/reports/jumuah-khutbah-topic">
                       <i className="bx bx-book"></i>
                       <span>{props.t("Jumuah Topics")}</span>
                     </Link>
@@ -378,6 +378,15 @@ const SidebarContent = (props) => {
                     <span>{props.t("Lookup Setup")}</span>
                   </Link>
                 </li>
+                {/* ✅ Email Template Settings - App Admin only */}
+                {userType === 1 && (
+                  <li>
+                    <Link to="/email-templates">
+                      <i className="bx bx-envelope"></i>
+                      <span>{props.t("Email Templates")}</span>
+                    </Link>
+                  </li>
+                )}
               </>
             )}
 

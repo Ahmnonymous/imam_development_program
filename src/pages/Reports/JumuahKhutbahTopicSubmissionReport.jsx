@@ -3,7 +3,7 @@ import { Container, Card, CardBody, Row, Col, Table, Spinner, Alert, Button, Inp
 import { Link } from 'react-router-dom';
 import axiosApi from '../../helpers/api_helper';
 import Breadcrumbs from '../../components/Common/Breadcrumb';
-import { GET_JUMUAH_KHUTBAH_TOPIC_SUBMISSION_REPORT } from '../../helpers/url_helper';
+import { GET_JUMUAH_KHUTBAH_TOPIC_REPORT } from '../../helpers/url_helper';
 
 const JumuahKhutbahTopicSubmissionReport = () => {
     const [data, setData] = useState([]);
@@ -24,7 +24,7 @@ const JumuahKhutbahTopicSubmissionReport = () => {
         try {
             setLoading(true);
             const token = localStorage.getItem('authToken');
-            const response = await axiosApi.get(GET_JUMUAH_KHUTBAH_TOPIC_SUBMISSION_REPORT, {
+            const response = await axiosApi.get(GET_JUMUAH_KHUTBAH_TOPIC_REPORT, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (response.data.success) {
@@ -104,7 +104,7 @@ const JumuahKhutbahTopicSubmissionReport = () => {
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
-        link.download = `jumuah_khutbah_topic_submission_report_${new Date().toISOString().split('T')[0]}.csv`;
+        link.download = `jumuah_khutbah_topic_report_${new Date().toISOString().split('T')[0]}.csv`;
         link.click();
     };
 

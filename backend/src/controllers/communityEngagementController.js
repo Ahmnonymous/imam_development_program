@@ -1,4 +1,5 @@
 const communityEngagementModel = require('../models/communityEngagementModel');
+const { afterCreate } = require('../utils/modelHelpers');
 const fs = require('fs').promises;
 
 const communityEngagementController = {
@@ -30,6 +31,15 @@ const communityEngagementController = {
       fields.created_by = username;
       fields.updated_by = username;
       
+      // Convert empty strings to null for nullable bigint fields
+      if (fields.engagement_type === '' || fields.engagement_type === undefined) {
+        fields.engagement_type = null;
+      } else if (fields.engagement_type !== null && typeof fields.engagement_type === 'string') {
+        // Parse string values to integers
+        const parsed = parseInt(fields.engagement_type, 10);
+        fields.engagement_type = isNaN(parsed) ? null : parsed;
+      }
+      
       if (req.files && req.files.Engagement_Image && req.files.Engagement_Image.length > 0) {
         const file = req.files.Engagement_Image[0];
         const buffer = await fs.readFile(file.path);
@@ -41,7 +51,11 @@ const communityEngagementController = {
         await fs.unlink(file.path);
       }
       
-      const data = await communityEngagementModel.create(fields); 
+      const data = await communityEngagementModel.create(fields);
+      
+      // Automatically trigger email based on template configuration
+      afterCreate('Community_Engagement', data);
+      
       res.status(201).json(data); 
     } catch(err){ 
       res.status(500).json({error: "Error creating record in Community_Engagement: " + err.message}); 
@@ -55,6 +69,15 @@ const communityEngagementController = {
       const username = req.user?.username || 'system';
       fields.updated_by = username;
       delete fields.created_by;
+      
+      // Convert empty strings to null for nullable bigint fields
+      if (fields.engagement_type === '' || fields.engagement_type === undefined) {
+        fields.engagement_type = null;
+      } else if (fields.engagement_type !== null && typeof fields.engagement_type === 'string') {
+        // Parse string values to integers
+        const parsed = parseInt(fields.engagement_type, 10);
+        fields.engagement_type = isNaN(parsed) ? null : parsed;
+      }
       
       // Remove file-related fields if no file is provided
       if (!req.files || !req.files.Engagement_Image || req.files.Engagement_Image.length === 0) {

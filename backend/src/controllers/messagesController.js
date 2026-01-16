@@ -1,5 +1,8 @@
 ﻿const messagesModel = require('../models/messagesModel');
 const conversationParticipantsModel = require('../models/conversationParticipantsModel');
+const conversationsModel = require('../models/conversationsModel');
+const { afterCreate } = require('../utils/modelHelpers');
+const pool = require('../config/db');
 const fs = require('fs').promises;
 
 const messagesController = {
@@ -141,6 +144,10 @@ const messagesController = {
           console.error('Error restoring conversation for participants:', restoreErr);
         }
       }
+      
+      // Automatically trigger email based on template configuration
+      // The hook will handle getting recipient emails and sending to all participants
+      afterCreate('Messages', data);
       
       res.status(201).json(data); 
     } catch(err){ 

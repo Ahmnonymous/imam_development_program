@@ -56,8 +56,8 @@ router.get('/higher-education-request', ReportsController.getHigherEducationRequ
 // Jumuah Audio Khutbah Report
 router.get('/jumuah-audio-khutbah', ReportsController.getJumuahAudioKhutbah.bind(ReportsController));
 
-// Jumuah Khutbah Topic Submission Report
-router.get('/jumuah-khutbah-topic-submission', ReportsController.getJumuahKhutbahTopicSubmission.bind(ReportsController));
+// Jumuah Khutbah Topic Report
+router.get('/jumuah-khutbah-topic', ReportsController.getJumuahKhutbahTopicSubmission.bind(ReportsController));
 
 // Medical Reimbursement Report
 router.get('/medical-reimbursement', ReportsController.getMedicalReimbursement.bind(ReportsController));

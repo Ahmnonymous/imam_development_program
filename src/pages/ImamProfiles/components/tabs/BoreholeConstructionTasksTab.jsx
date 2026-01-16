@@ -275,7 +275,8 @@ const BoreholeConstructionTasksTab = ({ boreholeId, boreholeConstructionTasks, l
 
       <Modal isOpen={modalOpen} toggle={toggleModal} centered size="lg" backdrop="static">
         <ModalHeader toggle={toggleModal}>
-          {editItem ? "Edit Borehole Construction Task" : "Add Borehole Construction Task"}
+          <i className={`bx ${editItem ? "bx-edit" : "bx-plus-circle"} me-2`}></i>
+          {editItem ? "Edit" : "Add"} Borehole Construction Task
         </ModalHeader>
         <Form onSubmit={handleSubmit(onSubmit)}>
           <ModalBody>

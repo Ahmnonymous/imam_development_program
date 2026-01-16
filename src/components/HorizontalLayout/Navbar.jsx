@@ -258,7 +258,7 @@ const Navbar = (props) => {
                         <i className="bx bx-microphone me-2"></i>
                         {props.t("Jumuah Audio Khutbah")}
                       </Link>
-                      <Link to="/reports/jumuah-khutbah-topic-submission" className="dropdown-item">
+                      <Link to="/reports/jumuah-khutbah-topic" className="dropdown-item">
                         <i className="bx bx-file-blank me-2"></i>
                         {props.t("Jumuah Khutbah Topics")}
                       </Link>

@@ -52,7 +52,7 @@ const TopicsModal = ({ isOpen, toggle, imamProfileId }) => {
         created_by: getAuditName(),
         updated_by: getAuditName(),
       };
-      await axiosApi.post(`${API_BASE_URL}/jumuahKhutbahTopicSubmission`, payload);
+      await axiosApi.post(`${API_BASE_URL}/jumuahKhutbahTopic`, payload);
       showAlert("Khutbah topic created successfully", "success");
       setTimeout(() => {
         toggle();

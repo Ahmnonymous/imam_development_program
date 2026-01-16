@@ -1,4 +1,5 @@
 const nikahBonusModel = require('../models/nikahBonusModel');
+const { afterCreate } = require('../utils/modelHelpers');
 const fs = require('fs').promises;
 
 const nikahBonusController = {
@@ -30,6 +31,14 @@ const nikahBonusController = {
       fields.created_by = username;
       fields.updated_by = username;
       
+      // Convert empty strings to null for nullable bigint fields
+      if (fields.is_first_nikah === '' || fields.is_first_nikah === undefined) {
+        fields.is_first_nikah = null;
+      } else if (fields.is_first_nikah !== null && typeof fields.is_first_nikah === 'string') {
+        const parsed = parseInt(fields.is_first_nikah, 10);
+        fields.is_first_nikah = isNaN(parsed) ? null : parsed;
+      }
+      
       if (req.files && req.files.Certificate && req.files.Certificate.length > 0) {
         const file = req.files.Certificate[0];
         const buffer = await fs.readFile(file.path);
@@ -52,7 +61,11 @@ const nikahBonusController = {
         await fs.unlink(file.path);
       }
       
-      const data = await nikahBonusModel.create(fields); 
+      const data = await nikahBonusModel.create(fields);
+      
+      // Automatically trigger email based on template configuration
+      afterCreate('Nikah_Bonus', data);
+      
       res.status(201).json(data); 
     } catch(err){ 
       res.status(500).json({error: "Error creating record in Nikah_Bonus: " + err.message}); 
@@ -66,6 +79,14 @@ const nikahBonusController = {
       const username = req.user?.username || 'system';
       fields.updated_by = username;
       delete fields.created_by;
+      
+      // Convert empty strings to null for nullable bigint fields
+      if (fields.is_first_nikah === '' || fields.is_first_nikah === undefined) {
+        fields.is_first_nikah = null;
+      } else if (fields.is_first_nikah !== null && typeof fields.is_first_nikah === 'string') {
+        const parsed = parseInt(fields.is_first_nikah, 10);
+        fields.is_first_nikah = isNaN(parsed) ? null : parsed;
+      }
       
       if (req.files && req.files.Certificate && req.files.Certificate.length > 0) {
         const file = req.files.Certificate[0];

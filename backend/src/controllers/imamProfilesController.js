@@ -1,4 +1,6 @@
 const imamProfilesModel = require('../models/imamProfilesModel');
+const { afterCreate, afterUpdate } = require('../utils/modelHelpers');
+const pool = require('../config/db');
 const fs = require('fs').promises;
 
 const imamProfilesController = {
@@ -72,7 +74,11 @@ const imamProfilesController = {
         await fs.unlink(file.path);
       }
       
-      const data = await imamProfilesModel.create(fields); 
+      const data = await imamProfilesModel.create(fields);
+      
+      // Automatically trigger email based on template configuration
+      afterCreate('Imam_Profiles', data);
+      
       res.status(201).json(data); 
     } catch(err){ 
       res.status(500).json({error: "Error creating record in Imam_Profiles: " + err.message}); 
@@ -110,10 +116,18 @@ const imamProfilesController = {
         }
       });
       
+      // Get old profile to check if status changed (needed for email hook)
+      const oldProfile = await imamProfilesModel.getById(req.params.id);
+      
       const data = await imamProfilesModel.update(req.params.id, fields); 
       if (!data) {
         return res.status(404).json({error: 'Not found'}); 
       }
+      
+      // Automatically trigger email based on template configuration
+      // The hook will detect status_id changes and use the appropriate template
+      afterUpdate('Imam_Profiles', data, oldProfile);
+      
       res.json(data); 
     } catch(err){ 
       res.status(500).json({error: "Error updating record in Imam_Profiles: " + err.message}); 

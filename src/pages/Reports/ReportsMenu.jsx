@@ -181,11 +181,11 @@ const ReportsMenu = () => {
                     color: 'info'
                 },
                 {
-                    id: 'jumuah-khutbah-topic-submission',
-                    title: 'Jumuah Khutbah Topic Submission',
-                    description: 'Jumuah khutbah topic submissions',
+                    id: 'jumuah-khutbah-topic',
+                    title: 'Jumuah Khutbah Topic',
+                    description: 'Jumuah khutbah topics',
                     icon: 'bx bx-file-blank',
-                    path: '/reports/jumuah-khutbah-topic-submission',
+                    path: '/reports/jumuah-khutbah-topic',
                     color: 'secondary'
                 },
                 {

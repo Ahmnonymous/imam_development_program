@@ -23,6 +23,7 @@ const ImamProfilesManagement = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [alert, setAlert] = useState(null);
+  const [activeTab, setActiveTab] = useState("all");
 
   // Detail data states - ALL FROM IMAM TABLES
   const [pearlsOfWisdom, setPearlsOfWisdom] = useState([]);
@@ -296,7 +297,7 @@ const ImamProfilesManagement = () => {
         ticketsRes,
       ] = await Promise.all([
         axiosApi.get(`${API_BASE_URL}/pearlsOfWisdom?imam_profile_id=${imamProfileId}`),
-        axiosApi.get(`${API_BASE_URL}/jumuahKhutbahTopicSubmission?imam_profile_id=${imamProfileId}`),
+        axiosApi.get(`${API_BASE_URL}/jumuahKhutbahTopic?imam_profile_id=${imamProfileId}`),
         axiosApi.get(`${API_BASE_URL}/nikahBonus?imam_profile_id=${imamProfileId}`),
         axiosApi.get(`${API_BASE_URL}/communityEngagement?imam_profile_id=${imamProfileId}`),
         axiosApi.get(`${API_BASE_URL}/medicalReimbursement?imam_profile_id=${imamProfileId}`),
@@ -415,16 +416,44 @@ const ImamProfilesManagement = () => {
   };
 
   const handleImamProfileUpdate = useCallback(async () => {
+    // Preserve the selected profile ID before refreshing
+    const preservedProfileId = selectedImamProfile?.id;
+    
     if (isImamUser) {
       // For Imam User, refresh their own profile
       await fetchMyProfile();
     } else {
       // For Admin and others, refresh all profiles
-      fetchImamProfiles();
+      try {
+        setLoading(true);
+        const response = await axiosApi.get(`${API_BASE_URL}/imamProfiles`);
+        const updatedProfiles = response.data || [];
+        setImamProfiles(updatedProfiles);
+        
+        // Restore the previously selected profile if it still exists
+        if (preservedProfileId && updatedProfiles.length > 0) {
+          const restoredProfile = updatedProfiles.find(p => p.id === preservedProfileId);
+          if (restoredProfile) {
+            setSelectedImamProfile(restoredProfile);
+          } else if (updatedProfiles.length > 0) {
+            // If the profile was deleted, select the first one
+            setSelectedImamProfile(updatedProfiles[0]);
+          }
+        } else if (updatedProfiles.length > 0) {
+          setSelectedImamProfile(updatedProfiles[0]);
+        }
+      } catch (error) {
+        console.error("Error fetching imam profiles:", error);
+        showAlert("Failed to fetch imam profiles", "danger");
+      } finally {
+        setLoading(false);
+      }
     }
+    
     // Refresh detail data if profile is selected
-    if (selectedImamProfile) {
-      fetchImamProfileDetails(selectedImamProfile.id);
+    const currentSelectedId = preservedProfileId || selectedImamProfile?.id;
+    if (currentSelectedId) {
+      fetchImamProfileDetails(currentSelectedId);
     }
   }, [selectedImamProfile, isImamUser]);
 
@@ -516,7 +545,6 @@ const ImamProfilesManagement = () => {
                 {/* Detail Tabs - Hide for Imam User if status is pending (1), show if approved (2) */}
                 {(!isImamUser || Number(selectedImamProfile.status_id) === 2) && (
                   <DetailTabs
-                    key={selectedImamProfile.id}
                     imamProfileId={selectedImamProfile.id}
                     imamProfile={selectedImamProfile}
                     pearlsOfWisdom={pearlsOfWisdom}
@@ -541,6 +569,8 @@ const ImamProfilesManagement = () => {
                     lookupData={lookupData}
                     onUpdate={handleDetailUpdate}
                     showAlert={showAlert}
+                    activeTab={activeTab}
+                    onTabChange={setActiveTab}
                   />
                 )}
               </>

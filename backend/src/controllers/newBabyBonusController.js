@@ -1,4 +1,5 @@
 const newBabyBonusModel = require('../models/newBabyBonusModel');
+const { afterCreate } = require('../utils/modelHelpers');
 const fs = require('fs').promises;
 
 const newBabyBonusController = {
@@ -30,6 +31,14 @@ const newBabyBonusController = {
       fields.created_by = username;
       fields.updated_by = username;
       
+      // Convert empty strings to null for nullable bigint fields
+      if (fields.baby_gender === '' || fields.baby_gender === undefined) {
+        fields.baby_gender = null;
+      } else if (fields.baby_gender !== null && typeof fields.baby_gender === 'string') {
+        const parsed = parseInt(fields.baby_gender, 10);
+        fields.baby_gender = isNaN(parsed) ? null : parsed;
+      }
+      
       if (req.files && req.files.Baby_Image && req.files.Baby_Image.length > 0) {
         const file = req.files.Baby_Image[0];
         const buffer = await fs.readFile(file.path);
@@ -52,7 +61,11 @@ const newBabyBonusController = {
         await fs.unlink(file.path);
       }
       
-      const data = await newBabyBonusModel.create(fields); 
+      const data = await newBabyBonusModel.create(fields);
+      
+      // Automatically trigger email based on template configuration
+      afterCreate('New_Baby_Bonus', data);
+      
       res.status(201).json(data); 
     } catch(err){ 
       res.status(500).json({error: "Error creating record in New_Baby_Bonus: " + err.message}); 
@@ -66,6 +79,14 @@ const newBabyBonusController = {
       const username = req.user?.username || 'system';
       fields.updated_by = username;
       delete fields.created_by;
+      
+      // Convert empty strings to null for nullable bigint fields
+      if (fields.baby_gender === '' || fields.baby_gender === undefined) {
+        fields.baby_gender = null;
+      } else if (fields.baby_gender !== null && typeof fields.baby_gender === 'string') {
+        const parsed = parseInt(fields.baby_gender, 10);
+        fields.baby_gender = isNaN(parsed) ? null : parsed;
+      }
       
       if (req.files && req.files.Baby_Image && req.files.Baby_Image.length > 0) {
         const file = req.files.Baby_Image[0];

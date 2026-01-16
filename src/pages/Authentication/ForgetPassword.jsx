@@ -13,18 +13,15 @@ import {
   Form,
 } from "reactstrap";
 
-//redux
-import { useSelector, useDispatch } from "react-redux";
-import { createSelector } from "reselect";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import withRouter from "../../components/Common/withRouter";
+import axiosApi from "../../helpers/api_helper";
+import { API_BASE_URL } from "../../helpers/url_helper";
 
 // Formik Validation
 import * as Yup from "yup";
 import { useFormik } from "formik";
-
-// action
-import { userForgetPassword } from "/src/store/actions";
+import { useState } from "react";
 
 // import images
 import profile from "../../assets/images/profile-img.png";
@@ -35,7 +32,11 @@ const ForgetPasswordPage = (props) => {
   //meta title
   document.title =
     "Forget Password | IDP - Admin & Dashboard";
-  const dispatch = useDispatch();
+  
+  const [error, setError] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const validation = useFormik({
     // enableReinitialize : use this flag when initial values needs to be changed
@@ -45,25 +46,33 @@ const ForgetPasswordPage = (props) => {
       email: "",
     },
     validationSchema: Yup.object({
-      email: Yup.string().required("Please Enter Your Email"),
+      email: Yup.string().email("Please enter a valid email").required("Please Enter Your Email"),
     }),
-    onSubmit: (values) => {
-      dispatch(userForgetPassword(values, props.history));
+    onSubmit: async (values) => {
+      try {
+        setLoading(true);
+        setError("");
+        setSuccessMsg("");
+        
+        const response = await axiosApi.post(`${API_BASE_URL}/auth/password-reset/request`, {
+          email: values.email
+        });
+        
+        setSuccessMsg(response.data.msg || "If an account with that email exists, a password reset link has been sent.");
+        validation.resetForm();
+      } catch (err) {
+        const errorMessage = err.response?.data?.msg || err.message || "An error occurred. Please try again.";
+        if (err.response?.status === 429) {
+          setError(errorMessage);
+        } else {
+          // For security, show success message even on error (don't reveal if email exists)
+          setSuccessMsg("If an account with that email exists, a password reset link has been sent.");
+        }
+      } finally {
+        setLoading(false);
+      }
     },
   });
-
-  const ForgotPasswordProperties = createSelector(
-    (state) => state.ForgetPassword,
-    (forgetPassword) => ({
-      forgetError: forgetPassword.forgetError,
-      forgetSuccessMsg: forgetPassword.forgetSuccessMsg,
-    })
-  );
-
-  const {
-    forgetError,
-    forgetSuccessMsg
-  } = useSelector(ForgotPasswordProperties);
 
   return (
     <React.Fragment>
@@ -118,14 +127,14 @@ const ForgetPasswordPage = (props) => {
                     </Link>
                   </div>
                   <div className="p-2">
-                    {forgetError && forgetError ? (
+                    {error ? (
                       <Alert color="danger" style={{ marginTop: "13px" }}>
-                        {forgetError}
+                        {error}
                       </Alert>
                     ) : null}
-                    {forgetSuccessMsg ? (
+                    {successMsg ? (
                       <Alert color="success" style={{ marginTop: "13px" }}>
-                        {forgetSuccessMsg}
+                        {successMsg}
                       </Alert>
                     ) : null}
 
@@ -164,8 +173,9 @@ const ForgetPasswordPage = (props) => {
                           <button
                             className="btn btn-primary w-md "
                             type="submit"
+                            disabled={loading}
                           >
-                            Reset
+                            {loading ? "Sending..." : "Reset"}
                           </button>
                         </Col>
                       </Row>
@@ -176,7 +186,7 @@ const ForgetPasswordPage = (props) => {
               <div className="mt-5 text-center">
                 <p>
                   Go back to{" "}
-                  <Link to="login" className="font-weight-medium text-primary">
+                  <Link to="/login" className="font-weight-medium text-primary">
                     Login
                   </Link>{" "}
                 </p>

@@ -1,4 +1,5 @@
 const jumuahAudioKhutbahModel = require('../models/jumuahAudioKhutbahModel');
+const { afterCreate } = require('../utils/modelHelpers');
 const fs = require('fs').promises;
 
 const jumuahAudioKhutbahController = {
@@ -30,6 +31,14 @@ const jumuahAudioKhutbahController = {
       fields.created_by = username;
       fields.updated_by = username;
       
+      // Convert empty strings to null for nullable bigint fields
+      if (fields.language === '' || fields.language === undefined) {
+        fields.language = null;
+      } else if (fields.language !== null && typeof fields.language === 'string') {
+        const parsed = parseInt(fields.language, 10);
+        fields.language = isNaN(parsed) ? null : parsed;
+      }
+      
       if (req.files && req.files.Audio && req.files.Audio.length > 0) {
         const file = req.files.Audio[0];
         const buffer = await fs.readFile(file.path);
@@ -41,7 +50,11 @@ const jumuahAudioKhutbahController = {
         await fs.unlink(file.path);
       }
       
-      const data = await jumuahAudioKhutbahModel.create(fields); 
+      const data = await jumuahAudioKhutbahModel.create(fields);
+      
+      // Automatically trigger email based on template configuration
+      afterCreate('Jumuah_Audio_Khutbah', data);
+      
       res.status(201).json(data); 
     } catch(err){ 
       res.status(500).json({error: "Error creating record in Jumuah_Audio_Khutbah: " + err.message}); 
@@ -55,6 +68,14 @@ const jumuahAudioKhutbahController = {
       const username = req.user?.username || 'system';
       fields.updated_by = username;
       delete fields.created_by;
+      
+      // Convert empty strings to null for nullable bigint fields
+      if (fields.language === '' || fields.language === undefined) {
+        fields.language = null;
+      } else if (fields.language !== null && typeof fields.language === 'string') {
+        const parsed = parseInt(fields.language, 10);
+        fields.language = isNaN(parsed) ? null : parsed;
+      }
       
       if (req.files && req.files.Audio && req.files.Audio.length > 0) {
         const file = req.files.Audio[0];

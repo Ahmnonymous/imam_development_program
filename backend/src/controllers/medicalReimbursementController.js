@@ -1,4 +1,5 @@
 const medicalReimbursementModel = require('../models/medicalReimbursementModel');
+const { afterCreate } = require('../utils/modelHelpers');
 const fs = require('fs').promises;
 
 const medicalReimbursementController = {
@@ -30,6 +31,28 @@ const medicalReimbursementController = {
       fields.created_by = username;
       fields.updated_by = username;
       
+      // Convert empty strings to null for nullable bigint fields
+      if (fields.relationship_type === '' || fields.relationship_type === undefined) {
+        fields.relationship_type = null;
+      } else if (fields.relationship_type !== null && typeof fields.relationship_type === 'string') {
+        const parsed = parseInt(fields.relationship_type, 10);
+        fields.relationship_type = isNaN(parsed) ? null : parsed;
+      }
+      
+      if (fields.visit_type === '' || fields.visit_type === undefined) {
+        fields.visit_type = null;
+      } else if (fields.visit_type !== null && typeof fields.visit_type === 'string') {
+        const parsed = parseInt(fields.visit_type, 10);
+        fields.visit_type = isNaN(parsed) ? null : parsed;
+      }
+      
+      if (fields.service_provider === '' || fields.service_provider === undefined) {
+        fields.service_provider = null;
+      } else if (fields.service_provider !== null && typeof fields.service_provider === 'string') {
+        const parsed = parseInt(fields.service_provider, 10);
+        fields.service_provider = isNaN(parsed) ? null : parsed;
+      }
+      
       if (req.files && req.files.Receipt && req.files.Receipt.length > 0) {
         const file = req.files.Receipt[0];
         const buffer = await fs.readFile(file.path);
@@ -52,7 +75,11 @@ const medicalReimbursementController = {
         await fs.unlink(file.path);
       }
       
-      const data = await medicalReimbursementModel.create(fields); 
+      const data = await medicalReimbursementModel.create(fields);
+      
+      // Automatically trigger email based on template configuration
+      afterCreate('Medical_Reimbursement', data);
+      
       res.status(201).json(data); 
     } catch(err){ 
       res.status(500).json({error: "Error creating record in Medical_Reimbursement: " + err.message}); 
@@ -66,6 +93,28 @@ const medicalReimbursementController = {
       const username = req.user?.username || 'system';
       fields.updated_by = username;
       delete fields.created_by;
+      
+      // Convert empty strings to null for nullable bigint fields
+      if (fields.relationship_type === '' || fields.relationship_type === undefined) {
+        fields.relationship_type = null;
+      } else if (fields.relationship_type !== null && typeof fields.relationship_type === 'string') {
+        const parsed = parseInt(fields.relationship_type, 10);
+        fields.relationship_type = isNaN(parsed) ? null : parsed;
+      }
+      
+      if (fields.visit_type === '' || fields.visit_type === undefined) {
+        fields.visit_type = null;
+      } else if (fields.visit_type !== null && typeof fields.visit_type === 'string') {
+        const parsed = parseInt(fields.visit_type, 10);
+        fields.visit_type = isNaN(parsed) ? null : parsed;
+      }
+      
+      if (fields.service_provider === '' || fields.service_provider === undefined) {
+        fields.service_provider = null;
+      } else if (fields.service_provider !== null && typeof fields.service_provider === 'string') {
+        const parsed = parseInt(fields.service_provider, 10);
+        fields.service_provider = isNaN(parsed) ? null : parsed;
+      }
       
       // Remove file-related fields if no file is provided
       if (!req.files || !req.files.Receipt || req.files.Receipt.length === 0) {

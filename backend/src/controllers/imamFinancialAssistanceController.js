@@ -1,4 +1,5 @@
 const imamFinancialAssistanceModel = require('../models/imamFinancialAssistanceModel');
+const { afterCreate } = require('../utils/modelHelpers');
 
 const imamFinancialAssistanceController = {
   getAll: async (req, res) => { 
@@ -29,7 +30,11 @@ const imamFinancialAssistanceController = {
       fields.created_by = username;
       fields.updated_by = username;
       
-      const data = await imamFinancialAssistanceModel.create(fields); 
+      const data = await imamFinancialAssistanceModel.create(fields);
+      
+      // Automatically trigger email based on template configuration
+      afterCreate('imam_financial_assistance', data);
+      
       res.status(201).json(data); 
     } catch(err){ 
       res.status(500).json({error: "Error creating record in Imam_Financial_Assistance: " + err.message}); 

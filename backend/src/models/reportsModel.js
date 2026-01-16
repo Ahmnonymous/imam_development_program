@@ -480,7 +480,7 @@ class ReportsModel {
                     s.name AS suburb_name,
                     l.name AS language_name,
                     st.name AS status_name
-                FROM Jumuah_Khutbah_Topic_Submission jkts
+                FROM Jumuah_Khutbah_Topic jkts
                 INNER JOIN Imam_Profiles ip ON jkts.imam_profile_id = ip.id
                 LEFT JOIN Suburb s ON jkts.town = s.id
                 LEFT JOIN Language l ON jkts.language = l.id

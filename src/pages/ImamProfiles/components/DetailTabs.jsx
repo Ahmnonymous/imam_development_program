@@ -48,9 +48,10 @@ const DetailTabs = ({
   lookupData,
   onUpdate,
   showAlert,
+  activeTab = "all",
+  onTabChange,
 }) => {
   const { isOrgExecutive } = useRole();
-  const [activeTab, setActiveTab] = useState("all");
 
   if (!imamProfileId) {
     return null;
@@ -58,7 +59,9 @@ const DetailTabs = ({
 
   const toggleTab = (tab) => {
     if (activeTab !== tab) {
-      setActiveTab(tab);
+      if (onTabChange) {
+        onTabChange(tab);
+      }
     }
   };
 

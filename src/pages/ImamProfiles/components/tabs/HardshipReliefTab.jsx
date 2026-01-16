@@ -273,7 +273,8 @@ const HardshipReliefTab = ({ imamProfileId, hardshipRelief, lookupData, onUpdate
 
       <Modal isOpen={modalOpen} toggle={toggleModal} centered size="lg" backdrop="static">
         <ModalHeader toggle={toggleModal}>
-          {editItem ? "Edit Hardship Relief" : "Add Hardship Relief"}
+          <i className={`bx ${editItem ? "bx-edit" : "bx-plus-circle"} me-2`}></i>
+          {editItem ? "Edit" : "Add"} Hardship Relief
         </ModalHeader>
         <Form onSubmit={handleSubmit(onSubmit)}>
           <ModalBody>
@@ -460,18 +461,33 @@ const HardshipReliefTab = ({ imamProfileId, hardshipRelief, lookupData, onUpdate
               <Label check>Acknowledge <span className="text-danger">*</span></Label>
             </FormGroup>
           </ModalBody>
-          <ModalFooter>
-            {editItem && (
-              <Button color="danger" onClick={handleDelete} disabled={isSubmitting}>
-                <i className="bx bx-trash me-1"></i> Delete
+          <ModalFooter className="d-flex justify-content-between">
+            <div>
+              {editItem && !isOrgExecutive && (
+                <Button color="danger" onClick={handleDelete} type="button" disabled={isSubmitting}>
+                  <i className="bx bx-trash me-1"></i> Delete
+                </Button>
+              )}
+            </div>
+            <div>
+              <Button color="light" onClick={toggleModal} disabled={isSubmitting} className="me-2">
+                <i className="bx bx-x me-1"></i> Cancel
               </Button>
-            )}
-            <Button color="secondary" onClick={toggleModal} disabled={isSubmitting}>
-              Cancel
-            </Button>
-            <Button color="primary" type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Saving..." : editItem ? "Update" : "Create"}
-            </Button>
+              {!isOrgExecutive && (
+                <Button color="success" type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" role="status" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <i className="bx bx-save me-1"></i> Save
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
           </ModalFooter>
         </Form>
       </Modal>

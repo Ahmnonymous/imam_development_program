@@ -66,6 +66,7 @@ const higherEducationRequestRoutes = require("./routes/higherEducationRequestRou
 const boreholeConstructionTasksRoutes = require("./routes/boreholeConstructionTasksRoutes");
 const boreholeRepairsMatrixRoutes = require("./routes/boreholeRepairsMatrixRoutes");
 const ticketsRoutes = require("./routes/ticketsRoutes");
+const emailTemplateRoutes = require("./routes/emailTemplateRoutes");
 
 // ===========================
 // 📦 ROUTE REGISTRATION
@@ -110,7 +111,7 @@ app.use("/api/dashboard", dashboardRoutes);
 
 // 🔹 Imam Management
 app.use("/api/imamProfiles", imamProfilesRoutes);
-app.use("/api/jumuahKhutbahTopicSubmission", jumuahKhutbahTopicSubmissionRoutes);
+app.use("/api/jumuahKhutbahTopic", jumuahKhutbahTopicSubmissionRoutes);
 app.use("/api/jumuahAudioKhutbah", jumuahAudioKhutbahRoutes);
 app.use("/api/pearlsOfWisdom", pearlsOfWisdomRoutes);
 app.use("/api/medicalReimbursement", medicalReimbursementRoutes);
@@ -129,6 +130,7 @@ app.use("/api/higherEducationRequest", higherEducationRequestRoutes);
 app.use("/api/boreholeConstructionTasks", boreholeConstructionTasksRoutes);
 app.use("/api/boreholeRepairsMatrix", boreholeRepairsMatrixRoutes);
 app.use("/api/tickets", ticketsRoutes);
+app.use("/api/emailTemplates", emailTemplateRoutes);
 
 // ✅ Export app for testing
 module.exports = app;

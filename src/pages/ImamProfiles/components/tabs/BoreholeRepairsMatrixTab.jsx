@@ -315,7 +315,8 @@ const BoreholeRepairsMatrixTab = ({ boreholeId, boreholeRepairsMatrix, lookupDat
 
       <Modal isOpen={modalOpen} toggle={toggleModal} centered size="lg" backdrop="static">
         <ModalHeader toggle={toggleModal}>
-          {editItem ? "Edit Borehole Repairs Matrix" : "Add Borehole Repairs Matrix"}
+          <i className={`bx ${editItem ? "bx-edit" : "bx-plus-circle"} me-2`}></i>
+          {editItem ? "Edit" : "Add"} Borehole Repairs Matrix
         </ModalHeader>
         <Form onSubmit={handleSubmit(onSubmit)}>
           <ModalBody>

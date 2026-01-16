@@ -404,6 +404,24 @@ CREATE TRIGGER Employee_password_hash
     BEFORE INSERT OR UPDATE ON Employee
     FOR EACH ROW EXECUTE FUNCTION hash_employee_password();
 
+-- Password Reset Tokens Table
+-- Stores temporary tokens for password reset functionality
+CREATE TABLE IF NOT EXISTS Password_Reset_Tokens (
+    ID BIGSERIAL PRIMARY KEY,
+    email VARCHAR(255) NOT NULL,
+    token VARCHAR(255) NOT NULL UNIQUE,
+    employee_id BIGINT,
+    expires_at TIMESTAMPTZ NOT NULL,
+    used BOOLEAN DEFAULT false,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT fk_employee_reset FOREIGN KEY (employee_id) REFERENCES Employee(ID) ON DELETE CASCADE
+);
+
+-- Create index on token for faster lookups
+CREATE INDEX IF NOT EXISTS idx_password_reset_token ON Password_Reset_Tokens(token);
+CREATE INDEX IF NOT EXISTS idx_password_reset_email ON Password_Reset_Tokens(email);
+CREATE INDEX IF NOT EXISTS idx_password_reset_expires ON Password_Reset_Tokens(expires_at);
+
 CREATE TABLE Employee_Appraisal (
     ID SERIAL PRIMARY KEY,
     Employee_ID BIGINT NOT NULL,
@@ -1322,7 +1340,7 @@ CREATE TABLE IF NOT EXISTS Imam_Profiles (
 -- ============================================================
 
 -- Jumuah Khutbah Topic Submission
-CREATE TABLE IF NOT EXISTS Jumuah_Khutbah_Topic_Submission (
+CREATE TABLE IF NOT EXISTS Jumuah_Khutbah_Topic (
     ID BIGSERIAL PRIMARY KEY,
     imam_profile_id BIGINT NOT NULL,
     topic VARCHAR(500) NOT NULL,
@@ -2171,8 +2189,8 @@ BEGIN
         CREATE INDEX IF NOT EXISTS idx_imam_profiles_suburb_id ON Imam_Profiles(suburb_id);
     END IF;
     
-    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'Jumuah_Khutbah_Topic_Submission' AND table_schema = current_schema()) THEN
-        CREATE INDEX IF NOT EXISTS idx_jumuah_imam ON Jumuah_Khutbah_Topic_Submission(imam_profile_id);
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'Jumuah_Khutbah_Topic' AND table_schema = current_schema()) THEN
+        CREATE INDEX IF NOT EXISTS idx_jumuah_imam ON Jumuah_Khutbah_Topic(imam_profile_id);
     END IF;
     
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'Pearls_Of_Wisdom' AND table_schema = current_schema()) THEN
@@ -2273,11 +2291,11 @@ BEGIN
     -- Drop center_id from child tables
     IF EXISTS (
         SELECT 1 FROM information_schema.table_constraints 
-        WHERE table_name = 'Jumuah_Khutbah_Topic_Submission' 
+        WHERE table_name = 'Jumuah_Khutbah_Topic' 
         AND constraint_name = 'fk_jumuah_center_id'
         AND table_schema = current_schema()
     ) THEN
-        ALTER TABLE Jumuah_Khutbah_Topic_Submission DROP CONSTRAINT fk_jumuah_center_id;
+        ALTER TABLE Jumuah_Khutbah_Topic DROP CONSTRAINT fk_jumuah_center_id;
         RAISE NOTICE 'Dropped fk_jumuah_center_id constraint';
     END IF;
 
@@ -2374,12 +2392,12 @@ BEGIN
 
     IF EXISTS (
         SELECT 1 FROM information_schema.columns 
-        WHERE table_name = 'Jumuah_Khutbah_Topic_Submission' 
+        WHERE table_name = 'Jumuah_Khutbah_Topic' 
         AND column_name = 'center_id'
         AND table_schema = current_schema()
     ) THEN
-        ALTER TABLE Jumuah_Khutbah_Topic_Submission DROP COLUMN center_id;
-        RAISE NOTICE 'Dropped center_id from Jumuah_Khutbah_Topic_Submission';
+        ALTER TABLE Jumuah_Khutbah_Topic DROP COLUMN center_id;
+        RAISE NOTICE 'Dropped center_id from Jumuah_Khutbah_Topic';
     END IF;
 
     IF EXISTS (
@@ -4048,7 +4066,7 @@ SELECT
 WHERE NOT EXISTS (SELECT 1 FROM Imam_Profiles WHERE employee_id = (SELECT ID FROM Employee WHERE Username = 'imam3' LIMIT 1));
 
 -- Insert Child Table Records: Jumuah Khutbah Topic Submission
-INSERT INTO Jumuah_Khutbah_Topic_Submission (
+INSERT INTO Jumuah_Khutbah_Topic (
     imam_profile_id, topic, masjid_name, town, attendance_count, language, acknowledge, status_id, comment, Created_By, Updated_By
 )
 SELECT 
@@ -4063,9 +4081,9 @@ SELECT
     'Excellent khutbah, well received by the community',
     'system', 'system'
 WHERE EXISTS (SELECT 1 FROM Imam_Profiles WHERE File_Number = 'IM-001')
-AND NOT EXISTS (SELECT 1 FROM Jumuah_Khutbah_Topic_Submission WHERE imam_profile_id = (SELECT ID FROM Imam_Profiles WHERE File_Number = 'IM-001' LIMIT 1) AND topic = 'The Importance of Unity in the Muslim Community');
+AND NOT EXISTS (SELECT 1 FROM Jumuah_Khutbah_Topic WHERE imam_profile_id = (SELECT ID FROM Imam_Profiles WHERE File_Number = 'IM-001' LIMIT 1) AND topic = 'The Importance of Unity in the Muslim Community');
 
-INSERT INTO Jumuah_Khutbah_Topic_Submission (
+INSERT INTO Jumuah_Khutbah_Topic (
     imam_profile_id, topic, masjid_name, town, attendance_count, language, acknowledge, status_id, comment, Created_By, Updated_By
 )
 SELECT 
@@ -4080,7 +4098,7 @@ SELECT
     'Very inspiring message',
     'system', 'system'
 WHERE EXISTS (SELECT 1 FROM Imam_Profiles WHERE File_Number = 'IM-002')
-AND NOT EXISTS (SELECT 1 FROM Jumuah_Khutbah_Topic_Submission WHERE imam_profile_id = (SELECT ID FROM Imam_Profiles WHERE File_Number = 'IM-002' LIMIT 1) AND topic = 'Patience and Perseverance in Times of Difficulty');
+AND NOT EXISTS (SELECT 1 FROM Jumuah_Khutbah_Topic WHERE imam_profile_id = (SELECT ID FROM Imam_Profiles WHERE File_Number = 'IM-002' LIMIT 1) AND topic = 'Patience and Perseverance in Times of Difficulty');
 
 -- Insert Child Table Records: Pearls of Wisdom
 INSERT INTO Pearls_Of_Wisdom (
@@ -4273,3 +4291,406 @@ SELECT
 WHERE EXISTS (SELECT 1 FROM Imam_Profiles WHERE File_Number = 'IM-001')
 AND NOT EXISTS (SELECT 1 FROM Imam_Relationships WHERE imam_profile_id = (SELECT ID FROM Imam_Profiles WHERE File_Number = 'IM-001' LIMIT 1) AND Name = 'Fatima' AND Surname = 'Hassan');
 
+-- ============================================================
+-- EMAIL TEMPLATES SYSTEM
+-- ============================================================
+
+-- Email Templates Table
+CREATE TABLE IF NOT EXISTS Email_Templates (
+    ID BIGSERIAL PRIMARY KEY,
+    template_name VARCHAR(255) NOT NULL UNIQUE,
+    template_type VARCHAR(100), -- Deprecated: now using email_triggers instead
+    subject VARCHAR(500) NOT NULL,
+    html_content TEXT NOT NULL,
+    background_image BYTEA,
+    background_image_filename VARCHAR(255),
+    background_image_mime VARCHAR(255),
+    background_image_size INT,
+    background_image_updated_at TIMESTAMPTZ,
+    background_image_show_link TEXT,
+    background_color VARCHAR(50),
+    text_color VARCHAR(50),
+    button_color VARCHAR(50),
+    button_text_color VARCHAR(50),
+    image_position VARCHAR(50) DEFAULT 'center', -- 'top', 'center', 'bottom'
+    text_alignment VARCHAR(50) DEFAULT 'left', -- 'left', 'center', 'right'
+    available_variables TEXT, -- JSON array of available variables like ["{{imam_name}}", "((submission_date))"]
+    recipient_type VARCHAR(50) NOT NULL DEFAULT 'imam', -- 'imam', 'admin', 'both'
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    login_url TEXT,
+    email_triggers TEXT, -- JSON array of email triggers like [{"table_name": "Jumuah_Khutbah_Topic", "action": "CREATE"}]
+    Created_By VARCHAR(255),
+    Created_At TIMESTAMPTZ NOT NULL DEFAULT now(),
+    Updated_By VARCHAR(255),
+    Updated_At TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Migration: Add email_triggers column and make template_type nullable
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'Email_Templates' AND table_schema = current_schema()) THEN
+        -- Add email_triggers column if it doesn't exist
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Email_Templates' AND column_name = 'email_triggers' AND table_schema = current_schema()) THEN
+            ALTER TABLE Email_Templates ADD COLUMN email_triggers TEXT;
+            RAISE NOTICE 'Added email_triggers column to Email_Templates';
+        END IF;
+        
+        -- Make template_type nullable if it's currently NOT NULL
+        IF EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name = 'Email_Templates' 
+                   AND column_name = 'template_type' 
+                   AND is_nullable = 'NO'
+                   AND table_schema = current_schema()) THEN
+            ALTER TABLE Email_Templates ALTER COLUMN template_type DROP NOT NULL;
+            RAISE NOTICE 'Made template_type column nullable in Email_Templates';
+        END IF;
+    END IF;
+END $$;
+
+-- ============================================================
+-- EMAIL TEMPLATES INSERT STATEMENTS
+-- ============================================================
+INSERT INTO Email_Templates (
+  template_name, subject, html_content, background_color, text_color, 
+  button_color, button_text_color, image_position, text_alignment, 
+  available_variables, recipient_type, is_active, login_url, email_triggers, Created_By, Updated_By
+) VALUES (
+  'Default Submission Template - Imam User',
+  '{{table_label}} - Submission Received',
+  '<body style="background-color: #fff;">
+  <div style="width:70%; margin:20px auto;background-color:#fff;padding:20px;border-radius:8px;text-align:center;font-family:Arial,sans-serif;">
+    <h1 style="color:#2d2d2d;font-size:36px;font-style:bold;"><b>{{table_label}}</b></h1>
+    <div style="background-color:#BD1F5B; border-radius: 20px;margin-top:10px;">
+      <img src="{{background_image}}" alt="{{table_label}}" style="max-width:70%;height:auto;border-radius:8px;background:#BD1F5B;" />
+    </div>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
+      Asalaamu Alaikum {{imam_name}},
+    </p>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
+      JazakAllahu khayran for submitting your {{table_label}} on ((submission_date)).
+    </p>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
+      We confirm that your submission has been successfully received and is currently marked as Pending Review.
+    </p>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
+      <strong>Submission:</strong> {{table_label}}<br/>
+      <strong>Submission Date:</strong> ((submission_date))<br/>
+      <strong>Current Status:</strong> Pending
+    </p>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
+      The submitted {{topic}} will be reviewed by the relevant administrators.
+    </p>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
+      You may log in to the platform at any time to track the status of your submission.
+    </p>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
+      In sha'' Allah, your {{topic}} will be a means of goodness and guidance for your community.
+    </p>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
+      Kind regards,<br/>
+      Imam Development Plan<br/>
+      helpdesk@imamdp.org
+    </p>
+    <a href="{{login_url}}" target="_blank" style="display:inline-block;background-color:#BD1F5B;color:#fff;padding:15px 60px;text-decoration:none;margin-top:20px;border-radius:5px;font-size:14px;">
+      LOGIN HERE
+    </a>
+  </div>
+</body>',
+  '#8f98ff', '#666', '#BD1F5B', '#fff', 'center', 'left',
+  '["{{imam_name}}","{{imam_surname}}","((submission_date))","{{topic}}","{{masjid_name}}","{{table_name}}","{{table_label}}"]',
+  'imam', true, 'https://imamportal.com/dashboard',
+  '[{"table_name":"Jumuah_Khutbah_Topic","action":"CREATE"},{"table_name":"Jumuah_Audio_Khutbah","action":"CREATE"},{"table_name":"Pearls_Of_Wisdom","action":"CREATE"},{"table_name":"Medical_Reimbursement","action":"CREATE"},{"table_name":"Community_Engagement","action":"CREATE"},{"table_name":"Nikah_Bonus","action":"CREATE"},{"table_name":"New_Muslim_Bonus","action":"CREATE"},{"table_name":"New_Baby_Bonus","action":"CREATE"},{"table_name":"imam_financial_assistance","action":"CREATE"}]',
+  'system', 'system'
+) ON CONFLICT (template_name) DO NOTHING;
+
+INSERT INTO Email_Templates (
+  template_name, subject, html_content, background_color, text_color, 
+  button_color, button_text_color, image_position, text_alignment, 
+  available_variables, recipient_type, is_active, login_url, email_triggers, Created_By, Updated_By
+) VALUES (
+  'Default Submission Template - App Admin',
+  '{{table_label}} - New Submission',
+  '<body style="background-color: #fff;">
+  <div style="width:70%; margin:20px auto;background-color:#fff;padding:20px;border-radius:8px;text-align:center;font-family:Arial,sans-serif;">
+    <h1 style="color:#2d2d2d;font-size:36px;font-style:bold;"><b>{{table_label}}</b></h1>
+    <div style="background-color:#BD1F5B; border-radius: 20px;margin-top:10px;">
+      <img src="{{background_image}}" alt="{{table_label}}" style="max-width:70%;height:auto;border-radius:8px;background:#BD1F5B;" />
+    </div>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
+      Asalaamu Alaikum,
+    </p>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
+      A {{table_label}} has been submitted on ((submission_date)) and is currently marked as Pending Review.
+    </p>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
+      <strong>Submitted By:</strong> {{imam_name}}<br/>
+      <strong>Submission:</strong> {{table_label}}<br/>
+      <strong>Submission Date:</strong> ((submission_date))<br/>
+      <strong>Current Status:</strong> Pending
+    </p>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
+      Please log in to the platform to review the submission and take the appropriate action.
+    </p>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
+      JazakAllahu khayran for your continued service and oversight.
+    </p>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
+      Kind regards,<br/>
+      Imam Development Plan<br/>
+      helpdesk@imamdp.org
+    </p>
+    <a href="{{login_url}}" target="_blank" style="display:inline-block;background-color:#BD1F5B;color:#fff;padding:15px 60px;text-decoration:none;margin-top:20px;border-radius:5px;font-size:14px;">
+      LOGIN HERE
+    </a>
+  </div>
+</body>',
+  '#8f98ff', '#666', '#BD1F5B', '#fff', 'center', 'left',
+  '["{{imam_name}}","{{imam_surname}}","((submission_date))","{{topic}}","{{masjid_name}}","{{table_name}}","{{table_label}}"]',
+  'admin', true, 'https://imamportal.com/dashboard',
+  '[{"table_name":"Jumuah_Khutbah_Topic","action":"CREATE"},{"table_name":"Jumuah_Audio_Khutbah","action":"CREATE"},{"table_name":"Pearls_Of_Wisdom","action":"CREATE"},{"table_name":"Medical_Reimbursement","action":"CREATE"},{"table_name":"Community_Engagement","action":"CREATE"},{"table_name":"Nikah_Bonus","action":"CREATE"},{"table_name":"New_Muslim_Bonus","action":"CREATE"},{"table_name":"New_Baby_Bonus","action":"CREATE"},{"table_name":"imam_financial_assistance","action":"CREATE"}]',
+  'system', 'system'
+) ON CONFLICT (template_name) DO NOTHING;
+
+-- Imam Profile Created - Admin Notification
+INSERT INTO Email_Templates (
+  template_name, subject, html_content, background_color, text_color, 
+  button_color, button_text_color, image_position, text_alignment, 
+  available_variables, recipient_type, is_active, login_url, email_triggers, Created_By, Updated_By
+) VALUES (
+  'Imam Profile Created - Admin Notification',
+  'New Imam Profile Created',
+  '<body style="background-color: #fff;">
+  <div style="width:70%; margin:20px auto;background-color:#fff;padding:20px;border-radius:8px;text-align:center;font-family:Arial,sans-serif;">
+    <h1 style="color:#2d2d2d;font-size:36px;font-style:bold;"><b>New Imam Profile</b></h1>
+    <div style="background-color:#BD1F5B; border-radius: 20px;margin-top:10px;">
+      <img src="{{background_image}}" alt="Imam Profile" style="max-width:70%;height:auto;border-radius:8px;background:#BD1F5B;" />
+    </div>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
+      Asalaamu Alaikum,
+    </p>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
+      A new Imam Profile has been created and is currently marked as Pending Review.
+    </p>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
+      <strong>Imam Name:</strong> {{imam_name}}<br/>
+      <strong>Email:</strong> {{imam_email}}<br/>
+      <strong>File Number:</strong> {{file_number}}<br/>
+      <strong>Created Date:</strong> ((submission_date))<br/>
+      <strong>Current Status:</strong> Pending
+    </p>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
+      Please log in to the platform to review the Imam Profile and take the appropriate action.
+    </p>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
+      JazakAllahu khayran for your continued service and oversight.
+    </p>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
+      Kind regards,<br/>
+      Imam Development Plan<br/>
+      helpdesk@imamdp.org
+    </p>
+    <a href="{{login_url}}" target="_blank" style="display:inline-block;background-color:#BD1F5B;color:#fff;padding:15px 60px;text-decoration:none;margin-top:20px;border-radius:5px;font-size:14px;">
+      LOGIN HERE
+    </a>
+  </div>
+</body>',
+  '#8f98ff', '#666', '#BD1F5B', '#fff', 'center', 'left',
+  '["{{imam_name}}","{{imam_surname}}","{{imam_email}}","{{file_number}}","((submission_date))","{{table_name}}","{{table_label}}"]',
+  'admin', true, 'https://imamportal.com/dashboard',
+  '[{"table_name":"Imam_Profiles","action":"CREATE"}]',
+  'system', 'system'
+) ON CONFLICT (template_name) DO NOTHING;
+
+-- Imam Profile Approved - Imam User Notification
+INSERT INTO Email_Templates (
+  template_name, subject, html_content, background_color, text_color, 
+  button_color, button_text_color, image_position, text_alignment, 
+  available_variables, recipient_type, is_active, login_url, email_triggers, Created_By, Updated_By
+) VALUES (
+  'Imam Profile Approved - Imam User Notification',
+  'Your Imam Profile Has Been Approved',
+  '<body style="background-color: #fff;">
+  <div style="width:70%; margin:20px auto;background-color:#fff;padding:20px;border-radius:8px;text-align:center;font-family:Arial,sans-serif;">
+    <h1 style="color:#2d2d2d;font-size:36px;font-style:bold;"><b>Profile Approved</b></h1>
+    <div style="background-color:#BD1F5B; border-radius: 20px;margin-top:10px;">
+      <img src="{{background_image}}" alt="Profile Approved" style="max-width:70%;height:auto;border-radius:8px;background:#BD1F5B;" />
+    </div>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
+      Asalaamu Alaikum {{imam_name}},
+    </p>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
+      Alhamdulillah! Your Imam Profile has been reviewed and approved.
+    </p>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
+      <strong>Profile Status:</strong> Approved<br/>
+      <strong>File Number:</strong> {{file_number}}<br/>
+      <strong>Approval Date:</strong> ((submission_date))
+    </p>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
+      You can now access all features of the Imam Development Plan platform. Please log in to view your profile and submit your activities.
+    </p>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
+      May Allah accept your efforts and grant you success in serving the community.
+    </p>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
+      Kind regards,<br/>
+      Imam Development Plan<br/>
+      helpdesk@imamdp.org
+    </p>
+    <a href="{{login_url}}" target="_blank" style="display:inline-block;background-color:#BD1F5B;color:#fff;padding:15px 60px;text-decoration:none;margin-top:20px;border-radius:5px;font-size:14px;">
+      LOGIN HERE
+    </a>
+  </div>
+</body>',
+  '#8f98ff', '#666', '#BD1F5B', '#fff', 'center', 'left',
+  '["{{imam_name}}","{{imam_surname}}","{{imam_email}}","{{file_number}}","((submission_date))","{{table_name}}","{{table_label}}"]',
+  'imam', true, 'https://imamportal.com/dashboard',
+  '[{"table_name":"Imam_Profiles","action":"UPDATE","status_id":2}]',
+  'system', 'system'
+) ON CONFLICT (template_name) DO NOTHING;
+
+-- Imam Profile Rejected - Imam User Notification
+INSERT INTO Email_Templates (
+  template_name, subject, html_content, background_color, text_color, 
+  button_color, button_text_color, image_position, text_alignment, 
+  available_variables, recipient_type, is_active, login_url, email_triggers, Created_By, Updated_By
+) VALUES (
+  'Imam Profile Rejected - Imam User Notification',
+  'Imam Profile Update: {{imam_name}}',
+  '<body style="background-color: #fff;">
+  <div style="width:70%; margin:20px auto;background-color:#fff;padding:20px;border-radius:8px;text-align:center;font-family:Arial,sans-serif;">
+    <h1 style="color:#2d2d2d;font-size:36px;font-style:bold;"><b>Profile Review Update</b></h1>
+    <div style="background-color:#BD1F5B; border-radius: 20px;margin-top:10px;">
+      <img src="{{background_image}}" alt="Profile Review" style="max-width:70%;height:auto;border-radius:8px;background:#BD1F5B;" />
+    </div>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
+      Asalaamu Alaikum {{imam_name}},
+    </p>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
+      Thank you for your interest in joining the Imam Development Plan. We have reviewed your Imam Profile application.
+    </p>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
+      <strong>Profile Status:</strong> Requires Additional Information<br/>
+      <strong>File Number:</strong> {{file_number}}<br/>
+      <strong>Review Date:</strong> ((submission_date))
+    </p>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
+      At this time, your profile requires additional information or clarification before it can be approved. This is a normal part of our review process, and we encourage you to review your submission and provide any missing details.
+    </p>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
+      We value your dedication to serving the community and would be happy to assist you in completing your profile. Please feel free to reach out to our support team if you have any questions or need guidance.
+    </p>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
+      May Allah guide us all in our efforts to serve the Ummah with excellence and sincerity.
+    </p>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
+      Kind regards,<br/>
+      Imam Development Plan<br/>
+      helpdesk@imamdp.org
+    </p>
+    <a href="{{login_url}}" target="_blank" style="display:inline-block;background-color:#BD1F5B;color:#fff;padding:15px 60px;text-decoration:none;margin-top:20px;border-radius:5px;font-size:14px;">
+      REVIEW PROFILE
+    </a>
+  </div>
+</body>',
+  '#8f98ff', '#666', '#BD1F5B', '#fff', 'center', 'left',
+  '["{{imam_name}}","{{imam_surname}}","{{imam_email}}","{{file_number}}","((submission_date))","{{table_name}}","{{table_label}}"]',
+  'imam', true, 'https://imamportal.com/dashboard',
+  '[{"table_name":"Imam_Profiles","action":"UPDATE","status_id":3}]',
+  'system', 'system'
+) ON CONFLICT (template_name) DO NOTHING;
+
+-- New Message Received - User Notification
+INSERT INTO Email_Templates (
+  template_name, subject, html_content, background_color, text_color, 
+  button_color, button_text_color, image_position, text_alignment, 
+  available_variables, recipient_type, is_active, login_url, email_triggers, Created_By, Updated_By
+) VALUES (
+  'New Message Received - User Notification',
+  'New Message from {{sender_name}}',
+  '<body style="background-color: #fff;">
+  <div style="width:70%; margin:20px auto;background-color:#fff;padding:20px;border-radius:8px;text-align:center;font-family:Arial,sans-serif;">
+    <h1 style="color:#2d2d2d;font-size:36px;font-style:bold;"><b>New Message</b></h1>
+    <div style="background-color:#BD1F5B; border-radius: 20px;margin-top:10px;">
+      <img src="{{background_image}}" alt="New Message" style="max-width:70%;height:auto;border-radius:8px;background:#BD1F5B;" />
+    </div>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
+      Asalaamu Alaikum {{recipient_name}},
+    </p>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
+      You have received a new message in your conversation.
+    </p>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
+      <strong>From:</strong> {{sender_name}}<br/>
+      <strong>Conversation:</strong> {{conversation_title}}<br/>
+      <strong>Message Date:</strong> ((submission_date))<br/>
+      <strong>Message Preview:</strong> {{message_preview}}
+    </p>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
+      Please log in to view and respond to this message.
+    </p>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
+      Kind regards,<br/>
+      Imam Development Plan<br/>
+      helpdesk@imamdp.org
+    </p>
+    <a href="{{login_url}}" target="_blank" style="display:inline-block;background-color:#BD1F5B;color:#fff;padding:15px 60px;text-decoration:none;margin-top:20px;border-radius:5px;font-size:14px;">
+      VIEW MESSAGE
+    </a>
+  </div>
+</body>',
+  '#8f98ff', '#666', '#BD1F5B', '#fff', 'center', 'left',
+  '["{{recipient_name}}","{{sender_name}}","{{conversation_title}}","{{message_preview}}","{{message_text}}","((submission_date))","{{table_name}}","{{table_label}}"]',
+  'both', true, 'https://imamportal.com/dashboard',
+  '[{"table_name":"Messages","action":"CREATE"}]',
+  'system', 'system'
+) ON CONFLICT (template_name) DO NOTHING;
+
+-- Password Reset - User Notification
+INSERT INTO Email_Templates (
+  template_name, subject, html_content, background_color, text_color, 
+  button_color, button_text_color, image_position, text_alignment, 
+  available_variables, recipient_type, is_active, login_url, email_triggers, Created_By, Updated_By
+) VALUES (
+  'Password Reset - User Notification',
+  'Password Reset Request - Imam Development Plan',
+  '<body style="background-color: #f7f5f5;">
+  <div style="width:70%; margin:20px auto;background-color:#fff;padding:20px;border-radius:8px;text-align:center;font-family:Arial,sans-serif;">
+    <h1 style="color:#2d2d2d;font-size:36px;font-style:bold;"><b>Password Reset</b></h1>
+    <div style="background-color:#BD1F5B; border-radius: 20px;margin-top:10px;">
+      <img src="{{background_image}}" alt="Password Reset" style="max-width:70%;height:auto;border-radius:8px;background:#BD1F5B;" />
+    </div>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
+      Asalaamu Alaikum {{user_name}},
+    </p>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
+      You have requested to reset your password for your Imam Development Plan account.
+    </p>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
+      Click the button below to reset your password. This link will expire in {{expires_in}}.
+    </p>
+    <a href="{{reset_link}}" target="_blank" style="display:inline-block;background-color:#BD1F5B;color:#fff;padding:15px 60px;text-decoration:none;margin-top:20px;border-radius:5px;font-size:14px;">
+      RESET PASSWORD
+    </a>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:20px;text-align:left;">
+      If you did not request this password reset, please ignore this email. Your password will remain unchanged.
+    </p>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
+      For security reasons, this link will expire in {{expires_in}}. If you need to reset your password again, please request a new reset link.
+    </p>
+    <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
+      Kind regards,<br/>
+      Imam Development Plan<br/>
+      helpdesk@imamdp.org
+    </p>
+    <a href="{{login_url}}" target="_blank" style="display:inline-block;background-color:#BD1F5B;color:#fff;padding:15px 60px;text-decoration:none;margin-top:20px;border-radius:5px;font-size:14px;">
+      LOGIN HERE
+    </a>
+  </div>
+</body>',
+  '#8f98ff', '#666', '#BD1F5B', '#fff', 'center', 'left',
+  '["{{user_name}}","{{reset_link}}","{{expires_in}}","{{login_url}}"]',
+  'both', true, 'https://imamdp.org/login',
+  '[]',
+  'system', 'system'
+) ON CONFLICT (template_name) DO NOTHING;

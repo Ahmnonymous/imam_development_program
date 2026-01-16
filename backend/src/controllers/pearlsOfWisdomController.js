@@ -1,4 +1,5 @@
 const pearlsOfWisdomModel = require('../models/pearlsOfWisdomModel');
+const { afterCreate } = require('../utils/modelHelpers');
 
 const pearlsOfWisdomController = {
   getAll: async (req, res) => { 
@@ -29,7 +30,11 @@ const pearlsOfWisdomController = {
       fields.created_by = username;
       fields.updated_by = username;
       
-      const data = await pearlsOfWisdomModel.create(fields); 
+      const data = await pearlsOfWisdomModel.create(fields);
+      
+      // Automatically trigger email based on template configuration
+      afterCreate('Pearls_Of_Wisdom', data);
+      
       res.status(201).json(data); 
     } catch(err){ 
       res.status(500).json({error: "Error creating record in Pearls_Of_Wisdom: " + err.message}); 

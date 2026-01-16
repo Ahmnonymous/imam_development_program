@@ -5,7 +5,7 @@ const {
   scopeQuery,
 } = require("../utils/modelHelpers");
 
-const tableName = "Jumuah_Khutbah_Topic_Submission";
+const tableName = "Jumuah_Khutbah_Topic";
 
 const jumuahKhutbahTopicSubmissionModel = {
   getAll: async (imamProfileId = null) => {
