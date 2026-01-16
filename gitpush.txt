@@ -3,3 +3,15 @@ git add .
 git commit -m "IDP Starts"
 git push -u origin main
 clear
+
+# Replace these values:
+# <host> = your server hostname or IP
+# <port> = usually 5432
+# <user> = your PostgreSQL username (usually postgres)
+# <password> = your password (will be prompted, or use PGPASSWORD env var)
+
+# Step 1: Drop existing database
+psql -h localhost -p 5432 -U postgres -d postgres -c "DROP DATABASE IF EXISTS idp_app;"
+
+# Step 2: Import the backup (this will create the database)
+psql -h localhost -p 5432 -U postgres -d postgres -f idp_app_backup_2026-01-16T20-41-39.sql
