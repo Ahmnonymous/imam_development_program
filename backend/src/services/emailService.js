@@ -216,9 +216,16 @@ class EmailService {
       console.log(`✅ Postmark client initialized`);
       const emailFrom = process.env.EMAIL_FROM || 'noreply@imamdp.org';
       // Use environment variable or detect production URL dynamically
-      const API_BASE_URL = process.env.API_BASE_URL 
-        || process.env.PRODUCTION_API_URL 
+      // For emails, always prefer production URL to avoid localhost issues
+      let API_BASE_URL = process.env.PRODUCTION_API_URL 
+        || process.env.API_BASE_URL 
         || (process.env.NODE_ENV === 'production' ? 'https://imamportal.com' : 'http://localhost:5000');
+      
+      // Force production URL if we're in production mode (override localhost)
+      if (process.env.NODE_ENV === 'production' && (API_BASE_URL.includes('localhost') || API_BASE_URL.includes('127.0.0.1'))) {
+        API_BASE_URL = process.env.PRODUCTION_API_URL || 'https://imamportal.com';
+        console.log(`📧 Forced production URL for email: ${API_BASE_URL}`);
+      }
 
       // Process each template and send emails
       const allResults = [];
@@ -238,7 +245,15 @@ class EmailService {
         if (isDefaultSubmissionTemplate && ANIMATED_EMAIL_IMAGE_MAPPING[tableName]) {
           // Use the mapped animated email image from backend public directory
           const imagePath = ANIMATED_EMAIL_IMAGE_MAPPING[tableName];
-          imageUrl = `${API_BASE_URL}/public/images/animated_email_images/${imagePath}`;
+          // URL encode each segment of the path to handle spaces in folder names (spaces become %20)
+          const encodedPath = imagePath.split('/').map(segment => encodeURIComponent(segment)).join('/');
+          // Always use production URL for email images (never use localhost)
+          const productionBaseUrl = process.env.PRODUCTION_API_URL || process.env.API_BASE_URL || 'https://imamportal.com';
+          // Force https://imamportal.com if we detect localhost in the URL
+          const baseUrl = (productionBaseUrl.includes('localhost') || productionBaseUrl.includes('127.0.0.1')) 
+            ? 'https://imamportal.com' 
+            : productionBaseUrl;
+          imageUrl = `${baseUrl}/public/images/animated_email_images/${encodedPath}`;
           console.log(`📧 Using animated email image for table ${tableName}: ${imageUrl}`);
         } else if (currentTemplate.background_image_show_link) {
           // Use template's background image for non-default templates
