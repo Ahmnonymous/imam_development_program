@@ -3,6 +3,19 @@ const emailTemplateModel = require('../models/emailTemplateModel');
 const imamProfilesModel = require('../models/imamProfilesModel');
 const pool = require('../config/db');
 
+// Mapping from table names to animated email image filenames (using PNG for better email client support)
+const ANIMATED_EMAIL_IMAGE_MAPPING = {
+  "Jumuah_Khutbah_Topic": "Jumuah Khutbah Topic Submissionder/creative-idea-lightbulb-cartoon-illustration-2025-10-20-02-21-50-utc.png",
+  "Jumuah_Audio_Khutbah": "Jumuah Khutbah Audio Submission/corporate-business-speaker-illustration-2025-10-20-04-28-31-utc.png",
+  "Pearls_Of_Wisdom": "Pearls of Wisdom/ai-brainstorming-duotone-illustration-2025-10-20-04-33-45-utc.png",
+  "Medical_Reimbursement": "Medical Assistance/medical-examination-tools-cartoon-illustration-2025-10-20-04-32-48-utc.png",
+  "Community_Engagement": "Community Engagement/diverse-people-in-community-disability-2025-10-20-04-28-17-utc.png",
+  "Nikah_Bonus": "Nikah Bonus/illustration-of-a-muslim-couple-in-love-2025-10-20-06-25-40-utc.png",
+  "New_Muslim_Bonus": "New Muslim Bonus/flat-illustration-of-arab-man-in-traditional-dress-2025-10-20-02-32-55-utc.png",
+  "New_Baby_Bonus": "New Baby Bonus/woman-cradling-a-baby-2025-11-05-06-06-57-utc.png",
+  "imam_financial_assistance": "Financial Assistance/writing-a-check-illustration-2025-10-20-04-33-44-utc.png",
+};
+
 class EmailService {
   constructor() {
     this.client = process.env.POSTMARK_SERVER_TOKEN
@@ -216,9 +229,20 @@ class EmailService {
         const subject = this.replaceVariables(currentTemplate.subject, allVariables);
         let htmlContent = this.replaceVariables(currentTemplate.html_content, allVariables);
 
-        // Handle background image for this template
-        if (currentTemplate.background_image_show_link) {
-          let imageUrl = currentTemplate.background_image_show_link;
+        // For "Default Submission Template" templates, use animated email images based on table name
+        const isDefaultSubmissionTemplate = currentTemplate.template_name === 'Default Submission Template - Imam User' || 
+                                            currentTemplate.template_name === 'Default Submission Template - App Admin';
+        
+        let imageUrl = null;
+        
+        if (isDefaultSubmissionTemplate && ANIMATED_EMAIL_IMAGE_MAPPING[tableName]) {
+          // Use the mapped animated email image from backend public directory
+          const imagePath = ANIMATED_EMAIL_IMAGE_MAPPING[tableName];
+          imageUrl = `${API_BASE_URL}/public/images/animated_email_images/${imagePath}`;
+          console.log(`📧 Using animated email image for table ${tableName}: ${imageUrl}`);
+        } else if (currentTemplate.background_image_show_link) {
+          // Use template's background image for non-default templates
+          imageUrl = currentTemplate.background_image_show_link;
           
           // Always replace any non-production URLs with production URL for email delivery
           // This ensures emails always use the correct production URL regardless of what's stored in DB
@@ -268,14 +292,19 @@ class EmailService {
           );
           
           console.log(`📧 Final image URL used in email: ${imageUrl}`);
-        } else {
-          // If no show_link but image exists, generate it
+        } else if (!isDefaultSubmissionTemplate) {
+          // If no show_link but image exists, generate it (only for non-default templates)
           if (currentTemplate.background_image && currentTemplate.id) {
-            const imageUrl = `${API_BASE_URL}/api/emailTemplates/${currentTemplate.id}/view-image`;
-            htmlContent = htmlContent.replace(/\{\{background_image\}\}/g, imageUrl);
-            htmlContent = htmlContent.replace(/\(\(background_image\)\)/g, imageUrl);
+            imageUrl = `${API_BASE_URL}/api/emailTemplates/${currentTemplate.id}/view-image`;
             console.log(`📧 Generated image URL for email: ${imageUrl}`);
           }
+        }
+        
+        // Replace background_image variable with the determined image URL
+        if (imageUrl) {
+          htmlContent = htmlContent.replace(/\{\{background_image\}\}/g, imageUrl);
+          htmlContent = htmlContent.replace(/\(\(background_image\)\)/g, imageUrl);
+          console.log(`📧 Replaced background_image variable with: ${imageUrl}`);
         }
 
         // Replace login URL if present

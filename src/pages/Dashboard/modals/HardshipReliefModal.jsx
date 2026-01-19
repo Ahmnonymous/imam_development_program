@@ -19,9 +19,9 @@ const HardshipReliefModal = ({ isOpen, toggle, imamProfileId }) => {
     const fetchLookupData = async () => {
       try {
         const [requestForRes, yesNoRes, areasRes] = await Promise.all([
-          axiosApi.get(`${API_BASE_URL}/lookup/Request_For`),
+          axiosApi.get(`${API_BASE_URL}/lookup/Request_For_Lookup`),
           axiosApi.get(`${API_BASE_URL}/lookup/Yes_No`),
-          axiosApi.get(`${API_BASE_URL}/lookup/Area`),
+          axiosApi.get(`${API_BASE_URL}/lookup/Suburb`),
         ]);
         setLookupData({
           requestFor: requestForRes.data || [],

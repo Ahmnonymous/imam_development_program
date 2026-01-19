@@ -19,7 +19,7 @@ const TicketsModal = ({ isOpen, toggle }) => {
     const fetchLookupData = async () => {
       try {
         const [classificationsRes, statusesRes, usersRes] = await Promise.all([
-          axiosApi.get(`${API_BASE_URL}/lookup/Ticket_Classification`).catch(() => ({ data: [] })),
+          axiosApi.get(`${API_BASE_URL}/lookup/Classification_Lookup`).catch(() => ({ data: [] })),
           axiosApi.get(`${API_BASE_URL}/lookup/Status`).catch(() => ({ data: [] })),
           axiosApi.get(`${API_BASE_URL}/users`).catch(() => ({ data: [] })),
         ]);

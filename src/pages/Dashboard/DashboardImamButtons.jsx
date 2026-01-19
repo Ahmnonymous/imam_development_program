@@ -22,6 +22,30 @@ import HardshipReliefModal from "./modals/HardshipReliefModal";
 import HigherEducationRequestModal from "./modals/HigherEducationRequestModal";
 import TicketsModal from "./modals/TicketsModal";
 
+// Import animated SVG images as raw strings for inline rendering
+import topicsSvg from "../../assets/images/animated_email_images/Jumuah Khutbah Topic Submissionder/creative-idea-lightbulb-cartoon-illustration-2025-10-20-02-21-50-utc.svg?raw";
+import audioSvg from "../../assets/images/animated_email_images/Jumuah Khutbah Audio Submission/corporate-business-speaker-illustration-2025-10-20-04-28-31-utc.svg?raw";
+import wisdomPearlsSvg from "../../assets/images/animated_email_images/Pearls of Wisdom/ai-brainstorming-duotone-illustration-2025-10-20-04-33-45-utc.svg?raw";
+import medicalSvg from "../../assets/images/animated_email_images/Medical Assistance/medical-examination-tools-cartoon-illustration-2025-10-20-04-32-48-utc.svg?raw";
+import communitySvg from "../../assets/images/animated_email_images/Community Engagement/diverse-people-in-community-disability-2025-10-20-04-28-17-utc.svg?raw";
+import nikahBonusSvg from "../../assets/images/animated_email_images/Nikah Bonus/illustration-of-a-muslim-couple-in-love-2025-10-20-06-25-40-utc.svg?raw";
+import muslimBonusSvg from "../../assets/images/animated_email_images/New Muslim Bonus/flat-illustration-of-arab-man-in-traditional-dress-2025-10-20-02-32-55-utc.svg?raw";
+import babyBonusSvg from "../../assets/images/animated_email_images/New Baby Bonus/woman-cradling-a-baby-2025-11-05-06-06-57-utc.svg?raw";
+import financialAssistanceSvg from "../../assets/images/animated_email_images/Financial Assistance/writing-a-check-illustration-2025-10-20-04-33-44-utc.svg?raw";
+
+// Mapping object for button IDs to SVG imports
+const SVG_MAPPING = {
+  topics: topicsSvg,
+  audio: audioSvg,
+  wisdomPearls: wisdomPearlsSvg,
+  medical: medicalSvg,
+  community: communitySvg,
+  nikahBonus: nikahBonusSvg,
+  muslimBonus: muslimBonusSvg,
+  babyBonus: babyBonusSvg,
+  financialAssistance: financialAssistanceSvg,
+};
+
 const DashboardImamButtons = () => {
   const { userType } = useRole();
   const [imamProfile, setImamProfile] = useState(null);
@@ -110,32 +134,49 @@ const DashboardImamButtons = () => {
   return (
     <>
       <Row className="mb-4">
-        {buttons.map((button) => (
-          <Col key={button.id} xs="12" md="6" lg="3" className="mb-3">
-            <Button
-              className="w-100 text-white border-0 shadow-sm"
-              style={{
-                background: button.gradient,
-                minHeight: "100px",
-                fontSize: "1rem",
-                fontWeight: "500",
-                transition: "all 0.3s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-5px)";
-                e.currentTarget.style.boxShadow = "0 10px 20px rgba(0,0,0,0.2)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
-              }}
-              onClick={() => openModal(button.id)}
-            >
-              <i className={`bx ${button.icon} d-block mb-2`} style={{ fontSize: "2rem" }}></i>
-              {button.label}
-            </Button>
-          </Col>
-        ))}
+        {buttons.map((button) => {
+          const svgSrc = SVG_MAPPING[button.id];
+          return (
+            <Col key={button.id} xs="12" md="6" lg="3" className="mb-3">
+              <Button
+                className="w-100 text-white border-0 shadow-sm"
+                style={{
+                  background: button.gradient,
+                  minHeight: "100px",
+                  fontSize: "1rem",
+                  fontWeight: "500",
+                  transition: "all 0.3s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-5px)";
+                  e.currentTarget.style.boxShadow = "0 10px 20px rgba(0,0,0,0.2)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
+                }}
+                onClick={() => openModal(button.id)}
+              >
+                {svgSrc ? (
+                  <div
+                    className="d-block mb-2 mx-auto"
+                    style={{ 
+                      width: "48px", 
+                      height: "48px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center"
+                    }}
+                    dangerouslySetInnerHTML={{ __html: svgSrc }}
+                  />
+                ) : (
+                  <i className={`bx ${button.icon} d-block mb-2`} style={{ fontSize: "2rem" }}></i>
+                )}
+                {button.label}
+              </Button>
+            </Col>
+          );
+        })}
       </Row>
 
       <TopicsModal

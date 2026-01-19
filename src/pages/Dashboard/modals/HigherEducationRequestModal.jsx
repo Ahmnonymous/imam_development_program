@@ -20,9 +20,9 @@ const HigherEducationRequestModal = ({ isOpen, toggle, imamProfileId }) => {
     const fetchLookupData = async () => {
       try {
         const [courseTypesRes, durationsRes, studyMethodsRes, yesNoRes] = await Promise.all([
-          axiosApi.get(`${API_BASE_URL}/lookup/Course_Type`).catch(() => ({ data: [] })),
-          axiosApi.get(`${API_BASE_URL}/lookup/Duration`).catch(() => ({ data: [] })),
-          axiosApi.get(`${API_BASE_URL}/lookup/Study_Method`).catch(() => ({ data: [] })),
+          axiosApi.get(`${API_BASE_URL}/lookup/Course_Type_Lookup`).catch(() => ({ data: [] })),
+          axiosApi.get(`${API_BASE_URL}/lookup/Course_Duration_Lookup`).catch(() => ({ data: [] })),
+          axiosApi.get(`${API_BASE_URL}/lookup/Study_Method_Lookup`).catch(() => ({ data: [] })),
           axiosApi.get(`${API_BASE_URL}/lookup/Yes_No`).catch(() => ({ data: [] })),
         ]);
         setLookupData({
