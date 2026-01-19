@@ -4361,7 +4361,7 @@ INSERT INTO Email_Templates (
   <div style="width:70%; margin:20px auto;background-color:#fff;padding:20px;border-radius:8px;text-align:center;font-family:Arial,sans-serif;">
     <h1 style="color:#2d2d2d;font-size:36px;font-style:bold;"><b>{{table_label}}</b></h1>
     <div style="background-color:#BD1F5B; border-radius: 20px;margin-top:10px;">
-      <img src="{{background_image}}" alt="{{table_label}}" style="max-width:70%;height:auto;border-radius:8px;background:#BD1F5B;" />
+      <img src="{{background_image}}" alt="{{table_label}}" style="max-width:60%;height:auto;border-radius:8px;background:#BD1F5B;" />
     </div>
     <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
       Asalaamu Alaikum {{imam_name}},
@@ -4414,7 +4414,7 @@ INSERT INTO Email_Templates (
   <div style="width:70%; margin:20px auto;background-color:#fff;padding:20px;border-radius:8px;text-align:center;font-family:Arial,sans-serif;">
     <h1 style="color:#2d2d2d;font-size:36px;font-style:bold;"><b>{{table_label}}</b></h1>
     <div style="background-color:#BD1F5B; border-radius: 20px;margin-top:10px;">
-      <img src="{{background_image}}" alt="{{table_label}}" style="max-width:70%;height:auto;border-radius:8px;background:#BD1F5B;" />
+      <img src="{{background_image}}" alt="{{table_label}}" style="max-width:60%;height:auto;border-radius:8px;background:#BD1F5B;" />
     </div>
     <p style="color:#666;font-size:14px;line-height:1.6;margin-top:10px;text-align:left;">
       Asalaamu Alaikum,

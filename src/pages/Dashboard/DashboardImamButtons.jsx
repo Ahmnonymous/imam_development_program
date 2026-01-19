@@ -137,26 +137,26 @@ const DashboardImamButtons = () => {
         {buttons.map((button) => {
           const svgSrc = SVG_MAPPING[button.id];
           return (
-            <Col key={button.id} xs="12" md="6" lg="3" className="mb-3">
-              <Button
-                className="w-100 text-white border-0 shadow-sm"
-                style={{
-                  background: button.gradient,
-                  minHeight: "100px",
-                  fontSize: "1rem",
-                  fontWeight: "500",
-                  transition: "all 0.3s ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = "translateY(-5px)";
-                  e.currentTarget.style.boxShadow = "0 10px 20px rgba(0,0,0,0.2)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
-                }}
-                onClick={() => openModal(button.id)}
-              >
+          <Col key={button.id} xs="12" md="6" lg="3" className="mb-3">
+            <Button
+              className="w-100 text-white border-0 shadow-sm"
+              style={{
+                background: button.gradient,
+                minHeight: "100px",
+                fontSize: "1rem",
+                fontWeight: "500",
+                transition: "all 0.3s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-5px)";
+                e.currentTarget.style.boxShadow = "0 10px 20px rgba(0,0,0,0.2)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
+              }}
+              onClick={() => openModal(button.id)}
+            >
                 {svgSrc ? (
                   <div
                     className="d-block mb-2 mx-auto"
@@ -170,11 +170,11 @@ const DashboardImamButtons = () => {
                     dangerouslySetInnerHTML={{ __html: svgSrc }}
                   />
                 ) : (
-                  <i className={`bx ${button.icon} d-block mb-2`} style={{ fontSize: "2rem" }}></i>
+              <i className={`bx ${button.icon} d-block mb-2`} style={{ fontSize: "2rem" }}></i>
                 )}
-                {button.label}
-              </Button>
-            </Col>
+              {button.label}
+            </Button>
+          </Col>
           );
         })}
       </Row>
