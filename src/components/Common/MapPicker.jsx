@@ -136,6 +136,29 @@ const MapPicker = ({ latitude, longitude, onLocationChange, showMap = true }) =>
 
   const hasValidCoordinates = latValue && lngValue && !isNaN(parseFloat(latValue)) && !isNaN(parseFloat(lngValue));
 
+  // Show error if API key is not configured
+  if (!GOOGLE_MAPS_API_KEY) {
+    return (
+      <Card className="mt-3">
+        <CardBody>
+          <Alert color="danger" className="mb-0">
+            <strong>Google Maps API Key Missing</strong>
+            <br />
+            Please set the <code>VITE_GOOGLE_MAPS_API_KEY</code> environment variable in your <code>.env</code> file.
+            <br />
+            <small className="d-block mt-2">
+              Add this line to your <code>.env</code> file in the project root:
+              <br />
+              <code>VITE_GOOGLE_MAPS_API_KEY=your_api_key_here</code>
+              <br />
+              Then restart your development server.
+            </small>
+          </Alert>
+        </CardBody>
+      </Card>
+    );
+  }
+
   return (
     <Card className="mt-3">
       <CardBody>
