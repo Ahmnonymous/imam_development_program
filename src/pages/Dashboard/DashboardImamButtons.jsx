@@ -32,6 +32,13 @@ import nikahBonusSvg from "../../assets/images/animated_email_images/Nikah Bonus
 import muslimBonusSvg from "../../assets/images/animated_email_images/New Muslim Bonus/flat-illustration-of-arab-man-in-traditional-dress-2025-10-20-02-32-55-utc.svg?raw";
 import babyBonusSvg from "../../assets/images/animated_email_images/New Baby Bonus/woman-cradling-a-baby-2025-11-05-06-06-57-utc.svg?raw";
 import financialAssistanceSvg from "../../assets/images/animated_email_images/Financial Assistance/writing-a-check-illustration-2025-10-20-04-33-44-utc.svg?raw";
+import relationshipsSvg from "../../assets/images/animated_email_images/Relationships/elderly-couple-sitting-together-illustration-2025-10-20-06-26-38-utc.svg?raw";
+import educationalDevelopmentSvg from "../../assets/images/animated_email_images/Educational Development/online-education-with-graduation-cap-and-laptop-il-2025-10-20-06-01-25-utc.svg?raw";
+import treePlantingSvg from "../../assets/images/animated_email_images/Tree/planting-a-sapling-duotone-illustration-2025-10-20-04-36-48-utc.svg?raw";
+import waqfLoanSvg from "../../assets/images/animated_email_images/Waqf Loan/quick-loans-illustration-2025-10-20-06-01-21-utc.svg?raw";
+import hardshipReliefSvg from "../../assets/images/animated_email_images/Hardship Relief/thumb-showdown-2025-12-15-16-36-45-utc.svg?raw";
+import higherEducationRequestSvg from "../../assets/images/animated_email_images/Higher Education/hand-holding-books-with-graduation-cap-and-diploma-2025-10-20-04-29-14-utc.svg?raw";
+import ticketsSvg from "../../assets/images/animated_email_images/Tickets/customer-service-employee-in-online-call-2025-11-05-03-42-36-utc.svg?raw";
 
 // Mapping object for button IDs to SVG imports
 const SVG_MAPPING = {
@@ -44,6 +51,13 @@ const SVG_MAPPING = {
   muslimBonus: muslimBonusSvg,
   babyBonus: babyBonusSvg,
   financialAssistance: financialAssistanceSvg,
+  relationships: relationshipsSvg,
+  educationalDevelopment: educationalDevelopmentSvg,
+  treePlanting: treePlantingSvg,
+  waqfLoan: waqfLoanSvg,
+  hardshipRelief: hardshipReliefSvg,
+  higherEducationRequest: higherEducationRequestSvg,
+  tickets: ticketsSvg,
 };
 
 const DashboardImamButtons = () => {

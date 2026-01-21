@@ -591,7 +591,6 @@ const EmployeeProfile = () => {
         special_task: data.Special_Task || "",
         overall_comments: data.Overall_Comments || "",
         room_for_improvement: data.Room_for_Improvement || "",
-        center_id: employee?.center_id || null,
       };
 
       if (editAppraisal && editAppraisal.id) {
@@ -685,7 +684,6 @@ const EmployeeProfile = () => {
         details: data.Details || "",
         idea_date: data.Idea_Date || null,
         status: data.Status || "",
-        center_id: employee?.center_id || null,
       };
 
       if (editInitiative && editInitiative.id) {
@@ -835,7 +833,6 @@ const EmployeeProfile = () => {
         formData.append("date_conducted", data.Date_Conducted || "");
         formData.append("date_expired", data.Date_Expired || "");
         formData.append("training_outcome", data.Training_Outcome || "");
-        formData.append("center_id", employee?.center_id || "");
         formData.append("attachment", data.Attachment[0]);
 
         if (editSkill && editSkill.id) {
@@ -868,7 +865,6 @@ const EmployeeProfile = () => {
           training_outcome: data.Training_Outcome
             ? parseInt(data.Training_Outcome)
             : null,
-          center_id: employee?.center_id || null,
         };
 
         if (editSkill && editSkill.id) {

@@ -14,6 +14,13 @@ const ANIMATED_EMAIL_IMAGE_MAPPING = {
   "New_Muslim_Bonus": "New Muslim Bonus/flat-illustration-of-arab-man-in-traditional-dress-2025-10-20-02-32-55-utc.png",
   "New_Baby_Bonus": "New Baby Bonus/woman-cradling-a-baby-2025-11-05-06-06-57-utc.png",
   "imam_financial_assistance": "Financial Assistance/writing-a-check-illustration-2025-10-20-04-33-44-utc.png",
+  "Imam_Relationships": "Relationships/elderly-couple-sitting-together-illustration-2025-10-20-06-26-38-utc.png",
+  "educational_development": "Educational Development/online-education-with-graduation-cap-and-laptop-il-2025-10-20-06-01-25-utc.png",
+  "Tree_Requests": "Tree/planting-a-sapling-duotone-illustration-2025-10-20-04-36-48-utc.png",
+  "Waqf_Loan": "Waqf Loan/quick-loans-illustration-2025-10-20-06-01-21-utc.png",
+  "hardship_relief": "Hardship Relief/thumb-showdown-2025-12-15-16-36-45-utc.png",
+  "Higher_Education_Request": "Higher Education/hand-holding-books-with-graduation-cap-and-diploma-2025-10-20-04-29-14-utc.png",
+  "tickets": "Tickets/customer-service-employee-in-online-call-2025-11-05-03-42-36-utc.png",
 };
 
 class EmailService {
