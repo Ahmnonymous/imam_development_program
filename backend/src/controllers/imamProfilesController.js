@@ -3,6 +3,70 @@ const { afterCreate, afterUpdate } = require('../utils/modelHelpers');
 const pool = require('../config/db');
 const fs = require('fs').promises;
 
+// Helper function to sanitize fields (convert empty strings to null for bigint, date, and decimal fields)
+const sanitizeFields = (fields) => {
+  const bigintFields = [
+    'title', 'madhab', 'race', 'gender', 'marital_status', 'nationality_id',
+    'province_id', 'suburb_id', 'employment_type', 'lead_salah_in_masjid',
+    'teach_maktab_madrassah', 'do_street_dawah', 'teaching_frequency',
+    'teach_adults_community_classes', 'average_students_taught_daily',
+    'prayers_lead_daily', 'jumuah_prayers_lead', 'average_fajr_attendees',
+    'average_dhuhr_attendees', 'average_asr_attendees', 'average_maghrib_attendees',
+    'average_esha_attendees', 'english_proficiency', 'arabic_proficiency',
+    'quran_reading_ability', 'public_speaking_khutbah_skills'
+  ];
+  
+  const dateFields = ['dob'];
+  const decimalFields = ['longitude', 'latitude'];
+  
+  const sanitized = { ...fields };
+  
+  // Sanitize bigint fields
+  bigintFields.forEach(field => {
+    if (sanitized[field] === '' || sanitized[field] === 'null') {
+      sanitized[field] = null;
+    } else if (sanitized[field] !== null && sanitized[field] !== undefined && typeof sanitized[field] === 'string') {
+      const parsed = parseInt(sanitized[field], 10);
+      if (!isNaN(parsed)) {
+        sanitized[field] = parsed;
+      } else {
+        sanitized[field] = null;
+      }
+    }
+  });
+  
+  // Sanitize date fields
+  dateFields.forEach(field => {
+    if (sanitized[field] === '' || sanitized[field] === 'null') {
+      sanitized[field] = null;
+    }
+  });
+  
+  // Sanitize decimal fields
+  decimalFields.forEach(field => {
+    if (sanitized[field] === '' || sanitized[field] === 'null') {
+      sanitized[field] = null;
+    } else if (sanitized[field] !== null && sanitized[field] !== undefined && typeof sanitized[field] === 'string') {
+      const parsed = parseFloat(sanitized[field]);
+      if (!isNaN(parsed)) {
+        sanitized[field] = parsed;
+      } else {
+        sanitized[field] = null;
+      }
+    }
+  });
+  
+  // Handle status_id specially (must not be null, default to 1)
+  if (sanitized.status_id === '' || sanitized.status_id === 'null') {
+    sanitized.status_id = 1;
+  } else if (sanitized.status_id !== null && sanitized.status_id !== undefined && typeof sanitized.status_id === 'string') {
+    const parsed = parseInt(sanitized.status_id, 10);
+    sanitized.status_id = !isNaN(parsed) ? parsed : 1;
+  }
+  
+  return sanitized;
+};
+
 const imamProfilesController = {
   getAll: async (req, res) => { 
     try {
@@ -39,7 +103,10 @@ const imamProfilesController = {
   
   create: async (req, res) => {
     try { 
-      const fields = { ...req.body };
+      let fields = { ...req.body };
+      
+      // Sanitize fields (convert empty strings to null for bigint, date, and decimal fields)
+      fields = sanitizeFields(fields);
       
       const username = req.user?.username || 'system';
       const employeeId = req.user?.id;
@@ -87,7 +154,10 @@ const imamProfilesController = {
   
   update: async (req, res) => { 
     try { 
-      const fields = { ...req.body };
+      let fields = { ...req.body };
+      
+      // Sanitize fields (convert empty strings to null for bigint, date, and decimal fields)
+      fields = sanitizeFields(fields);
       
       const username = req.user?.username || 'system';
       fields.updated_by = username;
