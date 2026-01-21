@@ -39,6 +39,7 @@ import waqfLoanSvg from "../../assets/images/animated_email_images/Waqf Loan/qui
 import hardshipReliefSvg from "../../assets/images/animated_email_images/Hardship Relief/thumb-showdown-2025-12-15-16-36-45-utc.svg?raw";
 import higherEducationRequestSvg from "../../assets/images/animated_email_images/Higher Education/hand-holding-books-with-graduation-cap-and-diploma-2025-10-20-04-29-14-utc.svg?raw";
 import ticketsSvg from "../../assets/images/animated_email_images/Tickets/customer-service-employee-in-online-call-2025-11-05-03-42-36-utc.svg?raw";
+import boreholeSvg from "../../assets/images/animated_email_images/Borehole/person-with-watering-can-watering-a-tree-2025-11-05-03-30-16-utc.svg?raw";
 
 // Mapping object for button IDs to SVG imports
 const SVG_MAPPING = {
@@ -58,6 +59,7 @@ const SVG_MAPPING = {
   hardshipRelief: hardshipReliefSvg,
   higherEducationRequest: higherEducationRequestSvg,
   tickets: ticketsSvg,
+  borehole: boreholeSvg,
 };
 
 const DashboardImamButtons = () => {

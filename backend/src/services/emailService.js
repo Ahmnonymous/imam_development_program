@@ -21,6 +21,7 @@ const ANIMATED_EMAIL_IMAGE_MAPPING = {
   "hardship_relief": "Hardship Relief/thumb-showdown-2025-12-15-16-36-45-utc.png",
   "Higher_Education_Request": "Higher Education/hand-holding-books-with-graduation-cap-and-diploma-2025-10-20-04-29-14-utc.png",
   "tickets": "Tickets/customer-service-employee-in-online-call-2025-11-05-03-42-36-utc.png",
+  "borehole": "Borehole/person-with-watering-can-watering-a-tree-2025-11-05-03-30-16-utc.png",
 };
 
 class EmailService {
