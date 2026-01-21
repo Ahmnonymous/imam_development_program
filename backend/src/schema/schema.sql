@@ -379,6 +379,7 @@ CREATE TABLE Employee (
     Home_Address VARCHAR(255),
     Emergency_Contact VARCHAR(255),
     Contact_Number VARCHAR(255),
+    Email VARCHAR(255),
     Blood_Type BIGINT,
     Username VARCHAR(255) UNIQUE,
     Password_Hash VARCHAR(255),

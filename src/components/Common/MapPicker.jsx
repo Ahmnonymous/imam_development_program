@@ -1,60 +1,140 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Card, CardBody, Alert, Input, Label, Row, Col } from "reactstrap";
+import { GoogleMap, LoadScript, Marker, Autocomplete } from '@react-google-maps/api';
+
+const GOOGLE_MAPS_API_KEY = "AIzaSyABlzIIBYxZ9ajE78T72d24Gg95z7rdXtI";
+
+const containerStyle = {
+  width: '100%',
+  height: '400px',
+};
 
 /**
  * MapPicker Component
  * 
- * Allows users to manually enter latitude and longitude coordinates for the masjid location.
- * Google Maps integration is disabled due to CORS issues with keyless APIs.
+ * Allows users to search for locations, click on a Google Map, or manually enter coordinates for the masjid location.
  * 
  * @param {Object} props
- * @param {number} props.latitude - Current latitude value
- * @param {number} props.longitude - Current longitude value
+ * @param {number|string} props.latitude - Current latitude value
+ * @param {number|string} props.longitude - Current longitude value
  * @param {Function} props.onLocationChange - Callback when location changes (lat, lng)
  * @param {boolean} props.showMap - Whether to show the component (typically when masjid image is uploaded)
  */
 const MapPicker = ({ latitude, longitude, onLocationChange, showMap = true }) => {
-  const [latValue, setLatValue] = useState(latitude || "");
-  const [lngValue, setLngValue] = useState(longitude || "");
+  const [latValue, setLatValue] = useState("");
+  const [lngValue, setLngValue] = useState("");
+  const [mapCenter, setMapCenter] = useState({ lat: -25.7479, lng: 28.2293 }); // Default: South Africa
+  const [markerPosition, setMarkerPosition] = useState(null);
+  const autocompleteRef = useRef(null);
 
   // Update local state when props change
   useEffect(() => {
-    if (latitude !== undefined && latitude !== null) {
-      setLatValue(latitude.toString());
+    const lat = latitude !== undefined && latitude !== null && latitude !== "" ? parseFloat(latitude) : null;
+    const lng = longitude !== undefined && longitude !== null && longitude !== "" ? parseFloat(longitude) : null;
+    
+    if (lat !== null && !isNaN(lat)) {
+      setLatValue(lat.toString());
+    } else {
+      setLatValue("");
     }
-    if (longitude !== undefined && longitude !== null) {
-      setLngValue(longitude.toString());
+    
+    if (lng !== null && !isNaN(lng)) {
+      setLngValue(lng.toString());
+    } else {
+      setLngValue("");
+    }
+
+    // Set map center and marker if coordinates exist
+    if (lat !== null && !isNaN(lat) && lng !== null && !isNaN(lng)) {
+      setMapCenter({ lat, lng });
+      setMarkerPosition({ lat, lng });
     }
   }, [latitude, longitude]);
 
-  // Handle coordinate changes
+  // Handle autocomplete place selection
+  const handlePlaceSelect = useCallback(() => {
+    if (autocompleteRef.current) {
+      const place = autocompleteRef.current.getPlace();
+      
+      if (place.geometry && place.geometry.location) {
+        const lat = place.geometry.location.lat();
+        const lng = place.geometry.location.lng();
+        
+        setLatValue(lat.toString());
+        setLngValue(lng.toString());
+        setMarkerPosition({ lat, lng });
+        setMapCenter({ lat, lng });
+        
+        if (onLocationChange) {
+          onLocationChange(lat, lng);
+        }
+      }
+    }
+  }, [onLocationChange]);
+
+  // Handle autocomplete load
+  const onLoad = useCallback((autocomplete) => {
+    autocompleteRef.current = autocomplete;
+  }, []);
+
+  // Handle map click to set coordinates
+  const handleMapClick = useCallback((event) => {
+    const lat = event.latLng.lat();
+    const lng = event.latLng.lng();
+    
+    setLatValue(lat.toString());
+    setLngValue(lng.toString());
+    setMarkerPosition({ lat, lng });
+    
+    if (onLocationChange) {
+      onLocationChange(lat, lng);
+    }
+  }, [onLocationChange]);
+
+  // Handle manual coordinate changes
   const handleLatChange = (e) => {
     const value = e.target.value;
     setLatValue(value);
-    if (value && lngValue && onLocationChange) {
-      const lat = parseFloat(value);
-      const lng = parseFloat(lngValue);
-      if (!isNaN(lat) && !isNaN(lng)) {
+    
+    const lat = parseFloat(value);
+    const lng = parseFloat(lngValue);
+    
+    if (!isNaN(lat) && !isNaN(lng)) {
+      setMarkerPosition({ lat, lng });
+      setMapCenter({ lat, lng });
+      if (onLocationChange) {
         onLocationChange(lat, lng);
       }
+    } else if (!isNaN(lat)) {
+      setMarkerPosition({ lat, lng: mapCenter.lng });
+      setMapCenter(prev => ({ ...prev, lat }));
     }
   };
 
   const handleLngChange = (e) => {
     const value = e.target.value;
     setLngValue(value);
-    if (value && latValue && onLocationChange) {
-      const lat = parseFloat(latValue);
-      const lng = parseFloat(value);
-      if (!isNaN(lat) && !isNaN(lng)) {
+    
+    const lat = parseFloat(latValue);
+    const lng = parseFloat(value);
+    
+    if (!isNaN(lat) && !isNaN(lng)) {
+      setMarkerPosition({ lat, lng });
+      setMapCenter({ lat, lng });
+      if (onLocationChange) {
         onLocationChange(lat, lng);
       }
+    } else if (!isNaN(lng)) {
+      setMarkerPosition({ lat: mapCenter.lat, lng });
+      setMapCenter(prev => ({ ...prev, lng }));
     }
   };
 
   if (!showMap) {
     return null;
   }
+
+  const hasValidCoordinates = latValue && lngValue && !isNaN(parseFloat(latValue)) && !isNaN(parseFloat(lngValue));
 
   return (
     <Card className="mt-3">
@@ -67,16 +147,90 @@ const MapPicker = ({ latitude, longitude, onLocationChange, showMap = true }) =>
           
           <Alert color="info" className="mb-3" style={{ fontSize: "0.875rem" }}>
             <i className="bx bx-info-circle me-2"></i>
-            <strong>How to find coordinates:</strong>
-            <ol className="mb-0 mt-2" style={{ fontSize: "0.875rem", paddingLeft: "1.5rem" }}>
-              <li>Open <a href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer">Google Maps</a> in a new tab</li>
-              <li>Search for or navigate to your masjid location</li>
-              <li>Right-click on the exact location on the map</li>
-              <li>Click on the coordinates that appear (e.g., "-25.7479, 28.2293")</li>
-              <li>Copy the latitude and longitude values</li>
-              <li>Paste them into the fields below</li>
-            </ol>
+            <strong>Instructions:</strong> Search for a masjid location, click on the map, or manually enter coordinates in the fields below.
           </Alert>
+
+          {/* Wrap both Autocomplete and Map in a single LoadScript */}
+          <LoadScript
+            googleMapsApiKey={GOOGLE_MAPS_API_KEY}
+            libraries={["places"]}
+            loadingElement={<div style={{ height: `400px` }}>Loading...</div>}
+            errorElement={
+              <Alert color="warning" className="mb-3">
+                <strong>Google Maps Error:</strong> Please ensure the following APIs are enabled in Google Cloud Console:
+                <ul className="mt-2 mb-0">
+                  <li>Maps JavaScript API</li>
+                  <li>Places API (required for search)</li>
+                  <li>Geocoding API (optional, but recommended)</li>
+                </ul>
+                <small className="d-block mt-2">
+                  Also ensure billing is enabled and the API key has proper restrictions configured.
+                </small>
+              </Alert>
+            }
+          >
+            {/* Search Input with Autocomplete */}
+            <div className="mb-3">
+              <Label className="form-label" style={{ fontSize: "0.875rem", fontWeight: 500 }}>
+                <i className="bx bx-search me-1"></i>
+                Search for Masjid Location
+              </Label>
+              <Autocomplete
+                onLoad={onLoad}
+                onPlaceChanged={handlePlaceSelect}
+                options={{
+                  types: ['establishment', 'geocode'],
+                }}
+              >
+                <input
+                  type="text"
+                  placeholder="Search for masjid name or address (e.g., 'Masjid Johannesburg' or 'Cape Town Mosque')"
+                  className="form-control"
+                  style={{
+                    padding: "0.5rem 0.75rem",
+                    fontSize: "0.875rem",
+                    width: "100%",
+                  }}
+                />
+              </Autocomplete>
+              <small className="text-muted" style={{ fontSize: "0.75rem" }}>
+                Start typing to see suggestions. Select a location from the dropdown list.
+              </small>
+            </div>
+
+            {/* Google Map */}
+            <div className="mb-3" style={{ border: "1px solid #dee2e6", borderRadius: "0.25rem", overflow: "hidden" }}>
+              <GoogleMap
+                mapContainerStyle={containerStyle}
+                center={mapCenter}
+                zoom={markerPosition ? 15 : 10}
+                onClick={handleMapClick}
+                options={{
+                  zoomControl: true,
+                  streetViewControl: false,
+                  mapTypeControl: true,
+                  fullscreenControl: true,
+                }}
+              >
+                {markerPosition && (
+                  <Marker
+                    position={markerPosition}
+                    draggable={true}
+                    onDragEnd={(event) => {
+                      const lat = event.latLng.lat();
+                      const lng = event.latLng.lng();
+                      setLatValue(lat.toString());
+                      setLngValue(lng.toString());
+                      setMarkerPosition({ lat, lng });
+                      if (onLocationChange) {
+                        onLocationChange(lat, lng);
+                      }
+                    }}
+                  />
+                )}
+              </GoogleMap>
+            </div>
+          </LoadScript>
 
           <Row>
             <Col md={6}>
@@ -128,7 +282,7 @@ const MapPicker = ({ latitude, longitude, onLocationChange, showMap = true }) =>
             </Col>
           </Row>
 
-          {latValue && lngValue && !isNaN(parseFloat(latValue)) && !isNaN(parseFloat(lngValue)) && (
+          {hasValidCoordinates && (
             <Alert color="success" className="py-2 mb-2" style={{ fontSize: "0.875rem" }}>
               <i className="bx bx-check-circle me-2"></i>
               <strong>Coordinates Set:</strong> {parseFloat(latValue).toFixed(6)}, {parseFloat(lngValue).toFixed(6)}
@@ -146,13 +300,6 @@ const MapPicker = ({ latitude, longitude, onLocationChange, showMap = true }) =>
               </small>
             </Alert>
           )}
-        </div>
-        
-        <div className="mt-2">
-          <p className="text-muted mb-0" style={{ fontSize: "0.75rem" }}>
-            <i className="bx bx-info-circle me-1"></i>
-            <strong>Tip:</strong> You can also use GPS coordinates from your mobile device or other mapping services.
-          </p>
         </div>
       </CardBody>
     </Card>

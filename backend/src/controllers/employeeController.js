@@ -24,12 +24,11 @@ const getEmployeeContext = async (req) => {
       return { error: { status: 400, message: 'Employee username is missing' } };
     }
 
-    const employeeCenterId = employee.center_id != null ? parseInt(employee.center_id, 10) : null;
-
+    // center_id has been removed from Employee table
     return {
       employeeId,
       username,
-      centerId: Number.isNaN(employeeCenterId) ? null : employeeCenterId,
+      centerId: null,
     };
   } catch (err) {
     return { error: { status: 500, message: err.message || 'Failed to resolve employee context' } };
@@ -95,35 +94,13 @@ const employeeController = {
 
   create: async (req, res) => {
     try {
-      const userTypeInt = parseInt(req.body.user_type);
-      const isGlobalAdminRole = [1, 2].includes(userTypeInt);
-
-      // ✅ Validate App Admin / HQ must have NULL center_id
-      if (isGlobalAdminRole && req.body.center_id != null) {
-        return res.status(400).json({ 
-          error: 'App Admin and HQ users cannot be assigned to a center. center_id must be NULL.' 
-        });
-      }
-      
-      // ✅ Validate other users must have center_id
-      if (!isGlobalAdminRole && !req.body.center_id) {
-        return res.status(400).json({ 
-          error: 'Users must be assigned to a center, except for App Admin and HQ.' 
-        });
-      }
-      
       // ✅ Add audit fields
       const username = req.user?.username || 'system';
       req.body.created_by = username;
       req.body.updated_by = username;
       
-      // ✅ For App Admin / HQ, explicitly set center_id to NULL
-      if (isGlobalAdminRole) {
-        req.body.center_id = null;
-      } else {
-        // ✅ For other roles, add center_id from context
-        req.body.center_id = req.body.center_id || req.center_id || req.user?.center_id;
-      }
+      // Remove center_id if present (column has been removed from Employee table)
+      delete req.body.center_id;
       
       const data = await employeeModel.create(req.body);
       res.status(201).json(data);
@@ -134,33 +111,19 @@ const employeeController = {
 
   update: async (req, res) => {
     try {
-      // ✅ Get existing employee to check current role (App Admin can see any)
+      // ✅ Get existing employee to check if it exists
       const existingEmployee = await employeeModel.getById(req.params.id, null);
       if (!existingEmployee) {
         return res.status(404).json({ error: 'Employee not found' });
-      }
-      
-      const newUserType = parseInt(req.body.user_type);
-      const isNewGlobalAdmin = [1, 2].includes(newUserType);
-      const existingUserType = parseInt(existingEmployee.user_type);
-      const wasGlobalAdmin = [1, 2].includes(existingUserType);
-
-      // ✅ If updating to App Admin / HQ, enforce NULL center_id
-      if (isNewGlobalAdmin) {
-        req.body.center_id = null;
-      }
-      
-      // ✅ If updating FROM App Admin / HQ, require center_id
-      if (wasGlobalAdmin && !isNewGlobalAdmin && !req.body.center_id) {
-        return res.status(400).json({ 
-          error: 'Users must be assigned to a center, except for App Admin and HQ.' 
-        });
       }
       
       // ✅ Add audit field (don't allow overwrite of created_by)
       const username = req.user?.username || 'system';
       req.body.updated_by = username;
       delete req.body.created_by; // Prevent overwrite
+      
+      // Remove center_id if present (column has been removed from Employee table)
+      delete req.body.center_id;
       
       // ✅ Apply tenant filtering: App Admin (center_id=null) can update all, others only their center
       const centerId = req.center_id || req.user?.center_id || null;
@@ -239,18 +202,13 @@ const employeeController = {
       return res.status(context.error.status).json({ error: context.error.message });
     }
 
-    const { employeeId, centerId } = context;
+    const { employeeId } = context;
     const params = [employeeId];
-    let query = `
+    const query = `
       SELECT COUNT(*)::int AS count
       FROM Employee_Skills
       WHERE Employee_ID = $1
     `;
-
-    if (centerId !== null) {
-      query += ' AND center_id = $2';
-      params.push(centerId);
-    }
 
     try {
       const result = await pool.query(query, params);

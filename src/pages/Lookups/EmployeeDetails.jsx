@@ -82,6 +82,7 @@ const EmployeeDetails = () => {
       Employment_Date: "",
       Contact_Number: "",
       Emergency_Contact: "",
+      Email: "",
       Home_Address: "",
       Suburb: "",
       Blood_Type: "",
@@ -137,6 +138,7 @@ const EmployeeDetails = () => {
           : "",
         Contact_Number: editItem?.contact_number || "",
         Emergency_Contact: editItem?.emergency_contact || "",
+        Email: editItem?.email || "",
         Home_Address: editItem?.home_address || "",
         Suburb: editItem?.suburb ? String(editItem.suburb) : "",
         Blood_Type: editItem?.blood_type ? String(editItem.blood_type) : "",
@@ -293,6 +295,7 @@ const EmployeeDetails = () => {
         employment_date: data.Employment_Date || null,
         contact_number: data.Contact_Number,
         emergency_contact: data.Emergency_Contact,
+        email: data.Email || null,
         home_address: data.Home_Address,
         suburb: data.Suburb ? parseInt(data.Suburb) : null,
         blood_type: data.Blood_Type ? parseInt(data.Blood_Type) : null,
@@ -893,6 +896,37 @@ const EmployeeDetails = () => {
                       {errors.Emergency_Contact && (
                         <FormFeedback>
                           {errors.Emergency_Contact.message}
+                        </FormFeedback>
+                      )}
+                    </FormGroup>
+                  </Col>
+                </Row>
+                <Row>
+                  <Col md={6}>
+                    <FormGroup>
+                      <Label for="Email">Email</Label>
+                      <Controller
+                        name="Email"
+                        control={control}
+                        rules={{
+                          validate: (v) => 
+                            !v ? true : 
+                            /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) || 
+                            "Please enter a valid email address"
+                        }}
+                        render={({ field }) => (
+                          <Input
+                            id="Email"
+                            type="email"
+                            placeholder="example@email.com"
+                            invalid={!!errors.Email}
+                            {...field}
+                          />
+                        )}
+                      />
+                      {errors.Email && (
+                        <FormFeedback>
+                          {errors.Email.message}
                         </FormFeedback>
                       )}
                     </FormGroup>

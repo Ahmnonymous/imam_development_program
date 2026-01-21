@@ -71,6 +71,55 @@ const DashboardImamButtons = () => {
   });
 
   useEffect(() => {
+    // Add responsive styles for imam cards
+    const styleId = 'imam-card-styles';
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement('style');
+      style.id = styleId;
+      style.textContent = `
+        .imam-card-button {
+          background: transparent !important;
+          background-color: transparent !important;
+          background-image: none !important;
+        }
+        @media (max-width: 768px) {
+          .imam-card-button {
+            min-height: 100px !important;
+            padding: 0.75rem 1rem !important;
+          }
+          .imam-card-text {
+            font-size: 1.5rem !important;
+          }
+          .imam-card-icon {
+            width: 80px !important;
+            height: 80px !important;
+          }
+          .imam-card-icon i {
+            font-size: 80px !important;
+            line-height: 1 !important;
+          }
+        }
+        @media (max-width: 576px) {
+          .imam-card-button {
+            min-height: 90px !important;
+            padding: 0.625rem 0.875rem !important;
+          }
+          .imam-card-text {
+            font-size: 1rem !important;
+          }
+          .imam-card-icon {
+            width: 70px !important;
+            height: 70px !important;
+          }
+          .imam-card-icon i {
+            font-size: 70px !important;
+            line-height: 1 !important;
+          }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
     const fetchProfile = async () => {
       if (userType === 6) {
         try {
@@ -137,14 +186,14 @@ const DashboardImamButtons = () => {
         {buttons.map((button) => {
           const svgSrc = SVG_MAPPING[button.id];
           return (
-          <Col key={button.id} xs="12" md="6" lg="3" className="mb-3">
-            <Button
-              className="w-100 text-white border-0 shadow-sm"
+          <Col key={button.id} xs="12" md="6" lg="4" className="mb-3">
+            <div
+              className="w-100"
               style={{
-                background: button.gradient,
-                minHeight: "100px",
-                fontSize: "1rem",
-                fontWeight: "500",
+                background: 'transparent',
+                border: '1px solid rgb(96, 119, 231)',
+                borderRadius: "12px",
+                padding: "3px",
                 transition: "all 0.3s ease",
               }}
               onMouseEnter={(e) => {
@@ -155,14 +204,41 @@ const DashboardImamButtons = () => {
                 e.currentTarget.style.transform = "translateY(0)";
                 e.currentTarget.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
               }}
-              onClick={() => openModal(button.id)}
             >
+              <Button
+                className="w-100 border-0 d-flex align-items-center justify-content-between imam-card-button"
+                style={{
+                  background: "transparent",
+                  backgroundColor: "transparent",
+                  backgroundImage: "none",
+                  color: "#495057",
+                  minHeight: "120px",
+                  fontSize: "1.25rem",
+                  fontWeight: "700",
+                  borderRadius: "9px",
+                  padding: "1rem 1.25rem",
+                }}
+                onClick={() => openModal(button.id)}
+              >
+                <span 
+                  className="text-start fw-bold imam-card-text" 
+                  style={{ 
+                    fontSize: "1.5rem", 
+                    fontWeight: "700",
+                    background: button.gradient,
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    backgroundClip: "text"
+                  }}
+                >
+                  {button.label}
+                </span>
                 {svgSrc ? (
                   <div
-                    className="d-block mb-2 mx-auto"
+                    className="flex-shrink-0 ms-3 imam-card-icon"
                     style={{ 
-                      width: "48px", 
-                      height: "48px",
+                      width: "110px", 
+                      height: "110px",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center"
@@ -170,10 +246,10 @@ const DashboardImamButtons = () => {
                     dangerouslySetInnerHTML={{ __html: svgSrc }}
                   />
                 ) : (
-              <i className={`bx ${button.icon} d-block mb-2`} style={{ fontSize: "2rem" }}></i>
+                  <i className={`bx ${button.icon} flex-shrink-0 ms-3 imam-card-icon`} style={{ fontSize: "110px", lineHeight: "1" }}></i>
                 )}
-              {button.label}
-            </Button>
+              </Button>
+            </div>
           </Col>
           );
         })}
