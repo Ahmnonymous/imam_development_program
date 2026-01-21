@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Card, CardBody, Alert, Input, Label, Row, Col } from "reactstrap";
 import { GoogleMap, LoadScript, Marker, Autocomplete } from '@react-google-maps/api';
 
-const GOOGLE_MAPS_API_KEY = "AIzaSyABlzIIBYxZ9ajE78T72d24Gg95z7rdXtI";
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
 
 const containerStyle = {
   width: '100%',
