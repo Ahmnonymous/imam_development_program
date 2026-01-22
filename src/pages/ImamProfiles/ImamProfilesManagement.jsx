@@ -145,6 +145,53 @@ const ImamProfilesManagement = () => {
   };
 
   const fetchLookupData = async () => {
+    // Skip lookup data fetch for Imam Users - they don't have permission to access lookup endpoints
+    if (isImamUser) {
+      // Initialize with empty arrays for Imam Users
+      setLookupData({
+        race: [],
+        nationality: [],
+        gender: [],
+        maritalStatus: [],
+        suburb: [],
+        title: [],
+        madhab: [],
+        province: [],
+        country: [],
+        status: [],
+        relationshipTypes: [],
+        employmentStatus: [],
+        educationLevel: [],
+        healthConditions: [],
+        yesNo: [],
+        boreholeLocation: [],
+        waterSource: [],
+        waterUsagePurpose: [],
+        requestFor: [],
+        classification: [],
+        courseType: [],
+        duration: [],
+        studyMethod: [],
+        timesPerMonth: [],
+        semestersPerYear: [],
+        boreholeConstructionTasks: [],
+        tasksStatus: [],
+        employmentType: [],
+        teachingFrequency: [],
+        teachAdults: [],
+        averageStudents: [],
+        prayersLead: [],
+        jumuahPrayers: [],
+        averageAttendees: [],
+        proficiency: [],
+        quranMemorization: [],
+        additionalTasks: [],
+        communityEngagementType: [],
+        medicalVisitType: [],
+      });
+      return;
+    }
+
     try {
       const [
         raceRes,
@@ -271,7 +318,10 @@ const ImamProfilesManagement = () => {
       });
     } catch (error) {
       console.error("Error fetching lookup data:", error);
-      showAlert("Failed to fetch lookup data", "warning");
+      // Only show alert for non-Imam users
+      if (!isImamUser) {
+        showAlert("Failed to fetch lookup data", "warning");
+      }
     }
   };
 
