@@ -112,6 +112,8 @@ const SidebarContent = (props) => {
     const pathName = path.pathname;
     let matchingMenuItem = null;
     const ul = document.getElementById("side-menu");
+    if (!ul) return; // Guard against missing element
+    
     const items = ul.getElementsByTagName("a");
     removeActivation(items);
 
@@ -123,6 +125,7 @@ const SidebarContent = (props) => {
         break;
       }
       // Handle /imam-profiles routes - match if path starts with the menu item path
+      // This includes /imam-profiles, /imam-profiles/create, etc.
       if (itemPath === "/imam-profiles" && pathName.startsWith("/imam-profiles")) {
         matchingMenuItem = items[i];
         break;
@@ -143,19 +146,25 @@ const SidebarContent = (props) => {
   // }, []);
   useEffect(() => {
     const metisMenu = new MetisMenu("#side-menu");
-    activeMenu();
+    // Use setTimeout to ensure DOM is ready after menu items are rendered
+    setTimeout(() => {
+      activeMenu();
+    }, 0);
 
     // Cleanup on component unmount
     return () => {
       metisMenu.dispose();
     };
-  }, []);
+  }, [activeMenu, imamProfileStatus]);
 
   
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
-    activeMenu();
-  }, [activeMenu, path.pathname]);
+    // Use setTimeout to ensure DOM is updated after menu items are rendered
+    setTimeout(() => {
+      activeMenu();
+    }, 0);
+  }, [activeMenu, path.pathname, imamProfileStatus]);
 
   // Check Imam User profile status
   useEffect(() => {
@@ -163,11 +172,16 @@ const SidebarContent = (props) => {
       if (userType === 6) {
         try {
           const response = await axiosApi.get(`${API_BASE_URL}/imamProfiles/my-profile`);
-          setImamProfileStatus(response.data?.status_id || null);
+          // Ensure status_id is converted to number for consistent comparison
+          const statusId = response.data?.status_id ? Number(response.data.status_id) : null;
+          setImamProfileStatus(statusId);
         } catch (error) {
           // No profile exists yet
           setImamProfileStatus(null);
         }
+      } else {
+        // For non-Imam users, set to null so dashboard shows
+        setImamProfileStatus(null);
       }
     };
     checkImamProfileStatus();
@@ -209,13 +223,15 @@ const SidebarContent = (props) => {
               <i className="bx bx-file"></i>
               <span>{props.t("Pages")}</span>
             </li>
-            {/* ✅ Dashboard - All roles (Imam User sees only welcome card) */}
-            <li>
-              <Link to="/dashboard">
-                <i className="bx bx-bar-chart-alt-2"></i>
-                <span>{props.t("Dashboard")}</span>
-              </Link>
-            </li>
+            {/* ✅ Dashboard - All roles except Imam User without approved profile */}
+            {userType !== 6 || (userType === 6 && imamProfileStatus === 2) ? (
+              <li>
+                <Link to="/dashboard">
+                  <i className="bx bx-bar-chart-alt-2"></i>
+                  <span>{props.t("Dashboard")}</span>
+                </Link>
+              </li>
+            ) : null}
 
             {/* ✅ Create Imam Profile - Hide if Imam User has a profile (pending or approved) */}
             {userType !== 6 || imamProfileStatus === null ? (
@@ -365,38 +381,14 @@ const SidebarContent = (props) => {
               </li>
             )}
 
-            {/* ✅ Admin Group - Lookup Setup (Second) */}
+            {/* ✅ Personal Dropdown - File Management, Chat, Policy & Procedure, Administration - For non-Imam Users */}
             {userType !== 6 && (
-              <>
-                <li className="menu-title">
-                  <i className="bx bx-cog"></i>
-                  <span>{props.t("Admin")}</span>
-                </li>
                 <li>
-                  <Link to="/lookups">
-                    <i className="bx bx-list-ul"></i>
-                    <span>{props.t("Lookup Setup")}</span>
-                  </Link>
-                </li>
-                {/* ✅ Email Template Settings - App Admin only (HIDDEN FOR NOW) */}
-                {/* {userType === 1 && (
-                  <li>
-                    <Link to="/email-templates">
-                      <i className="bx bx-envelope"></i>
-                      <span>{props.t("Email Templates")}</span>
-                    </Link>
-                  </li>
-                )} */}
-              </>
-            )}
-
-            {/* ✅ Personal Group - File Management, Chat, Policy & Procedure (Third) - For non-Imam Users */}
-            {userType !== 6 && (
-              <>
-                <li className="menu-title">
+                <Link to="/#" className="has-arrow">
                   <i className="bx bx-user"></i>
                   <span>{props.t("Personal")}</span>
-                </li>
+                </Link>
+                <ul className="sub-menu" aria-expanded="false">
                 <li>
                   <Link to="/FileManager">
                     <i className="bx bx-folder"></i>
@@ -415,7 +407,16 @@ const SidebarContent = (props) => {
                     <span>{props.t("Policy & Procedure")}</span>
                   </Link>
                 </li>
-              </>
+                  {canAccessNav("lookups") && (
+                    <li>
+                      <Link to="/lookups">
+                        <i className="bx bx-list-ul"></i>
+                        <span>{props.t("Administration")}</span>
+                      </Link>
+                    </li>
+                  )}
+                </ul>
+              </li>
             )}
 
             {/* TEMPORARILY HIDDEN - Centers */}

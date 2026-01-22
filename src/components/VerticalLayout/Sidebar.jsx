@@ -9,9 +9,9 @@ import SidebarContent from "./SidebarContent";
 
 import { Link } from "react-router-dom";
 
-// Brand logos (keep favicon as-is; these only affect in-app chrome)
-import idpDark from "../../assets/images/IDP-dark.png";
-import idpLight from "../../assets/images/IDP-light.png";
+// Brand logos from logos folder
+import idpDark from "../../assets/images/animated_email_images/Logos/IDP Logo Horizontal.png";
+import idpLight from "../../assets/images/animated_email_images/Logos/IDP Logo H White.png";
 import { leftSideBarThemeTypes } from "../../constants/layout";
 
 const Sidebar = (props) => {
@@ -34,19 +34,19 @@ const Sidebar = (props) => {
         <div className="navbar-brand-box">
           <Link to="/" className="logo logo-dark">
             <span className="logo-sm">
-              <img src={activeLogo} alt="IDP" height="22" />
+              <img src={activeLogo} alt="IDP" height="100" />
             </span>
             <span className="logo-lg">
-              <img src={activeLogo} alt="IDP" height="24" />
+              <img src={activeLogo} alt="IDP" height="120" />
             </span>
           </Link>
 
           <Link to="/" className="logo logo-light">
             <span className="logo-sm">
-              <img src={activeLogo} alt="IDP" height="22" />
+              <img src={activeLogo} alt="IDP" height="100" />
             </span>
             <span className="logo-lg">
-              <img src={activeLogo} alt="IDP" height="24" />
+              <img src={activeLogo} alt="IDP" height="120" />
             </span>
           </Link>
         </div>

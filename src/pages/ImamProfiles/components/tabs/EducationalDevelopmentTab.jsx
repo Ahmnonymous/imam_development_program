@@ -546,11 +546,25 @@ const EducationalDevelopmentTab = ({ imamProfileId, educationalDevelopment, look
                   <Controller
                     name="acknowledge"
                     control={control}
+                    rules={{ required: "You must acknowledge the statement to proceed" }}
                     render={({ field }) => (
-                      <Input {...field} type="checkbox" checked={field.value} />
+                      <>
+                        <Input
+                          type="checkbox"
+                          id="acknowledgment-educational"
+                          checked={field.value || false}
+                          onChange={(e) => field.onChange(e.target.checked)}
+                          invalid={!!errors.acknowledge}
+                        />
+                        <Label check htmlFor="acknowledgment-educational">
+                          I swear by Allah, the All-Hearing and the All-Seeing, that I have completed this form truthfully and honestly, to the best of my knowledge and belief.
+                        </Label>
+                        {errors.acknowledge && (
+                          <FormFeedback>{errors.acknowledge.message}</FormFeedback>
+                        )}
+                      </>
                     )}
                   />
-                  <Label check>Acknowledge</Label>
                 </FormGroup>
               </Col>
             </Row>

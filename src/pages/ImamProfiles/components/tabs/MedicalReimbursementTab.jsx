@@ -9,7 +9,7 @@ import axiosApi from "../../../../helpers/api_helper";
 import { API_BASE_URL, API_STREAM_BASE_URL } from "../../../../helpers/url_helper";
 import { getAuditName } from "../../../../helpers/userStorage";
 
-const MedicalReimbursementTab = ({ imamProfileId, medicalReimbursement, lookupData, onUpdate, showAlert }) => {
+const MedicalReimbursementTab = ({ imamProfileId, imamProfile, relationships, medicalReimbursement, lookupData, onUpdate, showAlert }) => {
   if (!imamProfileId) return null;
   const { isOrgExecutive, isAppAdmin, isGlobalAdmin } = useRole();
   const isAdmin = isAppAdmin || isGlobalAdmin;
@@ -40,12 +40,14 @@ const MedicalReimbursementTab = ({ imamProfileId, medicalReimbursement, lookupDa
   useEffect(() => {
     if (modalOpen) {
       reset({
+        relationship_type: editItem?.relationship_type || "",
+        visit_type: editItem?.visit_type || "",
         visit_date: formatDateForInput(editItem?.visit_date),
         illness_description: editItem?.illness_description || "",
         amount: editItem?.amount || "",
-        comment: editItem?.comment || "",
         Receipt: null,
         Supporting_Docs: null,
+        acknowledgment: editItem ? true : false,
       });
     }
   }, [editItem, modalOpen, reset]);
@@ -71,10 +73,11 @@ const MedicalReimbursementTab = ({ imamProfileId, medicalReimbursement, lookupDa
       const hasSupportingDocs = data.Supporting_Docs && data.Supporting_Docs.length > 0;
       const formData = new FormData();
       formData.append("imam_profile_id", imamProfileId);
+      formData.append("relationship_type", data.relationship_type ? parseInt(data.relationship_type) : "");
+      formData.append("visit_type", data.visit_type ? parseInt(data.visit_type) : "");
       formData.append("visit_date", data.visit_date);
       formData.append("illness_description", data.illness_description);
       formData.append("amount", data.amount);
-      formData.append("comment", data.comment || "");
       
       if (hasReceipt) {
         formData.append("Receipt", data.Receipt[0]);
@@ -169,6 +172,41 @@ const MedicalReimbursementTab = ({ imamProfileId, medicalReimbursement, lookupDa
             {cell.getValue() ? new Date(cell.getValue()).toLocaleDateString() : "-"}
           </span>
         ),
+      },
+      {
+        header: "Relationship",
+        accessorKey: "relationship_type",
+        enableSorting: true,
+        enableColumnFilter: false,
+        cell: (cell) => {
+          const relationshipTypeId = cell.getValue();
+          if (!relationshipTypeId) return "-";
+          
+          const relationshipType = lookupData?.relationshipTypes?.find(rt => Number(rt.id) === Number(relationshipTypeId));
+          if (!relationshipType) return "-";
+          
+          // Check if it's Imam/Self relationship type
+          const isImamType = relationshipType.name?.toLowerCase() === "imam" || relationshipType.name?.toLowerCase() === "self";
+          
+          if (isImamType && imamProfile) {
+            return `${imamProfile.name || ""} ${imamProfile.surname || ""} (${relationshipType.name})`.trim();
+          }
+          
+          // For other relationship types, try to find matching relationship
+          const matchingRelationship = relationships?.find(r => Number(r.relationship_type) === Number(relationshipTypeId));
+          if (matchingRelationship) {
+            return `${matchingRelationship.name || ""} ${matchingRelationship.surname || ""} (${relationshipType.name})`.trim();
+          }
+          
+          return relationshipType.name || "-";
+        },
+      },
+      {
+        header: "Visit Type",
+        accessorKey: "visit_type",
+        enableSorting: true,
+        enableColumnFilter: false,
+        cell: (cell) => getLookupValue(lookupData?.medicalVisitType, cell.getValue()),
       },
       {
         header: "Illness Description",
@@ -322,7 +360,7 @@ const MedicalReimbursementTab = ({ imamProfileId, medicalReimbursement, lookupDa
         },
       },
     ],
-    [lookupData, isAdmin]
+    [lookupData, isAdmin, relationships, imamProfile]
   );
 
   return (
@@ -362,6 +400,62 @@ const MedicalReimbursementTab = ({ imamProfileId, medicalReimbursement, lookupDa
         <Form onSubmit={handleSubmit(onSubmit)}>
           <ModalBody>
             <Row>
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Relationship <span className="text-danger">*</span></Label>
+                  <Controller 
+                    name="relationship_type" 
+                    control={control} 
+                    rules={{ required: "Relationship is required" }} 
+                    render={({ field }) => {
+                      // Find "Imam" or "Self" relationship type for the imam option
+                      const imamRelationshipType = lookupData?.relationshipTypes?.find(
+                        rt => rt.name?.toLowerCase() === "imam" || rt.name?.toLowerCase() === "self"
+                      );
+                      return (
+                        <Input type="select" invalid={!!errors.relationship_type} disabled={isOrgExecutive} {...field}>
+                          <option value="">Select Relationship</option>
+                          {/* Imam option */}
+                          {imamProfile && imamRelationshipType && (
+                            <option value={imamRelationshipType.id}>
+                              {imamProfile.name} {imamProfile.surname} ({imamRelationshipType.name})
+                            </option>
+                          )}
+                          {/* Relationship options */}
+                          {(relationships || []).map((rel) => {
+                            const relType = lookupData?.relationshipTypes?.find(rt => Number(rt.id) === Number(rel.relationship_type));
+                            return (
+                              <option key={rel.id} value={rel.relationship_type}>
+                                {rel.name} {rel.surname} ({relType?.name || ""})
+                              </option>
+                            );
+                          })}
+                        </Input>
+                      );
+                    }} 
+                  />
+                  {errors.relationship_type && <FormFeedback>{errors.relationship_type.message}</FormFeedback>}
+                </FormGroup>
+              </Col>
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Type of Visit <span className="text-danger">*</span></Label>
+                  <Controller 
+                    name="visit_type" 
+                    control={control} 
+                    rules={{ required: "Type of visit is required" }} 
+                    render={({ field }) => (
+                      <Input type="select" invalid={!!errors.visit_type} disabled={isOrgExecutive} {...field}>
+                        <option value="">Select Visit Type</option>
+                        {(lookupData.medicalVisitType || []).map((vt) => (
+                          <option key={vt.id} value={vt.id}>{vt.name}</option>
+                        ))}
+                      </Input>
+                    )} 
+                  />
+                  {errors.visit_type && <FormFeedback>{errors.visit_type.message}</FormFeedback>}
+                </FormGroup>
+              </Col>
               <Col md={6}>
                 <FormGroup>
                   <Label>Visit Date <span className="text-danger">*</span></Label>
@@ -482,13 +576,32 @@ const MedicalReimbursementTab = ({ imamProfileId, medicalReimbursement, lookupDa
                   )}
                 </FormGroup>
               </Col>
+            </Row>
+            <Row>
               <Col md={12}>
-                <FormGroup>
-                  <Label>Comment</Label>
-                  <Controller 
-                    name="comment" 
-                    control={control} 
-                    render={({ field }) => <Input type="textarea" rows={2} disabled={isOrgExecutive} {...field} />} 
+                <FormGroup check>
+                  <Controller
+                    name="acknowledgment"
+                    control={control}
+                    rules={{ required: "You must acknowledge the statement to proceed" }}
+                    render={({ field }) => (
+                      <>
+                        <Input
+                          type="checkbox"
+                          id="acknowledgment-medical"
+                          checked={field.value || false}
+                          onChange={(e) => field.onChange(e.target.checked)}
+                          disabled={isOrgExecutive}
+                          invalid={!!errors.acknowledgment}
+                        />
+                        <Label check htmlFor="acknowledgment-medical">
+                          I swear by Allah, the All-Hearing and the All-Seeing, that I have completed this form truthfully and honestly, to the best of my knowledge and belief.
+                        </Label>
+                        {errors.acknowledgment && (
+                          <FormFeedback>{errors.acknowledgment.message}</FormFeedback>
+                        )}
+                      </>
+                    )}
                   />
                 </FormGroup>
               </Col>

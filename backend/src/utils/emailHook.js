@@ -48,7 +48,7 @@ async function extractEmailVariables(tableName, record, oldRecord = null) {
       topic: 'title' 
     },
     'Medical_Reimbursement': { 
-      topic: 'description' 
+      topic: 'illness_description' 
     },
     'Community_Engagement': { 
       topic: 'description', 

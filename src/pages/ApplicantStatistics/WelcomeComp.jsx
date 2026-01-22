@@ -3,7 +3,7 @@ import { Row, Col, Card } from "reactstrap";
 import { useRole } from "../../helpers/useRole";
 
 import avatar1 from "../../assets/images/users/avatar-1.jpg";
-import profileImg from "../../assets/images/profile-img.png";
+import profileImg from "../../assets/images/animated_email_images/Welcome/Greetings Fellow Muslims.png";
 
 const WelcomeComp = () => {
   const { user, username } = useRole();
@@ -28,14 +28,14 @@ const WelcomeComp = () => {
         <div className="bg-primary bg-gradient" style={{ background: 'linear-gradient(135deg, #556ee6 0%, #6f42c1 100%)' }}>
           <Row>
             <Col lg="9" md="7" xs="7">
-              <div className="text-white p-4">
-                <h4 className="text-white fw-bold mb-2">
+              <div className="text-white p-2 p-md-4">
+                <h4 className="text-white fw-bold mb-2" style={{ fontSize: 'clamp(0.875rem, 2vw, 1.25rem)' }}>
                   Assalamualaikum Warahmatullahi Wabarakatuh {getUserName()}
                 </h4>
-                <p className="text-white-50 mb-2 font-size-14">
+                <p className="text-white-50 mb-2" style={{ fontSize: 'clamp(0.75rem, 1.5vw, 0.875rem)' }}>
                   InshaAllah you are in great health and spirituality
                 </p>
-                <p className="text-white-50 mb-0 font-size-14">
+                <p className="text-white-50 mb-0" style={{ fontSize: 'clamp(0.75rem, 1.5vw, 0.875rem)' }}>
                   <i className="bx bx-calendar me-1"></i>
                   {getCurrentDate()}
                 </p>

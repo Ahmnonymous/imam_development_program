@@ -9,7 +9,7 @@ import axiosApi from "../../../../helpers/api_helper";
 import { API_BASE_URL } from "../../../../helpers/url_helper";
 import { getAuditName } from "../../../../helpers/userStorage";
 
-const JumuahKhutbahTopicSubmissionTab = ({ imamProfileId, jumuahKhutbahTopicSubmission, lookupData, onUpdate, showAlert }) => {
+const JumuahKhutbahTopicSubmissionTab = ({ imamProfileId, imamProfile, jumuahKhutbahTopicSubmission, lookupData, onUpdate, showAlert }) => {
   if (!imamProfileId) return null;
   const { isOrgExecutive, isAppAdmin, isGlobalAdmin } = useRole();
   const isAdmin = isAppAdmin || isGlobalAdmin;
@@ -27,6 +27,7 @@ const JumuahKhutbahTopicSubmissionTab = ({ imamProfileId, jumuahKhutbahTopicSubm
         attendance_count: editItem?.attendance_count || "",
         language: editItem?.language || "",
         comment: editItem?.comment || "",
+        acknowledgment: editItem ? true : false,
       });
     }
   }, [editItem, modalOpen, reset]);
@@ -312,14 +313,20 @@ const JumuahKhutbahTopicSubmissionTab = ({ imamProfileId, jumuahKhutbahTopicSubm
                   <Controller 
                     name="town" 
                     control={control} 
-                    render={({ field }) => (
-                      <Input type="select" disabled={isOrgExecutive} {...field}>
-                        <option value="">Select Town</option>
-                        {(lookupData.suburb || []).map((x) => (
-                          <option key={x.id} value={x.id}>{x.name}</option>
-                        ))}
-                      </Input>
-                    )} 
+                    render={({ field }) => {
+                      const imamSuburbId = imamProfile?.suburb_id ? Number(imamProfile.suburb_id) : null;
+                      const filteredSuburbs = imamSuburbId 
+                        ? (lookupData.suburb || []).filter((x) => Number(x.id) === imamSuburbId)
+                        : (lookupData.suburb || []);
+                      return (
+                        <Input type="select" disabled={isOrgExecutive} {...field}>
+                          <option value="">Select Town</option>
+                          {filteredSuburbs.map((x) => (
+                            <option key={x.id} value={x.id}>{x.name}</option>
+                          ))}
+                        </Input>
+                      );
+                    }} 
                   />
                 </FormGroup>
               </Col>
@@ -340,6 +347,34 @@ const JumuahKhutbahTopicSubmissionTab = ({ imamProfileId, jumuahKhutbahTopicSubm
                     name="comment" 
                     control={control} 
                     render={({ field }) => <Input type="textarea" rows={2} disabled={isOrgExecutive} {...field} />} 
+                  />
+                </FormGroup>
+              </Col>
+            </Row>
+            <Row>
+              <Col md={12}>
+                <FormGroup check>
+                  <Controller
+                    name="acknowledgment"
+                    control={control}
+                    rules={{ required: "You must acknowledge the statement to proceed" }}
+                    render={({ field }) => (
+                      <>
+                        <Input
+                          type="checkbox"
+                          id="acknowledgment-khutbah-topic"
+                          checked={field.value || false}
+                          onChange={(e) => field.onChange(e.target.checked)}
+                          invalid={!!errors.acknowledgment}
+                        />
+                        <Label check htmlFor="acknowledgment-khutbah-topic">
+                          I swear by Allah, the All-Hearing and the All-Seeing, that I have completed this form truthfully and honestly, to the best of my knowledge and belief.
+                        </Label>
+                        {errors.acknowledgment && (
+                          <FormFeedback>{errors.acknowledgment.message}</FormFeedback>
+                        )}
+                      </>
+                    )}
                   />
                 </FormGroup>
               </Col>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Modal, ModalHeader, ModalBody, ModalFooter, Form, FormGroup, Label, Input, FormFeedback, Row, Col, Button } from "reactstrap";
 import { useForm, Controller } from "react-hook-form";
 import axiosApi from "../../../helpers/api_helper";
@@ -8,20 +8,66 @@ import TopRightAlert from "../../../components/Common/TopRightAlert";
 
 const MedicalModal = ({ isOpen, toggle, imamProfileId }) => {
   const [alert, setAlert] = useState(null);
+  const [imamProfile, setImamProfile] = useState(null);
+  const [relationships, setRelationships] = useState([]);
+  const [lookupData, setLookupData] = useState({
+    relationshipTypes: [],
+    medicalVisitType: [],
+  });
   const { control, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm();
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && imamProfileId) {
+      fetchImamProfile();
+      fetchRelationships();
+      fetchLookupData();
       reset({
+        relationship_type: "",
+        visit_type: "",
         visit_date: "",
         illness_description: "",
         amount: "",
-        comment: "",
         Receipt: null,
         Supporting_Docs: null,
       });
     }
-  }, [isOpen, reset]);
+  }, [isOpen, imamProfileId, reset]);
+
+  const fetchImamProfile = async () => {
+    try {
+      const response = await axiosApi.get(`${API_BASE_URL}/imamProfiles/${imamProfileId}`);
+      if (response.data) {
+        setImamProfile(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching imam profile:", error);
+    }
+  };
+
+  const fetchRelationships = async () => {
+    try {
+      const response = await axiosApi.get(`${API_BASE_URL}/imamRelationships?imam_profile_id=${imamProfileId}`);
+      setRelationships(response.data || []);
+    } catch (error) {
+      console.error("Error fetching relationships:", error);
+      setRelationships([]);
+    }
+  };
+
+  const fetchLookupData = async () => {
+    try {
+      const [relationshipTypesRes, medicalVisitTypeRes] = await Promise.all([
+        axiosApi.get(`${API_BASE_URL}/lookup/Relationship_Types`),
+        axiosApi.get(`${API_BASE_URL}/lookup/Medical_Visit_Type`),
+      ]);
+      setLookupData({
+        relationshipTypes: relationshipTypesRes.data || [],
+        medicalVisitType: medicalVisitTypeRes.data || [],
+      });
+    } catch (error) {
+      console.error("Error fetching lookup data:", error);
+    }
+  };
 
   const showAlert = (message, color = "success") => {
     setAlert({ message, color });
@@ -34,10 +80,11 @@ const MedicalModal = ({ isOpen, toggle, imamProfileId }) => {
       const hasSupportingDocs = data.Supporting_Docs && data.Supporting_Docs.length > 0;
       const formData = new FormData();
       formData.append("imam_profile_id", imamProfileId);
+      formData.append("relationship_type", data.relationship_type ? parseInt(data.relationship_type) : "");
+      formData.append("visit_type", data.visit_type ? parseInt(data.visit_type) : "");
       formData.append("visit_date", data.visit_date);
       formData.append("illness_description", data.illness_description);
       formData.append("amount", data.amount);
-      formData.append("comment", data.comment || "");
       
       if (hasReceipt) {
         formData.append("Receipt", data.Receipt[0]);
@@ -66,36 +113,98 @@ const MedicalModal = ({ isOpen, toggle, imamProfileId }) => {
           Add Medical Reimbursement
         </ModalHeader>
         <Form onSubmit={handleSubmit(onSubmit)}>
-          <ModalBody>
+          <ModalBody style={{ maxHeight: "70vh", overflowY: "auto" }}>
             <Row>
               <Col md={6}>
                 <FormGroup>
-                  <Label>Visit Date</Label>
+                  <Label>Relationship <span className="text-danger">*</span></Label>
                   <Controller 
-                    name="visit_date" 
+                    name="relationship_type" 
                     control={control} 
-                    render={({ field }) => <Input type="date" {...field} />} 
+                    rules={{ required: "Relationship is required" }} 
+                    render={({ field }) => {
+                      // Find "Imam" or "Self" relationship type for the imam option
+                      const imamRelationshipType = lookupData?.relationshipTypes?.find(
+                        rt => rt.name?.toLowerCase() === "imam" || rt.name?.toLowerCase() === "self"
+                      );
+                      return (
+                        <Input type="select" invalid={!!errors.relationship_type} {...field}>
+                          <option value="">Select Relationship</option>
+                          {/* Imam option */}
+                          {imamProfile && imamRelationshipType && (
+                            <option value={imamRelationshipType.id}>
+                              {imamProfile.name} {imamProfile.surname} ({imamRelationshipType.name})
+                            </option>
+                          )}
+                          {/* Relationship options */}
+                          {(relationships || []).map((rel) => {
+                            const relType = lookupData?.relationshipTypes?.find(rt => Number(rt.id) === Number(rel.relationship_type));
+                            return (
+                              <option key={rel.id} value={rel.relationship_type}>
+                                {rel.name} {rel.surname} ({relType?.name || ""})
+                              </option>
+                            );
+                          })}
+                        </Input>
+                      );
+                    }} 
                   />
+                  {errors.relationship_type && <FormFeedback>{errors.relationship_type.message}</FormFeedback>}
                 </FormGroup>
               </Col>
               <Col md={6}>
                 <FormGroup>
-                  <Label>Amount</Label>
+                  <Label>Type of Visit <span className="text-danger">*</span></Label>
+                  <Controller 
+                    name="visit_type" 
+                    control={control} 
+                    rules={{ required: "Type of visit is required" }} 
+                    render={({ field }) => (
+                      <Input type="select" invalid={!!errors.visit_type} {...field}>
+                        <option value="">Select Visit Type</option>
+                        {(lookupData.medicalVisitType || []).map((vt) => (
+                          <option key={vt.id} value={vt.id}>{vt.name}</option>
+                        ))}
+                      </Input>
+                    )} 
+                  />
+                  {errors.visit_type && <FormFeedback>{errors.visit_type.message}</FormFeedback>}
+                </FormGroup>
+              </Col>
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Visit Date <span className="text-danger">*</span></Label>
+                  <Controller 
+                    name="visit_date" 
+                    control={control} 
+                    rules={{ required: "Visit date is required" }} 
+                    render={({ field }) => <Input type="date" invalid={!!errors.visit_date} {...field} />} 
+                  />
+                  {errors.visit_date && <FormFeedback>{errors.visit_date.message}</FormFeedback>}
+                </FormGroup>
+              </Col>
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Amount <span className="text-danger">*</span></Label>
                   <Controller 
                     name="amount" 
                     control={control} 
-                    render={({ field }) => <Input type="number" step="0.01" {...field} />} 
+                    rules={{ required: "Amount is required" }} 
+                    render={({ field }) => <Input type="number" step="0.01" invalid={!!errors.amount} {...field} />} 
                   />
+                  {errors.amount && <FormFeedback>{errors.amount.message}</FormFeedback>}
                 </FormGroup>
               </Col>
               <Col md={12}>
                 <FormGroup>
-                  <Label>Illness Description</Label>
+                  <Label>Illness Description <span className="text-danger">*</span></Label>
                   <Controller 
                     name="illness_description" 
                     control={control} 
-                    render={({ field }) => <Input type="textarea" rows={3} {...field} />} 
+                    rules={{ required: "Illness description is required" }} 
+                    render={({ field }) => <Input type="textarea" rows={3} invalid={!!errors.illness_description} {...field} />} 
                   />
+                  {errors.illness_description && <FormFeedback>{errors.illness_description.message}</FormFeedback>}
                 </FormGroup>
               </Col>
               <Col md={6}>
@@ -132,16 +241,6 @@ const MedicalModal = ({ isOpen, toggle, imamProfileId }) => {
                   />
                 </FormGroup>
               </Col>
-              <Col md={12}>
-                <FormGroup>
-                  <Label>Comment</Label>
-                  <Controller 
-                    name="comment" 
-                    control={control} 
-                    render={({ field }) => <Input type="textarea" rows={2} {...field} />} 
-                  />
-                </FormGroup>
-              </Col>
             </Row>
           </ModalBody>
           <ModalFooter>
@@ -168,4 +267,3 @@ const MedicalModal = ({ isOpen, toggle, imamProfileId }) => {
 };
 
 export default MedicalModal;
-

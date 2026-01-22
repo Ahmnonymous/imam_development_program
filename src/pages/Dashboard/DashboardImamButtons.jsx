@@ -14,7 +14,6 @@ import MuslimBonusModal from "./modals/MuslimBonusModal";
 import BabyBonusModal from "./modals/BabyBonusModal";
 import RelationshipsModal from "./modals/RelationshipsModal";
 import BoreholeModal from "./modals/BoreholeModal";
-import FinancialAssistanceModal from "./modals/FinancialAssistanceModal";
 import EducationalDevelopmentModal from "./modals/EducationalDevelopmentModal";
 import TreePlantingModal from "./modals/TreePlantingModal";
 import WAQFLoanModal from "./modals/WAQFLoanModal";
@@ -31,7 +30,6 @@ import communitySvg from "../../assets/images/animated_email_images/Community En
 import nikahBonusSvg from "../../assets/images/animated_email_images/Nikah Bonus/illustration-of-a-muslim-couple-in-love-2025-10-20-06-25-40-utc.svg?raw";
 import muslimBonusSvg from "../../assets/images/animated_email_images/New Muslim Bonus/flat-illustration-of-arab-man-in-traditional-dress-2025-10-20-02-32-55-utc.svg?raw";
 import babyBonusSvg from "../../assets/images/animated_email_images/New Baby Bonus/woman-cradling-a-baby-2025-11-05-06-06-57-utc.svg?raw";
-import financialAssistanceSvg from "../../assets/images/animated_email_images/Financial Assistance/writing-a-check-illustration-2025-10-20-04-33-44-utc.svg?raw";
 import relationshipsSvg from "../../assets/images/animated_email_images/Relationships/elderly-couple-sitting-together-illustration-2025-10-20-06-26-38-utc.svg?raw";
 import educationalDevelopmentSvg from "../../assets/images/animated_email_images/Educational Development/online-education-with-graduation-cap-and-laptop-il-2025-10-20-06-01-25-utc.svg?raw";
 import treePlantingSvg from "../../assets/images/animated_email_images/Tree/planting-a-sapling-duotone-illustration-2025-10-20-04-36-48-utc.svg?raw";
@@ -51,7 +49,6 @@ const SVG_MAPPING = {
   nikahBonus: nikahBonusSvg,
   muslimBonus: muslimBonusSvg,
   babyBonus: babyBonusSvg,
-  financialAssistance: financialAssistanceSvg,
   relationships: relationshipsSvg,
   educationalDevelopment: educationalDevelopmentSvg,
   treePlanting: treePlantingSvg,
@@ -77,7 +74,6 @@ const DashboardImamButtons = () => {
     babyBonus: false,
     relationships: false,
     borehole: false,
-    financialAssistance: false,
     educationalDevelopment: false,
     treePlanting: false,
     waqfLoan: false,
@@ -319,11 +315,6 @@ const DashboardImamButtons = () => {
       <BoreholeModal
         isOpen={modals.borehole}
         toggle={() => closeModal("borehole")}
-        imamProfileId={imamProfile.id}
-      />
-      <FinancialAssistanceModal
-        isOpen={modals.financialAssistance}
-        toggle={() => closeModal("financialAssistance")}
         imamProfileId={imamProfile.id}
       />
       <EducationalDevelopmentModal

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Modal, ModalHeader, ModalBody, ModalFooter, Form, FormGroup, Label, Input, FormFeedback, Row, Col, Button } from "reactstrap";
 import { useForm, Controller } from "react-hook-form";
 import axiosApi from "../../../helpers/api_helper";
@@ -8,19 +8,50 @@ import TopRightAlert from "../../../components/Common/TopRightAlert";
 
 const AudioModal = ({ isOpen, toggle, imamProfileId }) => {
   const [alert, setAlert] = useState(null);
+  const [imamProfile, setImamProfile] = useState(null);
+  const [lookupData, setLookupData] = useState({ suburb: [] });
   const { control, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm();
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && imamProfileId) {
+      fetchImamProfile();
+      fetchLookupData();
       reset({
         khutbah_topic: "",
         khutbah_date: "",
+        masjid_name: "",
+        town: "",
         attendance_count: "",
         comment: "",
         Audio: null,
       });
     }
-  }, [isOpen, reset]);
+  }, [isOpen, imamProfileId, reset]);
+
+  const fetchImamProfile = async () => {
+    try {
+      const response = await axiosApi.get(`${API_BASE_URL}/imamProfiles/${imamProfileId}`);
+      if (response.data) {
+        setImamProfile(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching imam profile:", error);
+    }
+  };
+
+  const fetchLookupData = async () => {
+    try {
+      const suburbRes = await axiosApi.get(`${API_BASE_URL}/lookup/Suburb`);
+      setLookupData({ suburb: suburbRes.data || [] });
+    } catch (error) {
+      console.error("Error fetching lookup data:", error);
+    }
+  };
+
+  const filteredSuburbs = useMemo(() => {
+    if (!imamProfile?.suburb_id || !lookupData?.suburb) return [];
+    return lookupData.suburb.filter(suburb => Number(suburb.id) === Number(imamProfile.suburb_id));
+  }, [imamProfile?.suburb_id, lookupData?.suburb]);
 
   const showAlert = (message, color = "success") => {
     setAlert({ message, color });
@@ -34,6 +65,8 @@ const AudioModal = ({ isOpen, toggle, imamProfileId }) => {
       formData.append("imam_profile_id", imamProfileId);
       formData.append("khutbah_topic", data.khutbah_topic);
       formData.append("khutbah_date", data.khutbah_date);
+      formData.append("masjid_name", data.masjid_name || "");
+      formData.append("town", data.town ? parseInt(data.town) : "");
       formData.append("attendance_count", data.attendance_count || "");
       formData.append("comment", data.comment || "");
       
@@ -85,6 +118,35 @@ const AudioModal = ({ isOpen, toggle, imamProfileId }) => {
                     render={({ field }) => <Input type="date" invalid={!!errors.khutbah_date} {...field} />} 
                   />
                   {errors.khutbah_date && <FormFeedback>{errors.khutbah_date.message}</FormFeedback>}
+                </FormGroup>
+              </Col>
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Masjid Name <span className="text-danger">*</span></Label>
+                  <Controller 
+                    name="masjid_name" 
+                    control={control} 
+                    rules={{ required: "Masjid name is required" }} 
+                    render={({ field }) => <Input type="text" invalid={!!errors.masjid_name} {...field} />} 
+                  />
+                  {errors.masjid_name && <FormFeedback>{errors.masjid_name.message}</FormFeedback>}
+                </FormGroup>
+              </Col>
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Town</Label>
+                  <Controller 
+                    name="town" 
+                    control={control} 
+                    render={({ field }) => (
+                      <Input type="select" {...field}>
+                        <option value="">Select Town</option>
+                        {(filteredSuburbs || []).map((x) => (
+                          <option key={x.id} value={x.id}>{x.name}</option>
+                        ))}
+                      </Input>
+                    )} 
+                  />
                 </FormGroup>
               </Col>
               <Col md={6}>

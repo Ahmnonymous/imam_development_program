@@ -8,9 +8,11 @@
 // 3 = Org Admin
 // 4 = Org Executives (VIEW ONLY)
 // 5 = Org Caseworkers (Applicants/Tasks only)
+// 6 = Imam User
+// 7 = Admin (same as App Admin but cannot access Administration page)
 
 import React from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import PropTypes from "prop-types";
 import { useRole } from "../helpers/useRole";
 
@@ -26,6 +28,7 @@ import { useRole } from "../helpers/useRole";
 const ProtectedRoute = ({ children, allowedRoles, redirectTo = "/unauthorized" }) => {
   try {
     const { roleKey, userType, isAppAdmin } = useRole();
+    const location = useLocation();
     const authToken = typeof window !== "undefined" ? localStorage.getItem("authToken") : null;
 
     // Require authentication
@@ -42,6 +45,19 @@ const ProtectedRoute = ({ children, allowedRoles, redirectTo = "/unauthorized" }
 
     // App Admin bypass other restrictions
     if (isAppAdmin) {
+      return children;
+    }
+
+    // Admin (type 7) bypass restrictions except for lookup routes
+    // Check if current path is a lookup route
+    const isLookupRoute = location.pathname.startsWith("/lookups");
+    
+    if (userType === 7) {
+      // Admin cannot access lookup routes
+      if (isLookupRoute) {
+        return <Navigate to={redirectTo} replace />;
+      }
+      // For all other routes, Admin has same access as App Admin
       return children;
     }
 

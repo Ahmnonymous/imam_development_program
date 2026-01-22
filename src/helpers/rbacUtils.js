@@ -7,6 +7,7 @@ const ROLE_IDS = {
   OrgExecutive: 4,
   OrgCaseworker: 5,
   ImamUser: 6,
+  Admin: 7,
 };
 
 const ROLE_BY_ID = Object.entries(ROLE_IDS).reduce((acc, [key, id]) => {
@@ -143,6 +144,18 @@ const ROLE_RULES = {
       denyEdit: createSet(["tasks", "comments", "relationships", "homevisits", "financialassistance", "foodassistance", "attachments", "programs", "filemanager", "chat", "policy", "reports", "training", "employee", "lookup"]),
     },
     navHide: createSet(["tasks", "comments", "relationships", "homevisits", "financialassistance", "foodassistance", "attachments", "programs", "filemanager", "chat", "policy", "reports", "training", "employee", "lookup"]),
+    readOnly: false,
+  },
+  Admin: {
+    id: ROLE_IDS.Admin,
+    reportScope: "all",
+    modules: {
+      view: "all",
+      edit: "all",
+      denyView: createSet(["lookup"]),
+      denyEdit: createSet(["lookup"]),
+    },
+    navHide: createSet(["lookup"]), // Hide Administration page from navigation
     readOnly: false,
   },
 };

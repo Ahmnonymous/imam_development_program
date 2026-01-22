@@ -15,6 +15,7 @@ const ROLES = {
   ORG_EXECUTIVE: 4,
   ORG_CASEWORKER: 5,
   IMAM_USER: 6,
+  ADMIN: 7,
 };
 
 const ROLE_KEY_BY_ID = {
@@ -24,6 +25,7 @@ const ROLE_KEY_BY_ID = {
   [ROLES.ORG_EXECUTIVE]: "OrgExecutive",
   [ROLES.ORG_CASEWORKER]: "OrgCaseworker",
   [ROLES.IMAM_USER]: "ImamUser",
+  [ROLES.ADMIN]: "Admin",
 };
 
 const MODULES = {
@@ -214,6 +216,22 @@ const ROLE_RULES = {
       },
     },
   },
+  Admin: {
+    id: ROLES.ADMIN,
+    label: "Admin",
+    centerScoped: false,
+    reportScope: "all",
+    moduleAccess: {
+      allow: "*",
+      deny: [],
+    },
+    methodAccess: {
+      default: METHODS.FULL,
+      overrides: {
+        [MODULES.LOOKUP]: METHODS.READ_ONLY, // Admin can read lookup data but not modify it
+      },
+    },
+  },
 };
 
 const normalizePath = (path = "") => path.toLowerCase();
@@ -262,10 +280,7 @@ const normalizeMethod = (method = "GET") => method.toUpperCase();
 
 const canAccessRoute = (role, routePath = "") => {
   const moduleKey = getModuleFromRoute(routePath);
-  // Always allow lookups
-  if (moduleKey === MODULES.LOOKUP) {
-    return true;
-  }
+  // Check module access (respects deny list)
   return isModuleAllowed(role, moduleKey);
 };
 

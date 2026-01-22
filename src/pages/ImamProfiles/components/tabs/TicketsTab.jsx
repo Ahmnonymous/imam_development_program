@@ -10,8 +10,9 @@ import { API_BASE_URL, API_STREAM_BASE_URL } from "../../../../helpers/url_helpe
 import { getAuditName } from "../../../../helpers/userStorage";
 
 const TicketsTab = ({ tickets, lookupData, onUpdate, showAlert }) => {
-  const { isOrgExecutive, isAppAdmin, isGlobalAdmin } = useRole();
+  const { isOrgExecutive, isAppAdmin, isGlobalAdmin, isCaseworker } = useRole();
   const isAdmin = isAppAdmin || isGlobalAdmin;
+  const isAdminOrCaseworker = isAppAdmin || isGlobalAdmin || isCaseworker;
   const [modalOpen, setModalOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
   const { deleteModalOpen, deleteItem, deleteLoading, showDeleteConfirmation, hideDeleteConfirmation, confirmDelete } = useDeleteConfirmation();
@@ -24,7 +25,9 @@ const TicketsTab = ({ tickets, lookupData, onUpdate, showAlert }) => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
 
   const formatFileSize = (bytes) => {
@@ -37,18 +40,27 @@ const TicketsTab = ({ tickets, lookupData, onUpdate, showAlert }) => {
 
   useEffect(() => {
     if (modalOpen) {
+      // Find Open status ID (default status)
+      const openStatus = lookupData?.status?.find(s => 
+        (s.name || "").toLowerCase() === "open"
+      );
+      const defaultStatusId = editItem?.status_id 
+        ? String(editItem.status_id) 
+        : (openStatus?.id ? String(openStatus.id) : "1");
+      
       reset({
         classification: editItem?.classification ? String(editItem.classification) : "",
         description: editItem?.description || "",
-        status_id: editItem?.status_id ? String(editItem.status_id) : "1",
+        status_id: defaultStatusId,
         allocated_to: editItem?.allocated_to ? String(editItem.allocated_to) : "",
-        created_time: formatDateForInput(editItem?.created_time),
+        created_time: editItem?.created_time ? new Date(editItem.created_time).toISOString().slice(0, 16) : new Date().toISOString().slice(0, 16),
         closed_time: formatDateForInput(editItem?.closed_time),
         closing_notes: editItem?.closing_notes || "",
         Media: null,
+        acknowledgment: editItem ? true : false,
       });
     }
-  }, [editItem, modalOpen, reset]);
+  }, [editItem, modalOpen, reset, lookupData?.status]);
 
   const toggleModal = () => {
     setModalOpen(!modalOpen);
@@ -68,13 +80,24 @@ const TicketsTab = ({ tickets, lookupData, onUpdate, showAlert }) => {
   const onSubmit = async (data) => {
     try {
       const formData = new FormData();
-      formData.append("classification", data.classification ? parseInt(data.classification) : "");
+      
+      // Only include admin/caseworker fields if user has permission
+      if (isAdminOrCaseworker) {
+        formData.append("classification", data.classification ? parseInt(data.classification) : "");
+        formData.append("status_id", data.status_id ? parseInt(data.status_id) : 1);
+        formData.append("allocated_to", data.allocated_to ? parseInt(data.allocated_to) : "");
+        formData.append("closing_notes", data.closing_notes || "");
+      } else {
+        // For non-admin users, set default status to Open
+        const openStatus = lookupData?.status?.find(s => 
+          (s.name || "").toLowerCase() === "open"
+        );
+        formData.append("status_id", openStatus?.id || 1);
+      }
+      
       formData.append("description", data.description || "");
-      formData.append("status_id", data.status_id ? parseInt(data.status_id) : 1);
-      formData.append("allocated_to", data.allocated_to ? parseInt(data.allocated_to) : "");
-      formData.append("created_time", data.created_time || "");
+      formData.append("created_time", data.created_time || new Date().toISOString());
       formData.append("closed_time", data.closed_time || "");
-      formData.append("closing_notes", data.closing_notes || "");
       
       if (data.Media && data.Media.length > 0) {
         formData.append("Media", data.Media[0]);
@@ -129,13 +152,6 @@ const TicketsTab = ({ tickets, lookupData, onUpdate, showAlert }) => {
   const columns = useMemo(
     () => [
       {
-        header: "Classification",
-        accessorKey: "classification",
-        enableSorting: true,
-        enableColumnFilter: false,
-        cell: (cell) => getLookupValue(lookupData?.classification, cell.getValue()),
-      },
-      {
         header: "Description",
         accessorKey: "description",
         enableSorting: true,
@@ -155,6 +171,13 @@ const TicketsTab = ({ tickets, lookupData, onUpdate, showAlert }) => {
             {cell.getValue()?.length > 50 ? "..." : ""}
           </span>
         ),
+      },
+      {
+        header: "Classification",
+        accessorKey: "classification",
+        enableSorting: true,
+        enableColumnFilter: false,
+        cell: (cell) => getLookupValue(lookupData?.classification, cell.getValue()),
       },
       {
         header: "Status",
@@ -261,90 +284,98 @@ const TicketsTab = ({ tickets, lookupData, onUpdate, showAlert }) => {
         <Form onSubmit={handleSubmit(onSubmit)}>
           <ModalBody>
             <Row>
-              <Col md={6}>
-                <FormGroup>
-                  <Label>Classification</Label>
-                  <Controller
-                    name="classification"
-                    control={control}
-                    render={({ field }) => (
-                      <Input {...field} type="select">
-                        <option value="">Select Classification</option>
-                        {(lookupData?.classification || []).map((item) => (
-                          <option key={item.id} value={item.id}>
-                            {item.name}
-                          </option>
-                        ))}
-                      </Input>
-                    )}
-                  />
-                </FormGroup>
-              </Col>
-              <Col md={6}>
-                <FormGroup>
-                  <Label>Status</Label>
-                  <Controller
-                    name="status_id"
-                    control={control}
-                    render={({ field }) => (
-                      <Input {...field} type="select">
-                        {(lookupData?.status || []).map((item) => (
-                          <option key={item.id} value={item.id}>
-                            {item.name}
-                          </option>
-                        ))}
-                      </Input>
-                    )}
-                  />
-                </FormGroup>
-              </Col>
-            </Row>
-            <FormGroup>
-              <Label>Description</Label>
-              <Controller
-                name="description"
-                control={control}
-                render={({ field }) => (
-                  <Input {...field} type="textarea" rows="4" placeholder="Enter ticket description" />
-                )}
-              />
-            </FormGroup>
-            <Row>
-              <Col md={6}>
-                <FormGroup>
-                  <Label>Allocated To</Label>
-                  <Controller
-                    name="allocated_to"
-                    control={control}
-                    render={({ field }) => (
-                      <Input {...field} type="select">
-                        <option value="">Select Admin</option>
-                        {(lookupData?.employees || []).filter(e => e.user_type === 1).map((item) => (
-                          <option key={item.id} value={item.id}>
-                            {item.name} {item.surname}
-                          </option>
-                        ))}
-                      </Input>
-                    )}
-                  />
-                </FormGroup>
-              </Col>
-              <Col md={6}>
-                <FormGroup>
-                  <Label>Created Time</Label>
-                  <Controller
-                    name="created_time"
-                    control={control}
-                    render={({ field }) => (
-                      <Input {...field} type="date" />
-                    )}
-                  />
-                </FormGroup>
-              </Col>
-            </Row>
-            {isAdmin && (
-              <>
-                <Row>
+              {/* Admin/Caseworker only fields */}
+              {isAdminOrCaseworker && (
+                <>
+                  <Col md={6}>
+                    <FormGroup>
+                      <Label>Classification</Label>
+                      <Controller
+                        name="classification"
+                        control={control}
+                        render={({ field }) => (
+                          <Input {...field} type="select" disabled={isOrgExecutive}>
+                            <option value="">Select Classification</option>
+                            {(lookupData?.classification || []).map((item) => (
+                              <option key={item.id} value={item.id}>
+                                {item.name}
+                              </option>
+                            ))}
+                          </Input>
+                        )}
+                      />
+                    </FormGroup>
+                  </Col>
+                  <Col md={6}>
+                    <FormGroup>
+                      <Label>Status</Label>
+                      <Controller
+                        name="status_id"
+                        control={control}
+                        render={({ field }) => {
+                          // Filter statuses to only Open, Inprogress, Completed
+                          const filteredStatuses = (lookupData?.status || []).filter(status => {
+                            const statusName = (status.name || "").toLowerCase();
+                            return statusName === "open" || statusName === "inprogress" || statusName === "completed" ||
+                                   statusName === "in progress" || statusName === "closed";
+                          });
+                          return (
+                            <Input {...field} type="select" disabled={isOrgExecutive}>
+                              {filteredStatuses.length > 0 ? filteredStatuses.map((item) => (
+                                <option key={item.id} value={item.id}>
+                                  {item.name}
+                                </option>
+                              )) : (lookupData?.status || []).map((item) => (
+                                <option key={item.id} value={item.id}>
+                                  {item.name}
+                                </option>
+                              ))}
+                            </Input>
+                          );
+                        }}
+                      />
+                    </FormGroup>
+                  </Col>
+                  <Col md={6}>
+                    <FormGroup>
+                      <Label>Allocated To</Label>
+                      <Controller
+                        name="allocated_to"
+                        control={control}
+                        render={({ field }) => (
+                          <Input {...field} type="select" disabled={isOrgExecutive}>
+                            <option value="">Select Admin</option>
+                            {(lookupData?.employees || []).filter(e => e.user_type === 1).map((item) => (
+                              <option key={item.id} value={item.id}>
+                                {item.name} {item.surname}
+                              </option>
+                            ))}
+                          </Input>
+                        )}
+                      />
+                    </FormGroup>
+                  </Col>
+                  {/* Created Time - Read-only timestamp */}
+                  <Col md={6}>
+                    <FormGroup>
+                      <Label>Created Time</Label>
+                      <Controller
+                        name="created_time"
+                        control={control}
+                        render={({ field }) => (
+                          <Input 
+                            {...field} 
+                            type="datetime-local" 
+                            readOnly
+                            disabled={isOrgExecutive}
+                            style={{ cursor: "not-allowed" }}
+                            className="bg-body-secondary"
+                          />
+                        )}
+                      />
+                      <small className="text-muted">This field is automatically set and cannot be edited.</small>
+                    </FormGroup>
+                  </Col>
                   <Col md={6}>
                     <FormGroup>
                       <Label>Closed Time</Label>
@@ -352,65 +383,127 @@ const TicketsTab = ({ tickets, lookupData, onUpdate, showAlert }) => {
                         name="closed_time"
                         control={control}
                         render={({ field }) => (
-                          <Input {...field} type="date" />
+                          <Input {...field} type="datetime-local" disabled={isOrgExecutive} />
                         )}
                       />
                     </FormGroup>
                   </Col>
-                </Row>
+                </>
+              )}
+              
+              {/* Description - Always visible */}
+              <Col md={12}>
                 <FormGroup>
-                  <Label>Closing Notes (Not Visible to Imams)</Label>
+                  <Label>Description <span className="text-danger">*</span></Label>
                   <Controller
-                    name="closing_notes"
+                    name="description"
                     control={control}
+                    rules={{ required: "Description is required" }}
                     render={({ field }) => (
-                      <Input {...field} type="textarea" rows="3" placeholder="Enter closing notes" />
+                      <Input 
+                        {...field} 
+                        type="textarea" 
+                        rows="4" 
+                        invalid={!!errors.description}
+                        disabled={isOrgExecutive}
+                        placeholder="Enter ticket description" 
+                      />
+                    )}
+                  />
+                  {errors.description && <FormFeedback>{errors.description.message}</FormFeedback>}
+                </FormGroup>
+              </Col>
+              
+              {/* Media - Always visible */}
+              <Col md={12}>
+                <FormGroup>
+                  <Label>Media Upload</Label>
+                  <Controller
+                    name="Media"
+                    control={control}
+                    render={({ field: { onChange, value, ...field } }) => (
+                      <Input
+                        {...field}
+                        type="file"
+                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.mp4,.mp3"
+                        disabled={isOrgExecutive}
+                        onChange={(e) => {
+                          onChange(e.target.files);
+                        }}
+                      />
+                    )}
+                  />
+                  {editItem && (editItem.media === "exists" || editItem.media_filename) && (
+                    <div className="mt-2 p-2 border rounded bg-light">
+                      <div className="d-flex align-items-center">
+                        <i className="bx bx-file font-size-24 text-primary me-2"></i>
+                        <div className="flex-grow-1">
+                          <div className="fw-medium">{editItem.media_filename || "file"}</div>
+                          <small className="text-muted">
+                            {formatFileSize(editItem.media_size)} • Current file
+                          </small>
+                        </div>
+                        <a
+                          href={`${API_STREAM_BASE_URL}/tickets/${editItem.id}/view-media`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title="View"
+                        >
+                          <i 
+                            className="bx bx-show text-success" 
+                            style={{ cursor: "pointer", fontSize: "16px" }}
+                          ></i>
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                </FormGroup>
+              </Col>
+              
+              {/* Closing Notes - Admin/Caseworker only */}
+              {isAdminOrCaseworker && (
+                <Col md={12}>
+                  <FormGroup>
+                    <Label>Closing Notes</Label>
+                    <Controller
+                      name="closing_notes"
+                      control={control}
+                      render={({ field }) => (
+                        <Input {...field} type="textarea" rows="3" disabled={isOrgExecutive} placeholder="Enter closing notes" />
+                      )}
+                    />
+                  </FormGroup>
+                </Col>
+              )}
+            </Row>
+            <Row>
+              <Col md={12}>
+                <FormGroup check>
+                  <Controller
+                    name="acknowledgment"
+                    control={control}
+                    rules={{ required: "You must acknowledge the statement to proceed" }}
+                    render={({ field }) => (
+                      <>
+                        <Input
+                          type="checkbox"
+                          id="acknowledgment-tickets"
+                          checked={field.value || false}
+                          onChange={(e) => field.onChange(e.target.checked)}
+                          invalid={!!errors.acknowledgment}
+                        />
+                        <Label check htmlFor="acknowledgment-tickets">
+                          I swear by Allah, the All-Hearing and the All-Seeing, that I have completed this form truthfully and honestly, to the best of my knowledge and belief.
+                        </Label>
+                        {errors.acknowledgment && (
+                          <FormFeedback>{errors.acknowledgment.message}</FormFeedback>
+                        )}
+                      </>
                     )}
                   />
                 </FormGroup>
-              </>
-            )}
-            <FormGroup>
-              <Label>Media Upload</Label>
-              <Controller
-                name="Media"
-                control={control}
-                render={({ field: { onChange, value, ...field } }) => (
-                  <Input
-                    {...field}
-                    type="file"
-                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.mp4,.mp3"
-                    onChange={(e) => {
-                      onChange(e.target.files);
-                    }}
-                  />
-                )}
-              />
-              {editItem && (editItem.media === "exists" || editItem.media_filename) && (
-                <div className="mt-2 p-2 border rounded bg-light">
-                  <div className="d-flex align-items-center">
-                    <i className="bx bx-file font-size-24 text-primary me-2"></i>
-                    <div className="flex-grow-1">
-                      <div className="fw-medium">{editItem.media_filename || "file"}</div>
-                      <small className="text-muted">
-                        {formatFileSize(editItem.media_size)} • Current file
-                      </small>
-                    </div>
-                    <a
-                      href={`${API_STREAM_BASE_URL}/tickets/${editItem.id}/view-media`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      title="View"
-                    >
-                      <i 
-                        className="bx bx-show text-success" 
-                        style={{ cursor: "pointer", fontSize: "16px" }}
-                      ></i>
-                    </a>
-                  </div>
-                </div>
-              )}
-            </FormGroup>
+              </Col>
+            </Row>
           </ModalBody>
           <ModalFooter className="d-flex justify-content-between">
             <div>

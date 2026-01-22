@@ -17,8 +17,7 @@ import { Link } from "react-router-dom";
 
 // import images
 import profileImg from "../../assets/images/profile-img.png";
-import logo from "../../assets/images/logo.jpeg";
-import lightlogo from "../../assets/images/logo.jpeg";
+import authLogo from "../../assets/images/animated_email_images/Logos/IDP Logo for Favicon login and register.png";
 
 const Register = () => {
   document.title = "Register | IDP - Admin & Dashboard";
@@ -75,11 +74,18 @@ const Register = () => {
   // Redirect to login on successful registration
   useEffect(() => {
     if (user) {
+      // Store name and surname in sessionStorage for create profile page
+      if (validation.values.name && validation.values.surname) {
+        sessionStorage.setItem("registrationData", JSON.stringify({
+          name: validation.values.name,
+          surname: validation.values.surname
+        }));
+      }
       setTimeout(() => {
         navigate("/login");
       }, 2000);
     }
-  }, [user, navigate]);
+  }, [user, navigate, validation.values.name, validation.values.surname]);
 
   return (
     <React.Fragment>
@@ -113,8 +119,8 @@ const Register = () => {
                       <div className="avatar-md profile-user-wid mb-4">
                         <span className="avatar-title rounded-circle bg-light">
                           <img
-                            src={lightlogo}
-                            alt=""
+                            src={authLogo}
+                            alt="IDP"
                             className="rounded-circle"
                             height="34"
                           />
@@ -125,8 +131,8 @@ const Register = () => {
                       <div className="avatar-md profile-user-wid mb-4">
                         <span className="avatar-title rounded-circle bg-light">
                           <img
-                            src={logo}
-                            alt=""
+                            src={authLogo}
+                            alt="IDP"
                             className="rounded-circle"
                             height="34"
                           />

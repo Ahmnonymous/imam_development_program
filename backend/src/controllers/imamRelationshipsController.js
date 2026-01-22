@@ -25,22 +25,54 @@ const imamRelationshipsController = {
     try {
       const fields = { ...req.body };
       
-      const username = req.user?.username || 'system';
-      fields.created_by = username;
-      fields.updated_by = username;
+      // Normalize field names to match database schema (lowercase for unquoted identifiers)
+      const fieldMapping = {
+        relationship_type: 'relationship_type',
+        'Relationship_Type': 'relationship_type',
+        employment_status: 'employment_status',
+        'Employment_Status': 'employment_status',
+        gender: 'gender',
+        'Gender': 'gender',
+        highest_education: 'highest_education',
+        'Highest_Education': 'highest_education',
+        health_condition: 'health_condition',
+        'Health_Condition': 'health_condition',
+        imam_profile_id: 'imam_profile_id',
+        name: 'name',
+        'Name': 'name',
+        surname: 'surname',
+        'Surname': 'surname',
+        id_number: 'id_number',
+        'ID_Number': 'id_number',
+        date_of_birth: 'date_of_birth',
+        'Date_of_Birth': 'date_of_birth',
+      };
       
-      // Convert empty strings to null for nullable bigint fields
-      const bigintFields = ['Relationship_Type', 'Employment_Status', 'Gender', 'Highest_Education', 'Health_Condition'];
-      bigintFields.forEach(fieldName => {
-        if (fields[fieldName] === '' || fields[fieldName] === undefined) {
-          fields[fieldName] = null;
-        } else if (fields[fieldName] !== null && typeof fields[fieldName] === 'string') {
-          const parsed = parseInt(fields[fieldName], 10);
-          fields[fieldName] = isNaN(parsed) ? null : parsed;
+      const normalizedFields = {};
+      Object.keys(fields).forEach(key => {
+        const dbFieldName = fieldMapping[key] || fieldMapping[key.toLowerCase()] || key.toLowerCase();
+        // Prevent duplicate columns
+        if (!normalizedFields.hasOwnProperty(dbFieldName)) {
+          normalizedFields[dbFieldName] = fields[key];
         }
       });
       
-      const data = await imamRelationshipsModel.create(fields);
+      const username = req.user?.username || 'system';
+      normalizedFields.created_by = username;
+      normalizedFields.updated_by = username;
+      
+      // Convert empty strings to null for nullable bigint fields
+      const bigintFields = ['relationship_type', 'employment_status', 'gender', 'highest_education', 'health_condition'];
+      bigintFields.forEach(fieldName => {
+        if (normalizedFields[fieldName] === '' || normalizedFields[fieldName] === undefined) {
+          normalizedFields[fieldName] = null;
+        } else if (normalizedFields[fieldName] !== null && typeof normalizedFields[fieldName] === 'string') {
+          const parsed = parseInt(normalizedFields[fieldName], 10);
+          normalizedFields[fieldName] = isNaN(parsed) ? null : parsed;
+        }
+      });
+      
+      const data = await imamRelationshipsModel.create(normalizedFields);
       res.status(201).json(data); 
     } catch(err){ 
       res.status(500).json({error: err.message}); 
@@ -51,22 +83,55 @@ const imamRelationshipsController = {
     try {
       const fields = { ...req.body };
       
-      const username = req.user?.username || 'system';
-      fields.updated_by = username;
-      delete fields.created_by;
+      // Normalize field names to match database schema (lowercase for unquoted identifiers)
+      const fieldMapping = {
+        relationship_type: 'relationship_type',
+        'Relationship_Type': 'relationship_type',
+        employment_status: 'employment_status',
+        'Employment_Status': 'employment_status',
+        gender: 'gender',
+        'Gender': 'gender',
+        highest_education: 'highest_education',
+        'Highest_Education': 'highest_education',
+        health_condition: 'health_condition',
+        'Health_Condition': 'health_condition',
+        imam_profile_id: 'imam_profile_id',
+        name: 'name',
+        'Name': 'name',
+        surname: 'surname',
+        'Surname': 'surname',
+        id_number: 'id_number',
+        'ID_Number': 'id_number',
+        date_of_birth: 'date_of_birth',
+        'Date_of_Birth': 'date_of_birth',
+        status_id: 'status_id',
+      };
       
-      // Convert empty strings to null for nullable bigint fields
-      const bigintFields = ['Relationship_Type', 'Employment_Status', 'Gender', 'Highest_Education', 'Health_Condition'];
-      bigintFields.forEach(fieldName => {
-        if (fields[fieldName] === '' || fields[fieldName] === undefined) {
-          fields[fieldName] = null;
-        } else if (fields[fieldName] !== null && typeof fields[fieldName] === 'string') {
-          const parsed = parseInt(fields[fieldName], 10);
-          fields[fieldName] = isNaN(parsed) ? null : parsed;
+      const normalizedFields = {};
+      Object.keys(fields).forEach(key => {
+        const dbFieldName = fieldMapping[key] || fieldMapping[key.toLowerCase()] || key.toLowerCase();
+        // Prevent duplicate columns
+        if (!normalizedFields.hasOwnProperty(dbFieldName)) {
+          normalizedFields[dbFieldName] = fields[key];
         }
       });
       
-      const data = await imamRelationshipsModel.update(req.params.id, fields);
+      const username = req.user?.username || 'system';
+      normalizedFields.updated_by = username;
+      delete normalizedFields.created_by;
+      
+      // Convert empty strings to null for nullable bigint fields
+      const bigintFields = ['relationship_type', 'employment_status', 'gender', 'highest_education', 'health_condition'];
+      bigintFields.forEach(fieldName => {
+        if (normalizedFields[fieldName] === '' || normalizedFields[fieldName] === undefined) {
+          normalizedFields[fieldName] = null;
+        } else if (normalizedFields[fieldName] !== null && typeof normalizedFields[fieldName] === 'string') {
+          const parsed = parseInt(normalizedFields[fieldName], 10);
+          normalizedFields[fieldName] = isNaN(parsed) ? null : parsed;
+        }
+      });
+      
+      const data = await imamRelationshipsModel.update(req.params.id, normalizedFields);
       if (!data) {
         return res.status(404).json({ error: "Not found" });
       }

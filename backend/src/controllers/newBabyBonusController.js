@@ -39,6 +39,24 @@ const newBabyBonusController = {
         fields.baby_gender = isNaN(parsed) ? null : parsed;
       }
       
+      if (fields.gender === '' || fields.gender === undefined) {
+        fields.gender = null;
+      } else if (fields.gender !== null && typeof fields.gender === 'string') {
+        const parsed = parseInt(fields.gender, 10);
+        fields.gender = isNaN(parsed) ? null : parsed;
+      }
+      
+      if (fields.spouse_relationship_id === '' || fields.spouse_relationship_id === undefined) {
+        fields.spouse_relationship_id = null;
+      } else if (fields.spouse_relationship_id !== null && typeof fields.spouse_relationship_id === 'string') {
+        const parsed = parseInt(fields.spouse_relationship_id, 10);
+        fields.spouse_relationship_id = isNaN(parsed) ? null : parsed;
+      }
+      
+      if (fields.identification_number === '' || fields.identification_number === undefined) {
+        fields.identification_number = null;
+      }
+      
       if (req.files && req.files.Baby_Image && req.files.Baby_Image.length > 0) {
         const file = req.files.Baby_Image[0];
         const buffer = await fs.readFile(file.path);
@@ -86,6 +104,24 @@ const newBabyBonusController = {
       } else if (fields.baby_gender !== null && typeof fields.baby_gender === 'string') {
         const parsed = parseInt(fields.baby_gender, 10);
         fields.baby_gender = isNaN(parsed) ? null : parsed;
+      }
+      
+      if (fields.gender === '' || fields.gender === undefined) {
+        fields.gender = null;
+      } else if (fields.gender !== null && typeof fields.gender === 'string') {
+        const parsed = parseInt(fields.gender, 10);
+        fields.gender = isNaN(parsed) ? null : parsed;
+      }
+      
+      if (fields.spouse_relationship_id === '' || fields.spouse_relationship_id === undefined) {
+        fields.spouse_relationship_id = null;
+      } else if (fields.spouse_relationship_id !== null && typeof fields.spouse_relationship_id === 'string') {
+        const parsed = parseInt(fields.spouse_relationship_id, 10);
+        fields.spouse_relationship_id = isNaN(parsed) ? null : parsed;
+      }
+      
+      if (fields.identification_number === '' || fields.identification_number === undefined) {
+        fields.identification_number = null;
       }
       
       if (req.files && req.files.Baby_Image && req.files.Baby_Image.length > 0) {

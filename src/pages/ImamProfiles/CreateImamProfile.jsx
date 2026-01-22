@@ -27,6 +27,7 @@ import { API_BASE_URL } from "../../helpers/url_helper";
 import { getAuditName } from "../../helpers/userStorage";
 import { useRole } from "../../helpers/useRole";
 import MapPicker from "../../components/Common/MapPicker";
+import exifr from "exifr";
 
 const CreateImamProfile = () => {
   document.title = "Create Imam Profile | IDP";
@@ -76,6 +77,28 @@ const CreateImamProfile = () => {
 
   const { isGlobalAdmin, centerId: userCenterId, userType } = useRole();
 
+  // Get registration data from sessionStorage for default values
+  const getRegistrationDefaults = () => {
+    try {
+      const registrationData = sessionStorage.getItem("registrationData");
+      if (registrationData) {
+        const data = JSON.parse(registrationData);
+        return {
+          Name: data.name || "",
+          Surname: data.surname || "",
+        };
+      }
+    } catch (error) {
+      console.error("Error parsing registration data:", error);
+    }
+    return {
+      Name: "",
+      Surname: "",
+    };
+  };
+
+  const registrationDefaults = getRegistrationDefaults();
+
   const {
     control,
     handleSubmit,
@@ -85,8 +108,8 @@ const CreateImamProfile = () => {
     setValue,
   } = useForm({
     defaultValues: {
-      Name: "",
-      Surname: "",
+      Name: registrationDefaults.Name,
+      Surname: registrationDefaults.Surname,
       Email: "",
       ID_Number: "",
       File_Number: "",
@@ -183,6 +206,28 @@ const CreateImamProfile = () => {
   useEffect(() => {
     fetchLookupData();
   }, []);
+
+  // Load registration data from sessionStorage (only if no existing profile)
+  useEffect(() => {
+    // Only load registration data if we don't have an existing profile
+    if (!existingProfile) {
+      const registrationData = sessionStorage.getItem("registrationData");
+      if (registrationData) {
+        try {
+          const data = JSON.parse(registrationData);
+          if (data.name || data.surname) {
+            // Set name and surname from registration
+            setValue("Name", data.name || "");
+            setValue("Surname", data.surname || "");
+            // Don't clear sessionStorage here - keep it until profile is successfully created
+          }
+        } catch (error) {
+          console.error("Error parsing registration data:", error);
+          sessionStorage.removeItem("registrationData");
+        }
+      }
+    }
+  }, [existingProfile, setValue]);
 
   // Fetch existing profile when userType becomes available (handles refresh/login)
   useEffect(() => {
@@ -422,6 +467,32 @@ const CreateImamProfile = () => {
     setAlert({ message, color });
     setTimeout(() => setAlert(null), 4000);
   }, []);
+
+  const extractGPSFromImage = useCallback(async (file) => {
+    try {
+      const exifData = await exifr.parse(file, {
+        gps: true,
+        pick: ['GPSLatitude', 'GPSLongitude', 'latitude', 'longitude']
+      });
+
+      if (exifData) {
+        // Try different property names that exifr might return
+        const lat = exifData.latitude || exifData.GPSLatitude || exifData.latitude?.value;
+        const lng = exifData.longitude || exifData.GPSLongitude || exifData.longitude?.value;
+
+        if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
+          setValue("Latitude", lat.toString(), { shouldValidate: true });
+          setValue("Longitude", lng.toString(), { shouldValidate: true });
+          showAlert("GPS coordinates extracted from image successfully", "success");
+          return true;
+        }
+      }
+      return false;
+    } catch (error) {
+      console.error("Error extracting GPS from image:", error);
+      return false;
+    }
+  }, [setValue, showAlert]);
 
   // Add New Country
   const handleAddCountry = async () => {
@@ -813,6 +884,9 @@ const CreateImamProfile = () => {
           }, 1500);
         }
       }
+      
+      // Clear registration data from sessionStorage after successful profile creation/update
+      sessionStorage.removeItem("registrationData");
     } catch (error) {
       console.error("Error saving imam profile:", error);
       showAlert(error?.response?.data?.message || "Failed to save imam profile", "danger");
@@ -1637,15 +1711,17 @@ const CreateImamProfile = () => {
                               id="Masjid_Image"
                               type="file"
                               accept="image/*"
-                              onChange={(e) => {
+                              onChange={async (e) => {
                                 const files = e.target.files;
                                 onChange(files);
                                 
-                                // Try to extract EXIF data from image if available
+                                // Try to extract GPS coordinates from image metadata
                                 if (files && files.length > 0) {
                                   const file = files[0];
-                                  // Note: EXIF extraction would require a library like exif-js
-                                  // For now, we'll rely on manual pin placement
+                                  const hasGPS = await extractGPSFromImage(file);
+                                  if (!hasGPS) {
+                                    showAlert("No GPS data found in image. Please use the map below to select the location.", "info");
+                                  }
                                 }
                               }}
                               {...field}
@@ -1673,7 +1749,7 @@ const CreateImamProfile = () => {
                       </Col>
                     )}
 
-                    {/* Longitude and Latitude - Visible inputs for manual entry (especially if map fails) */}
+                    {/* Longitude and Latitude - Visible inputs for display only (read-only) */}
                     <Col md={6}>
                       <FormGroup>
                         <Label for="Longitude">Longitude</Label>
@@ -1686,12 +1762,13 @@ const CreateImamProfile = () => {
                               type="number"
                               step="any"
                               placeholder="Enter longitude (e.g., 28.2293)"
+                              readOnly
                               {...field}
                             />
                           )}
                         />
                         <small className="text-muted" style={{ fontSize: "0.75rem" }}>
-                          Enter the longitude coordinate of the masjid location
+                          Longitude is set automatically from the map or image GPS data
                         </small>
                       </FormGroup>
                     </Col>
@@ -1708,12 +1785,13 @@ const CreateImamProfile = () => {
                               type="number"
                               step="any"
                               placeholder="Enter latitude (e.g., -25.7479)"
+                              readOnly
                               {...field}
                             />
                           )}
                         />
                         <small className="text-muted" style={{ fontSize: "0.75rem" }}>
-                          Enter the latitude coordinate of the masjid location
+                          Latitude is set automatically from the map or image GPS data
                         </small>
                       </FormGroup>
                     </Col>

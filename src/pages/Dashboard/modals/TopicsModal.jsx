@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Modal, ModalHeader, ModalBody, ModalFooter, Form, FormGroup, Label, Input, FormFeedback, Row, Col, Button } from "reactstrap";
 import { useForm, Controller } from "react-hook-form";
 import axiosApi from "../../../helpers/api_helper";
@@ -8,11 +8,14 @@ import TopRightAlert from "../../../components/Common/TopRightAlert";
 
 const TopicsModal = ({ isOpen, toggle, imamProfileId }) => {
   const [lookupData, setLookupData] = useState({ suburb: [] });
+  const [imamProfile, setImamProfile] = useState(null);
   const [alert, setAlert] = useState(null);
   const { control, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm();
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && imamProfileId) {
+      fetchImamProfile();
+      fetchLookupData();
       reset({
         topic: "",
         masjid_name: "",
@@ -21,9 +24,19 @@ const TopicsModal = ({ isOpen, toggle, imamProfileId }) => {
         language: "",
         comment: "",
       });
-      fetchLookupData();
     }
-  }, [isOpen, reset]);
+  }, [isOpen, imamProfileId, reset]);
+
+  const fetchImamProfile = async () => {
+    try {
+      const response = await axiosApi.get(`${API_BASE_URL}/imamProfiles/${imamProfileId}`);
+      if (response.data) {
+        setImamProfile(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching imam profile:", error);
+    }
+  };
 
   const fetchLookupData = async () => {
     try {
@@ -33,6 +46,11 @@ const TopicsModal = ({ isOpen, toggle, imamProfileId }) => {
       console.error("Error fetching lookup data:", error);
     }
   };
+
+  const filteredSuburbs = useMemo(() => {
+    if (!imamProfile?.suburb_id || !lookupData?.suburb) return [];
+    return lookupData.suburb.filter(suburb => Number(suburb.id) === Number(imamProfile.suburb_id));
+  }, [imamProfile?.suburb_id, lookupData?.suburb]);
 
   const showAlert = (message, color = "success") => {
     setAlert({ message, color });
@@ -106,7 +124,7 @@ const TopicsModal = ({ isOpen, toggle, imamProfileId }) => {
                     render={({ field }) => (
                       <Input type="select" {...field}>
                         <option value="">Select Town</option>
-                        {(lookupData.suburb || []).map((x) => (
+                        {(filteredSuburbs || []).map((x) => (
                           <option key={x.id} value={x.id}>{x.name}</option>
                         ))}
                       </Input>

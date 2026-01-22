@@ -13,18 +13,18 @@ import { API_BASE_URL } from "../helpers/url_helper";
  *   they get access to view and respond to conversations
  * - However, they still cannot create new conversations
  * 
- * For App Admin (role 1):
+ * For App Admin (role 1) and Admin (role 7):
  * - Full access to Chat module
  */
 const ChatRouteGuard = ({ children }) => {
-  const { isAppAdmin, isImamUser, userType } = useRole();
+  const { isAppAdmin, isImamUser, userType, isAdmin } = useRole();
   const [hasConversations, setHasConversations] = useState(null); // null = checking, true = has access, false = no access
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const checkConversations = async () => {
-      // App Admin always has access
-      if (isAppAdmin) {
+      // App Admin and Admin always have access
+      if (isAppAdmin || userType === 7) {
         setHasConversations(true);
         setLoading(false);
         return;
@@ -53,7 +53,7 @@ const ChatRouteGuard = ({ children }) => {
     };
 
     checkConversations();
-  }, [isAppAdmin, isImamUser]);
+  }, [isAppAdmin, isImamUser, userType]);
 
   // Show loading state while checking
   if (loading) {
@@ -70,7 +70,7 @@ const ChatRouteGuard = ({ children }) => {
   }
 
   // Grant access if:
-  // 1. App Admin (always)
+  // 1. App Admin or Admin (always)
   // 2. Imam User with conversations
   if (hasConversations) {
     return children;

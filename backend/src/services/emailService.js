@@ -54,7 +54,7 @@ class EmailService {
   }
 
   /**
-   * Get admin email addresses (User_Type = 1)
+   * Get admin email addresses (User_Type = 1 or 7)
    * Also checks for EMAIL_TO environment variable as fallback
    */
   async getAdminEmails() {
@@ -71,7 +71,7 @@ class EmailService {
       const query = `
         SELECT e.email 
         FROM Employee e
-        WHERE e.user_type = 1 AND e.email IS NOT NULL AND e.email != ''
+        WHERE e.user_type IN (1, 7) AND e.email IS NOT NULL AND e.email != ''
       `;
       const res = await pool.query(query);
       const dbEmails = res.rows.map(row => row.email).filter(email => email);

@@ -10,10 +10,25 @@ const MuslimBonusModal = ({ isOpen, toggle, imamProfileId }) => {
   const [alert, setAlert] = useState(null);
   const { control, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm();
 
+  const [lookupData, setLookupData] = useState({ gender: [] });
+
+  useEffect(() => {
+    const fetchLookupData = async () => {
+      try {
+        const genderRes = await axiosApi.get(`${API_BASE_URL}/lookup/Gender`);
+        setLookupData({ gender: genderRes.data || [] });
+      } catch (error) {
+        console.error("Error fetching lookup data:", error);
+      }
+    };
+    fetchLookupData();
+  }, []);
+
   useEffect(() => {
     if (isOpen) {
       reset({
         revert_name: "",
+        revert_gender: "",
         revert_dob: "",
         revert_phone: "",
         revert_email: "",
@@ -33,6 +48,7 @@ const MuslimBonusModal = ({ isOpen, toggle, imamProfileId }) => {
       const payload = {
         imam_profile_id: parseInt(imamProfileId),
         revert_name: data.revert_name,
+        revert_gender: data.revert_gender ? parseInt(data.revert_gender) : null,
         revert_dob: data.revert_dob || null,
         revert_phone: data.revert_phone || null,
         revert_email: data.revert_email || null,
@@ -69,6 +85,23 @@ const MuslimBonusModal = ({ isOpen, toggle, imamProfileId }) => {
                     name="revert_name" 
                     control={control} 
                     render={({ field }) => <Input type="text" {...field} />} 
+                  />
+                </FormGroup>
+              </Col>
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Gender</Label>
+                  <Controller 
+                    name="revert_gender" 
+                    control={control} 
+                    render={({ field }) => (
+                      <Input type="select" {...field}>
+                        <option value="">Select Gender</option>
+                        {(lookupData.gender || []).map((g) => (
+                          <option key={g.id} value={g.id}>{g.name}</option>
+                        ))}
+                      </Input>
+                    )} 
                   />
                 </FormGroup>
               </Col>

@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { Container, Row, Col, Alert } from "reactstrap";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { Container, Row, Col, Alert, Card, CardBody } from "reactstrap";
 import Breadcrumbs from "../../components/Common/Breadcrumb";
 import axiosApi from "../../helpers/api_helper";
 import { API_BASE_URL } from "../../helpers/url_helper";
@@ -27,6 +27,9 @@ const BoreholeManagement = () => {
   // Detail data states
   const [boreholeConstructionTasks, setBoreholeConstructionTasks] = useState([]);
   const [boreholeRepairsMatrix, setBoreholeRepairsMatrix] = useState([]);
+  // All construction tasks and repairs for selected imam (for cost calculation)
+  const [allImamConstructionTasks, setAllImamConstructionTasks] = useState([]);
+  const [allImamRepairsMatrix, setAllImamRepairsMatrix] = useState([]);
 
   // Lookup data states
   const [lookupData, setLookupData] = useState({
@@ -52,6 +55,16 @@ const BoreholeManagement = () => {
       fetchBoreholeDetails(selectedBorehole.id);
     }
   }, [selectedBorehole]);
+
+  // Fetch all construction tasks and repairs for selected imam (for cost calculation)
+  useEffect(() => {
+    if (selectedImamProfile) {
+      fetchAllImamBoreholeData(selectedImamProfile.id);
+    } else {
+      setAllImamConstructionTasks([]);
+      setAllImamRepairsMatrix([]);
+    }
+  }, [selectedImamProfile, boreholes]);
 
   const fetchApprovedBoreholes = async () => {
     try {
@@ -147,6 +160,45 @@ const BoreholeManagement = () => {
     }
   };
 
+  const fetchAllImamBoreholeData = async (imamProfileId) => {
+    try {
+      // Get all approved boreholes for this imam
+      const imamBoreholes = boreholes.filter(b => 
+        b.imam_profile_id === imamProfileId && Number(b.status_id) === 2
+      );
+
+      if (imamBoreholes.length === 0) {
+        setAllImamConstructionTasks([]);
+        setAllImamRepairsMatrix([]);
+        return;
+      }
+
+      // Fetch all construction tasks and repairs for all boreholes
+      const constructionTasksPromises = imamBoreholes.map(borehole =>
+        axiosApi.get(`${API_BASE_URL}/boreholeConstructionTasks?borehole_id=${borehole.id}`)
+      );
+      const repairsPromises = imamBoreholes.map(borehole =>
+        axiosApi.get(`${API_BASE_URL}/boreholeRepairsMatrix?borehole_id=${borehole.id}`)
+      );
+
+      const [constructionTasksResults, repairsResults] = await Promise.all([
+        Promise.all(constructionTasksPromises),
+        Promise.all(repairsPromises),
+      ]);
+
+      // Flatten the results
+      const allConstructionTasks = constructionTasksResults.flatMap(res => res.data || []);
+      const allRepairs = repairsResults.flatMap(res => res.data || []);
+
+      setAllImamConstructionTasks(allConstructionTasks);
+      setAllImamRepairsMatrix(allRepairs);
+    } catch (error) {
+      console.error("Error fetching all imam borehole data:", error);
+      setAllImamConstructionTasks([]);
+      setAllImamRepairsMatrix([]);
+    }
+  };
+
   const showAlert = (message, color = "success") => {
     setAlert({ message, color });
     setTimeout(() => setAlert(null), 4000);
@@ -233,7 +285,10 @@ const BoreholeManagement = () => {
     if (selectedBorehole) {
       fetchBoreholeDetails(selectedBorehole.id);
     }
-  }, [selectedBorehole]);
+    if (selectedImamProfile) {
+      fetchAllImamBoreholeData(selectedImamProfile.id);
+    }
+  }, [selectedBorehole, selectedImamProfile]);
 
   // Filter imam profiles based on search term
   const filteredImamProfiles = imamProfiles.filter((imamProfile) => {
@@ -256,6 +311,27 @@ const BoreholeManagement = () => {
       b.imam_profile_id === imamProfileId && Number(b.status_id) === 2
     );
   };
+
+  // Calculate total construction cost and repair cost for selected imam
+  const costSummary = useMemo(() => {
+    if (!selectedImamProfile) {
+      return { constructionCost: 0, repairCost: 0 };
+    }
+
+    // Calculate total construction cost from all construction tasks for the imam
+    const constructionCost = allImamConstructionTasks.reduce((sum, task) => {
+      const cost = parseFloat(task.cost) || 0;
+      return sum + cost;
+    }, 0);
+
+    // Calculate total repair cost from all repairs for the imam
+    const repairCost = allImamRepairsMatrix.reduce((sum, repair) => {
+      const cost = parseFloat(repair.cost) || 0;
+      return sum + cost;
+    }, 0);
+
+    return { constructionCost, repairCost };
+  }, [selectedImamProfile, allImamConstructionTasks, allImamRepairsMatrix]);
 
   return (
     <div className="page-content">
@@ -308,6 +384,54 @@ const BoreholeManagement = () => {
           <Col lg={9}>
             {selectedBorehole ? (
               <>
+                {/* Cost Summary Cards */}
+                {selectedImamProfile && (
+                  <Row className="mb-2">
+                    <Col md={6}>
+                      <Card className="border shadow-sm">
+                        <CardBody className="p-4">
+                          <div className="d-flex align-items-center">
+                            <div className="flex-shrink-0">
+                              <div className="avatar-sm rounded-circle bg-primary bg-soft d-flex align-items-center justify-content-center">
+                                <span className="avatar-title rounded-circle bg-primary">
+                                  <i className="bx bx-cog font-size-24"></i>
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex-grow-1 ms-3">
+                              <h6 className="text-muted mb-1">Construction Cost</h6>
+                              <h4 className="mb-0">
+                                R {costSummary.constructionCost.toFixed(2)}
+                              </h4>
+                            </div>
+                          </div>
+                        </CardBody>
+                      </Card>
+                    </Col>
+                    <Col md={6}>
+                      <Card className="border shadow-sm">
+                        <CardBody className="p-4">
+                          <div className="d-flex align-items-center">
+                            <div className="flex-shrink-0">
+                              <div className="avatar-sm rounded-circle bg-warning bg-soft d-flex align-items-center justify-content-center">
+                                <span className="avatar-title rounded-circle bg-warning">
+                                  <i className="bx bx-wrench font-size-24"></i>
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex-grow-1 ms-3">
+                              <h6 className="text-muted mb-1">Repair Cost</h6>
+                              <h4 className="mb-0">
+                                R {costSummary.repairCost.toFixed(2)}
+                              </h4>
+                            </div>
+                          </div>
+                        </CardBody>
+                      </Card>
+                    </Col>
+                  </Row>
+                )}
+
                 {/* Borehole Summary - Master Borehole Data */}
                 <BoreholeSummary
                   borehole={selectedBorehole}

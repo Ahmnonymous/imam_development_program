@@ -11,15 +11,15 @@ import { showRightSidebarAction, toggleLeftmenu } from "/src/store/actions";
 // Import menuDropdown
 import ProfileMenu from "../CommonForBoth/TopbarDropdown/ProfileMenu";
 
-// Brand logos (keep favicon as-is; these only affect in-app headers)
-import idpDark from "../../assets/images/IDP-dark.png";
-import idpLight from "../../assets/images/IDP-light.png";
+// Brand logos from logos folder - using horizontal logo for header
+import idpHorizontal from "../../assets/images/animated_email_images/Logos/IDP Logo Horizontal.png";
+import idpHorizontalWhite from "../../assets/images/animated_email_images/Logos/IDP Logo H White.png";
 
 // Map to existing logo variables to avoid changing JSX structure
-const logo = idpDark;       // small dark logo
-const logoDark = idpDark;   // large dark logo
-const logoLight = idpLight; // large light logo
-const logoLightSvg = idpLight; // small light logo
+const logo = idpHorizontal;       // small dark logo
+const logoDark = idpHorizontal;   // large dark logo
+const logoLight = idpHorizontalWhite; // large light logo
+const logoLightSvg = idpHorizontalWhite; // small light logo
 
 //i18n
 import { withTranslation } from "react-i18next";

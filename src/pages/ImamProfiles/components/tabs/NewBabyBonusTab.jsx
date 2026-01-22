@@ -9,7 +9,7 @@ import axiosApi from "../../../../helpers/api_helper";
 import { API_BASE_URL, API_STREAM_BASE_URL } from "../../../../helpers/url_helper";
 import { getAuditName } from "../../../../helpers/userStorage";
 
-const NewBabyBonusTab = ({ imamProfileId, newBabyBonus, lookupData, onUpdate, showAlert }) => {
+const NewBabyBonusTab = ({ imamProfileId, newBabyBonus, relationships, lookupData, onUpdate, showAlert }) => {
   if (!imamProfileId) return null;
   const { isOrgExecutive, isAppAdmin, isGlobalAdmin } = useRole();
   const isAdmin = isAppAdmin || isGlobalAdmin;
@@ -17,6 +17,14 @@ const NewBabyBonusTab = ({ imamProfileId, newBabyBonus, lookupData, onUpdate, sh
   const [editItem, setEditItem] = useState(null);
   const { deleteModalOpen, deleteItem, deleteLoading, showDeleteConfirmation, hideDeleteConfirmation, confirmDelete } = useDeleteConfirmation();
   const { control, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm();
+
+  // Filter relationships to only show spouse (husband/wife) relationships
+  const spouseRelationships = useMemo(() => {
+    if (!relationships || !lookupData?.relationshipTypes) return [];
+    const spouseType = lookupData.relationshipTypes.find(rt => rt.name?.toLowerCase() === "spouse");
+    if (!spouseType) return [];
+    return relationships.filter(rel => Number(rel.relationship_type) === Number(spouseType.id));
+  }, [relationships, lookupData]);
 
   const formatDateForInput = (dateValue) => {
     if (!dateValue) return "";
@@ -40,12 +48,15 @@ const NewBabyBonusTab = ({ imamProfileId, newBabyBonus, lookupData, onUpdate, sh
   useEffect(() => {
     if (modalOpen) {
       reset({
-        spouse_name: editItem?.spouse_name || "",
+        spouse_relationship_id: editItem?.spouse_relationship_id || "",
         baby_name: editItem?.baby_name || "",
         baby_dob: formatDateForInput(editItem?.baby_dob),
+        gender: editItem?.gender || "",
+        identification_number: editItem?.identification_number || "",
         comment: editItem?.comment || "",
         Baby_Image: null,
         Birth_Certificate: null,
+        acknowledgment: editItem ? true : false,
       });
     }
   }, [editItem, modalOpen, reset]);
@@ -71,9 +82,11 @@ const NewBabyBonusTab = ({ imamProfileId, newBabyBonus, lookupData, onUpdate, sh
       const hasBirthCertificate = data.Birth_Certificate && data.Birth_Certificate.length > 0;
       const formData = new FormData();
       formData.append("imam_profile_id", imamProfileId);
-      formData.append("spouse_name", data.spouse_name);
+      formData.append("spouse_relationship_id", data.spouse_relationship_id || "");
       formData.append("baby_name", data.baby_name);
       formData.append("baby_dob", data.baby_dob);
+      formData.append("gender", data.gender || "");
+      formData.append("identification_number", data.identification_number || "");
       formData.append("comment", data.comment || "");
       
       if (hasBabyImage) {
@@ -169,6 +182,20 @@ const NewBabyBonusTab = ({ imamProfileId, newBabyBonus, lookupData, onUpdate, sh
             {cell.getValue() || "-"}
           </span>
         ),
+      },
+      {
+        header: "Gender",
+        accessorKey: "gender",
+        enableSorting: true,
+        enableColumnFilter: false,
+        cell: (cell) => getLookupValue(lookupData?.gender, cell.getValue()),
+      },
+      {
+        header: "Identification Number",
+        accessorKey: "identification_number",
+        enableSorting: true,
+        enableColumnFilter: false,
+        cell: (cell) => cell.getValue() || "-",
       },
       {
         header: "Date of Birth",
@@ -359,12 +386,21 @@ const NewBabyBonusTab = ({ imamProfileId, newBabyBonus, lookupData, onUpdate, sh
                 <FormGroup>
                   <Label>Spouse Name <span className="text-danger">*</span></Label>
                   <Controller 
-                    name="spouse_name" 
+                    name="spouse_relationship_id" 
                     control={control} 
                     rules={{ required: "Spouse name is required" }} 
-                    render={({ field }) => <Input type="text" invalid={!!errors.spouse_name} disabled={isOrgExecutive} {...field} />} 
+                    render={({ field }) => (
+                      <Input type="select" invalid={!!errors.spouse_relationship_id} disabled={isOrgExecutive} {...field}>
+                        <option value="">Select Spouse</option>
+                        {spouseRelationships.map((rel) => (
+                          <option key={rel.id} value={rel.id}>
+                            {rel.name || ""} {rel.surname || ""}
+                          </option>
+                        ))}
+                      </Input>
+                    )} 
                   />
-                  {errors.spouse_name && <FormFeedback>{errors.spouse_name.message}</FormFeedback>}
+                  {errors.spouse_relationship_id && <FormFeedback>{errors.spouse_relationship_id.message}</FormFeedback>}
                 </FormGroup>
               </Col>
               <Col md={6}>
@@ -389,6 +425,37 @@ const NewBabyBonusTab = ({ imamProfileId, newBabyBonus, lookupData, onUpdate, sh
                     render={({ field }) => <Input type="date" invalid={!!errors.baby_dob} disabled={isOrgExecutive} {...field} />} 
                   />
                   {errors.baby_dob && <FormFeedback>{errors.baby_dob.message}</FormFeedback>}
+                </FormGroup>
+              </Col>
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Gender</Label>
+                  <Controller 
+                    name="gender" 
+                    control={control} 
+                    render={({ field }) => (
+                      <Input type="select" invalid={!!errors.gender} disabled={isOrgExecutive} {...field}>
+                        <option value="">Select Gender</option>
+                        {lookupData?.gender?.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </Input>
+                    )} 
+                  />
+                  {errors.gender && <FormFeedback>{errors.gender.message}</FormFeedback>}
+                </FormGroup>
+              </Col>
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Identification Number</Label>
+                  <Controller 
+                    name="identification_number" 
+                    control={control} 
+                    render={({ field }) => <Input type="text" invalid={!!errors.identification_number} disabled={isOrgExecutive} {...field} />} 
+                  />
+                  {errors.identification_number && <FormFeedback>{errors.identification_number.message}</FormFeedback>}
                 </FormGroup>
               </Col>
               <Col md={6}>
@@ -482,6 +549,34 @@ const NewBabyBonusTab = ({ imamProfileId, newBabyBonus, lookupData, onUpdate, sh
                     name="comment" 
                     control={control} 
                     render={({ field }) => <Input type="textarea" rows={2} disabled={isOrgExecutive} {...field} />} 
+                  />
+                </FormGroup>
+              </Col>
+            </Row>
+            <Row>
+              <Col md={12}>
+                <FormGroup check>
+                  <Controller
+                    name="acknowledgment"
+                    control={control}
+                    rules={{ required: "You must acknowledge the statement to proceed" }}
+                    render={({ field }) => (
+                      <>
+                        <Input
+                          type="checkbox"
+                          id="acknowledgment-baby"
+                          checked={field.value || false}
+                          onChange={(e) => field.onChange(e.target.checked)}
+                          invalid={!!errors.acknowledgment}
+                        />
+                        <Label check htmlFor="acknowledgment-baby">
+                          I swear by Allah, the All-Hearing and the All-Seeing, that I have completed this form truthfully and honestly, to the best of my knowledge and belief.
+                        </Label>
+                        {errors.acknowledgment && (
+                          <FormFeedback>{errors.acknowledgment.message}</FormFeedback>
+                        )}
+                      </>
+                    )}
                   />
                 </FormGroup>
               </Col>

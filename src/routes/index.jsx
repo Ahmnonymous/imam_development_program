@@ -3,6 +3,7 @@ import { Navigate } from "react-router-dom";
 
 // ✅ Import ProtectedRoute for RBAC
 import ProtectedRoute from "./ProtectedRoute";
+import DashboardRouteGuard from "./DashboardRouteGuard";
 
 // Pages Component
 import Chat from "../pages/Chat";
@@ -224,8 +225,8 @@ import UiProgressbar from "../pages/Ui/UiProgressbar";
 // import UiProgressbar from "../../src/pages/Ui/UiProgressbar"
 
 const authProtectedRoutes = [
-  // ✅ Dashboard - All staff roles (1,2,3,4,5) and Imam User (6)
-  { path: "/dashboard", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5, 6]}><ApplicantStatistics /></ProtectedRoute> },
+  // ✅ Dashboard - All staff roles (1,2,3,4,5,7) and Imam User (6) - but Imam User must have approved profile
+  { path: "/dashboard", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5, 6, 7]}><DashboardRouteGuard><ApplicantStatistics /></DashboardRouteGuard></ProtectedRoute> },
   { path: "/dashboard-saas", component: <DashboardSaas /> },
   { path: "/dashboard-crypto", component: <DashboardCrypto /> },
   { path: "/blog", component: <Blog /> },
@@ -239,14 +240,14 @@ const authProtectedRoutes = [
   { path: "/crypto-orders", component: <CryptoOrders /> },
   { path: "/crypto-kyc-application", component: <CryptoKYCApplication /> },
 
-  // ✅ Chat - App Admin (1) always has access, Imam User (6) only if they have conversations
-  { path: "/chat", component: <ProtectedRoute allowedRoles={[1, 6]}><ChatRouteGuard><Chat /></ChatRouteGuard></ProtectedRoute> },
+  // ✅ Chat - App Admin (1) and Admin (7) always have access, Imam User (6) only if they have conversations
+  { path: "/chat", component: <ProtectedRoute allowedRoles={[1, 6, 7]}><ChatRouteGuard><Chat /></ChatRouteGuard></ProtectedRoute> },
 
-  // ✅ Policy Library - All users (roles 1,2,3,4,5)
-  { path: "/policy-library", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><PolicyLibrary /></ProtectedRoute> },
+  // ✅ Policy Library - All users (roles 1,2,3,4,5,7)
+  { path: "/policy-library", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5, 7]}><PolicyLibrary /></ProtectedRoute> },
 
-  // ✅ File Manager - All roles except Org Executive (roles 1,2,3,5)
-  { path: "/FileManager", component: <ProtectedRoute allowedRoles={[1, 2, 3, 5]}><FileManager /></ProtectedRoute> },
+  // ✅ File Manager - All roles except Org Executive (roles 1,2,3,5,7)
+  { path: "/FileManager", component: <ProtectedRoute allowedRoles={[1, 2, 3, 5, 7]}><FileManager /></ProtectedRoute> },
 
   // //calendar
   { path: "/calendar", component: <Calendar /> },
@@ -373,12 +374,12 @@ const authProtectedRoutes = [
 
 
 
-  // ✅ Imam Profiles - All staff roles (1,2,3,4,5) can view, Imam User (6) only if approved
-  { path: "/imam-profiles", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5, 6]}><ImamProfileRouteGuard><ImamProfilesManagement /></ImamProfileRouteGuard></ProtectedRoute> },
+  // ✅ Imam Profiles - All staff roles (1,2,3,4,5,7) can view, Imam User (6) only if approved
+  { path: "/imam-profiles", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5, 6, 7]}><ImamProfileRouteGuard><ImamProfilesManagement /></ImamProfileRouteGuard></ProtectedRoute> },
   // ✅ Create Imam Profile - All except Org Executive (role 4) can create, INCLUDING Imam User (6) but only if not approved
-  { path: "/imam-profiles/create", component: <ProtectedRoute allowedRoles={[1, 2, 3, 5, 6]}><CreateImamProfileRouteGuard><CreateImamProfile /></CreateImamProfileRouteGuard></ProtectedRoute> },
-  // ✅ Borehole Management - All staff roles (1,2,3,4,5) can view
-  { path: "/borehole-management", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><BoreholeManagement /></ProtectedRoute> },
+  { path: "/imam-profiles/create", component: <ProtectedRoute allowedRoles={[1, 2, 3, 5, 6, 7]}><CreateImamProfileRouteGuard><CreateImamProfile /></CreateImamProfileRouteGuard></ProtectedRoute> },
+  // ✅ Borehole Management - All staff roles (1,2,3,4,5,7) can view
+  { path: "/borehole-management", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5, 7]}><BoreholeManagement /></ProtectedRoute> },
 
 
 
@@ -396,25 +397,25 @@ const authProtectedRoutes = [
 
 
   // ✅ Reports - All roles (Org Executive & Caseworker scoped to own center)
-  { path: "/reports/imam-details", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><ImamDetailsReport /></ProtectedRoute> },
-  { path: "/reports/hardship-relief", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><HardshipReliefReport /></ProtectedRoute> },
-  { path: "/reports/community-engagement", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><CommunityEngagementReport /></ProtectedRoute> },
-  { path: "/reports/borehole", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><BoreholeReport /></ProtectedRoute> },
-  { path: "/reports/continuous-professional-development", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><ContinuousProfessionalDevelopmentReport /></ProtectedRoute> },
-  { path: "/reports/higher-education-request", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><HigherEducationRequestReport /></ProtectedRoute> },
-  { path: "/reports/jumuah-audio-khutbah", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><JumuahAudioKhutbahReport /></ProtectedRoute> },
-  { path: "/reports/jumuah-khutbah-topic", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><JumuahKhutbahTopicSubmissionReport /></ProtectedRoute> },
-  { path: "/reports/medical-reimbursement", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><MedicalReimbursementReport /></ProtectedRoute> },
-  { path: "/reports/new-baby-bonus", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><NewBabyBonusReport /></ProtectedRoute> },
-  { path: "/reports/new-muslim-bonus", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><NewMuslimBonusReport /></ProtectedRoute> },
-  { path: "/reports/nikah-bonus", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><NikahBonusReport /></ProtectedRoute> },
-  { path: "/reports/pearls-of-wisdom", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><PearlsOfWisdomReport /></ProtectedRoute> },
-  { path: "/reports/tickets", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><TicketsReport /></ProtectedRoute> },
-  { path: "/reports/tree-requests", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><TreeRequestsReport /></ProtectedRoute> },
-  { path: "/reports/waqf-loan", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><WaqfLoanReport /></ProtectedRoute> },
+  { path: "/reports/imam-details", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5, 7]}><ImamDetailsReport /></ProtectedRoute> },
+  { path: "/reports/hardship-relief", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5, 7]}><HardshipReliefReport /></ProtectedRoute> },
+  { path: "/reports/community-engagement", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5, 7]}><CommunityEngagementReport /></ProtectedRoute> },
+  { path: "/reports/borehole", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5, 7]}><BoreholeReport /></ProtectedRoute> },
+  { path: "/reports/continuous-professional-development", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5, 7]}><ContinuousProfessionalDevelopmentReport /></ProtectedRoute> },
+  { path: "/reports/higher-education-request", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5, 7]}><HigherEducationRequestReport /></ProtectedRoute> },
+  { path: "/reports/jumuah-audio-khutbah", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5, 7]}><JumuahAudioKhutbahReport /></ProtectedRoute> },
+  { path: "/reports/jumuah-khutbah-topic", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5, 7]}><JumuahKhutbahTopicSubmissionReport /></ProtectedRoute> },
+  { path: "/reports/medical-reimbursement", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5, 7]}><MedicalReimbursementReport /></ProtectedRoute> },
+  { path: "/reports/new-baby-bonus", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5, 7]}><NewBabyBonusReport /></ProtectedRoute> },
+  { path: "/reports/new-muslim-bonus", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5, 7]}><NewMuslimBonusReport /></ProtectedRoute> },
+  { path: "/reports/nikah-bonus", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5, 7]}><NikahBonusReport /></ProtectedRoute> },
+  { path: "/reports/pearls-of-wisdom", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5, 7]}><PearlsOfWisdomReport /></ProtectedRoute> },
+  { path: "/reports/tickets", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5, 7]}><TicketsReport /></ProtectedRoute> },
+  { path: "/reports/tree-requests", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5, 7]}><TreeRequestsReport /></ProtectedRoute> },
+  { path: "/reports/waqf-loan", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5, 7]}><WaqfLoanReport /></ProtectedRoute> },
   // Reports for tables with File_ID removed: total-financial-assistance, financial-assistance, food-assistance, home-visits
   // relationship-report removed (table had File_ID)
-  { path: "/reports/skills-matrix", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}><SkillsMatrixReport /></ProtectedRoute> },
+  { path: "/reports/skills-matrix", component: <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5, 7]}><SkillsMatrixReport /></ProtectedRoute> },
 
   //   // this route should be at the end of all other routes
   //   // eslint-disable-next-line react/display-name

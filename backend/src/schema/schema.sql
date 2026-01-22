@@ -1369,12 +1369,15 @@ CREATE TABLE IF NOT EXISTS Jumuah_Audio_Khutbah (
     imam_profile_id BIGINT,
     khutbah_topic VARCHAR(500) NOT NULL,
     khutbah_date DATE NOT NULL,
+    masjid_name VARCHAR(255),
+    town BIGINT,
     Audio BYTEA,
     Audio_Filename VARCHAR(255),
     Audio_Mime VARCHAR(255),
     Audio_Size INT,
     Audio_Updated_At TIMESTAMPTZ,
     audio_show_link TEXT,
+    audio_created_date DATE,
     attendance_count INT,
     language BIGINT,
     acknowledge BOOLEAN NOT NULL DEFAULT false,
@@ -1386,6 +1389,7 @@ CREATE TABLE IF NOT EXISTS Jumuah_Audio_Khutbah (
     Updated_By VARCHAR(255),
     Updated_At TIMESTAMPTZ NOT NULL DEFAULT now(),
     CONSTRAINT fk_audio_imam FOREIGN KEY (imam_profile_id) REFERENCES Imam_Profiles(ID) ON DELETE CASCADE,
+    CONSTRAINT fk_audio_town FOREIGN KEY (town) REFERENCES Suburb(ID),
     CONSTRAINT fk_audio_language FOREIGN KEY (language) REFERENCES Language(ID),
     CONSTRAINT fk_audio_status FOREIGN KEY (status_id) REFERENCES Status(ID)
 );
@@ -2166,6 +2170,51 @@ BEGIN
     END IF;
 END $$;
 
+-- New_Baby_Bonus: Add gender column
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'new_baby_bonus') THEN
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'new_baby_bonus' AND column_name = 'gender') THEN
+            ALTER TABLE New_Baby_Bonus 
+            ADD COLUMN gender BIGINT,
+            ADD CONSTRAINT fk_baby_bonus_gender FOREIGN KEY (gender) REFERENCES Gender(ID);
+        END IF;
+    END IF;
+END $$;
+
+-- New_Baby_Bonus: Add identification number column
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'new_baby_bonus') THEN
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'new_baby_bonus' AND column_name = 'identification_number') THEN
+            ALTER TABLE New_Baby_Bonus 
+            ADD COLUMN identification_number VARCHAR(255);
+        END IF;
+    END IF;
+END $$;
+
+-- New_Baby_Bonus: Change spouse_name to foreign key lookup to Imam_Relationships (husband/wife only)
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'new_baby_bonus') THEN
+        -- First, add the new foreign key column
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'new_baby_bonus' AND column_name = 'spouse_relationship_id') THEN
+            ALTER TABLE New_Baby_Bonus 
+            ADD COLUMN spouse_relationship_id BIGINT;
+            
+            -- Add foreign key constraint
+            ALTER TABLE New_Baby_Bonus 
+            ADD CONSTRAINT fk_baby_bonus_spouse_relationship FOREIGN KEY (spouse_relationship_id) REFERENCES Imam_Relationships(ID) ON DELETE SET NULL;
+            
+            -- Create index for performance
+            CREATE INDEX IF NOT EXISTS idx_baby_bonus_spouse_relationship ON New_Baby_Bonus(spouse_relationship_id);
+        END IF;
+        
+        -- Note: The old spouse_name VARCHAR column is kept for backward compatibility
+        -- You may want to migrate data and drop it later if needed
+    END IF;
+END $$;
+
 -- Indexes
 CREATE INDEX idx_service_rating_datestamp ON Service_Rating (Datestamp);
 CREATE INDEX idx_service_rating_recommend ON Service_Rating (Would_Recommend);
@@ -2793,7 +2842,8 @@ INSERT INTO User_Types (Name) VALUES
     ('Org. Admin'),
     ('Org. Executives'),
     ('Org. Caseworkers'),
-    ('Imam User');
+    ('Imam User'),
+    ('Admin');
 
 INSERT INTO Tasks_Status (Name) VALUES
     ('Complete'),
@@ -3000,6 +3050,15 @@ INSERT INTO Employee (
     Highest_Education_Level, Contact_Number, Emergency_Contact, Blood_Type, Department, HSEQ_Related, Created_By, Updated_By
 ) VALUES (
     'Super', 'Admin', 'admin', '12345', 1,
+    1, 14, 1, 1, 3,
+    '+27123456789', '+27123456789', 1, NULL, NULL, 'system', 'system'
+);
+
+INSERT INTO Employee (
+    Name, Surname, Username, Password_Hash, User_Type, Suburb, Nationality, Race, Gender, 
+    Highest_Education_Level, Contact_Number, Emergency_Contact, Blood_Type, Department, HSEQ_Related, Created_By, Updated_By
+) VALUES (
+    'Admin', 'User', 'adminuser', '12345', 7,
     1, 14, 1, 1, 3,
     '+27123456789', '+27123456789', 1, NULL, NULL, 'system', 'system'
 );
@@ -4695,3 +4754,176 @@ INSERT INTO Email_Templates (
   '[]',
   'system', 'system'
 ) ON CONFLICT (template_name) DO NOTHING;
+
+
+-- ============================================================
+-- ALTER QUERY: Add masjid_name and town to Jumuah_Audio_Khutbah
+-- ============================================================
+-- This query adds the masjid_name and town fields to the Jumuah_Audio_Khutbah table
+-- Run this query separately to add the fields to an existing database
+
+-- ============================================================
+-- ALTER QUERY: Add audio_created_date to Jumuah_Audio_Khutbah
+-- ============================================================
+-- This query adds the audio_created_date field to the Jumuah_Audio_Khutbah table
+-- Run this query separately to add the field to an existing database
+
+ALTER TABLE Jumuah_Audio_Khutbah 
+ADD COLUMN IF NOT EXISTS audio_created_date DATE;
+
+-- Optional: Add a comment to document the field
+COMMENT ON COLUMN Jumuah_Audio_Khutbah.audio_created_date IS 'Date when the audio was created';
+
+
+-- Add masjid_name column
+ALTER TABLE Jumuah_Audio_Khutbah 
+ADD COLUMN IF NOT EXISTS masjid_name VARCHAR(255);
+
+-- Add town column
+ALTER TABLE Jumuah_Audio_Khutbah 
+ADD COLUMN IF NOT EXISTS town BIGINT;
+
+-- Add foreign key constraint for town
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.table_constraints 
+        WHERE constraint_name = 'fk_audio_town' 
+        AND table_name = 'jumuah_audio_khutbah'
+    ) THEN
+        ALTER TABLE Jumuah_Audio_Khutbah 
+        ADD CONSTRAINT fk_audio_town FOREIGN KEY (town) REFERENCES Suburb(ID);
+    END IF;
+END $$;
+
+-- Optional: Add comments to document the fields
+COMMENT ON COLUMN Jumuah_Audio_Khutbah.masjid_name IS 'Name of the masjid where the khutbah was delivered';
+COMMENT ON COLUMN Jumuah_Audio_Khutbah.town IS 'Town/Suburb where the masjid is located (references Suburb table)';
+
+-- New_Baby_Bonus: Add gender column
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'new_baby_bonus') THEN
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'new_baby_bonus' AND column_name = 'gender') THEN
+            ALTER TABLE New_Baby_Bonus 
+            ADD COLUMN gender BIGINT,
+            ADD CONSTRAINT fk_baby_bonus_gender FOREIGN KEY (gender) REFERENCES Gender(ID);
+        END IF;
+    END IF;
+END $$;
+
+-- New_Baby_Bonus: Add identification number column
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'new_baby_bonus') THEN
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'new_baby_bonus' AND column_name = 'identification_number') THEN
+            ALTER TABLE New_Baby_Bonus 
+            ADD COLUMN identification_number VARCHAR(255);
+        END IF;
+    END IF;
+END $$;
+
+-- New_Baby_Bonus: Change spouse_name to foreign key lookup to Imam_Relationships (husband/wife only)
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'new_baby_bonus') THEN
+        -- First, add the new foreign key column
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'new_baby_bonus' AND column_name = 'spouse_relationship_id') THEN
+            ALTER TABLE New_Baby_Bonus 
+            ADD COLUMN spouse_relationship_id BIGINT;
+            
+            -- Add foreign key constraint
+            ALTER TABLE New_Baby_Bonus 
+            ADD CONSTRAINT fk_baby_bonus_spouse_relationship FOREIGN KEY (spouse_relationship_id) REFERENCES Imam_Relationships(ID) ON DELETE SET NULL;
+            
+            -- Create index for performance
+            CREATE INDEX IF NOT EXISTS idx_baby_bonus_spouse_relationship ON New_Baby_Bonus(spouse_relationship_id);
+        END IF;
+        
+        -- Note: The old spouse_name VARCHAR column is kept for backward compatibility
+        -- You may want to migrate data and drop it later if needed
+    END IF;
+END $$;
+
+
+-- ============================================================
+-- Migration Script: Add Unique Constraint on Email for Imam_Profiles
+-- ============================================================
+-- This script adds a unique constraint on the Email column in the Imam_Profiles table
+-- It first checks for duplicate emails and provides a report before applying the constraint
+-- ============================================================
+
+DO $$
+DECLARE
+    duplicate_count INTEGER;
+    duplicate_emails TEXT;
+BEGIN
+    -- Step 1: Check if the constraint already exists
+    IF EXISTS (
+        SELECT 1 FROM information_schema.table_constraints 
+        WHERE table_name = 'Imam_Profiles' 
+        AND constraint_name = 'uq_imam_email' 
+        AND table_schema = current_schema()
+    ) THEN
+        RAISE NOTICE 'Unique constraint uq_imam_email already exists on Imam_Profiles.Email';
+        RETURN;
+    END IF;
+
+    -- Step 2: Check for duplicate emails (excluding NULL values)
+    SELECT COUNT(*) INTO duplicate_count
+    FROM (
+        SELECT Email, COUNT(*) as cnt
+        FROM Imam_Profiles 
+        WHERE Email IS NOT NULL 
+        GROUP BY Email 
+        HAVING COUNT(*) > 1
+    ) duplicates;
+
+    -- Step 3: If duplicates exist, report them and abort
+    IF duplicate_count > 0 THEN
+        -- Collect duplicate email addresses for reporting
+        SELECT string_agg(DISTINCT Email, ', ') INTO duplicate_emails
+        FROM (
+            SELECT Email
+            FROM Imam_Profiles 
+            WHERE Email IS NOT NULL 
+            GROUP BY Email 
+            HAVING COUNT(*) > 1
+        ) dup_emails;
+
+        RAISE EXCEPTION 'Cannot add unique constraint: Found % duplicate email(s) in Imam_Profiles. Duplicate emails: %. Please resolve duplicates before adding the constraint.', 
+            duplicate_count, 
+            COALESCE(duplicate_emails, 'N/A');
+    END IF;
+
+    -- Step 4: Add the unique constraint
+    ALTER TABLE Imam_Profiles 
+    ADD CONSTRAINT uq_imam_email UNIQUE (Email);
+
+    RAISE NOTICE 'Successfully added unique constraint uq_imam_email on Imam_Profiles.Email';
+END $$;
+
+-- ============================================================
+-- Verification Query (run separately to check constraint exists)
+-- ============================================================
+-- SELECT 
+--     constraint_name, 
+--     table_name, 
+--     column_name
+-- FROM information_schema.constraint_column_usage
+-- WHERE table_name = 'Imam_Profiles' 
+--     AND constraint_name = 'uq_imam_email';
+
+-- ============================================================
+-- Query to find duplicates (run before migration if needed)
+-- ============================================================
+-- SELECT 
+--     Email, 
+--     COUNT(*) as duplicate_count,
+--     string_agg(id::text, ', ') as profile_ids
+-- FROM Imam_Profiles 
+-- WHERE Email IS NOT NULL 
+-- GROUP BY Email 
+-- HAVING COUNT(*) > 1
+-- ORDER BY duplicate_count DESC;
+

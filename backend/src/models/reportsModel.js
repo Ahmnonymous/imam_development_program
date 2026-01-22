@@ -422,6 +422,8 @@ class ReportsModel {
                     jak.id,
                     jak.khutbah_topic,
                     jak.khutbah_date,
+                    jak.masjid_name,
+                    jak.town,
                     jak.attendance_count,
                     jak.language,
                     jak.acknowledge,
@@ -433,10 +435,12 @@ class ReportsModel {
                     jak.Updated_By,
                     jak.Updated_At,
                     -- Join with lookup tables for readable names
+                    s.name AS suburb_name,
                     l.name AS language_name,
                     st.name AS status_name
                 FROM Jumuah_Audio_Khutbah jak
                 INNER JOIN Imam_Profiles ip ON jak.imam_profile_id = ip.id
+                LEFT JOIN Suburb s ON jak.town = s.id
                 LEFT JOIN Language l ON jak.language = l.id
                 LEFT JOIN Status st ON jak.status_id = st.id
             `;
@@ -559,8 +563,13 @@ class ReportsModel {
                     ip.cell_number AS imam_cell_number,
                     nbb.id,
                     nbb.spouse_name,
+                    nbb.spouse_relationship_id,
+                    ir.name AS spouse_name_from_relationship,
+                    ir.surname AS spouse_surname_from_relationship,
                     nbb.baby_name,
                     nbb.baby_gender,
+                    nbb.gender,
+                    nbb.identification_number,
                     nbb.baby_dob,
                     nbb.acknowledge,
                     nbb.status_id,
@@ -572,10 +581,13 @@ class ReportsModel {
                     nbb.updated_at,
                     -- Join with lookup tables for readable names
                     g.name AS baby_gender_name,
+                    g2.name AS gender_name,
                     st.name AS status_name
                 FROM New_Baby_Bonus nbb
                 INNER JOIN Imam_Profiles ip ON nbb.imam_profile_id = ip.id
                 LEFT JOIN Gender g ON nbb.baby_gender = g.id
+                LEFT JOIN Gender g2 ON nbb.gender = g2.id
+                LEFT JOIN Imam_Relationships ir ON nbb.spouse_relationship_id = ir.id
                 LEFT JOIN Status st ON nbb.status_id = st.id
             `;
             

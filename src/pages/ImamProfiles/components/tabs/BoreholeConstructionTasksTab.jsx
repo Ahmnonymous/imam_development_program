@@ -49,6 +49,7 @@ const BoreholeConstructionTasksTab = ({ boreholeId, boreholeConstructionTasks, l
         status_id: editItem?.status_id ? String(editItem.status_id) : "",
         comments: editItem?.comments || "",
         Invoice: null,
+        acknowledgment: editItem ? true : false,
       });
     }
   }, [editItem, modalOpen, reset]);
@@ -458,6 +459,34 @@ const BoreholeConstructionTasksTab = ({ boreholeId, boreholeConstructionTasks, l
                 )}
               />
             </FormGroup>
+            <Row>
+              <Col md={12}>
+                <FormGroup check>
+                  <Controller
+                    name="acknowledgment"
+                    control={control}
+                    rules={{ required: "You must acknowledge the statement to proceed" }}
+                    render={({ field }) => (
+                      <>
+                        <Input
+                          type="checkbox"
+                          id="acknowledgment-construction"
+                          checked={field.value || false}
+                          onChange={(e) => field.onChange(e.target.checked)}
+                          invalid={!!errors.acknowledgment}
+                        />
+                        <Label check htmlFor="acknowledgment-construction">
+                          I swear by Allah, the All-Hearing and the All-Seeing, that I have completed this form truthfully and honestly, to the best of my knowledge and belief.
+                        </Label>
+                        {errors.acknowledgment && (
+                          <FormFeedback>{errors.acknowledgment.message}</FormFeedback>
+                        )}
+                      </>
+                    )}
+                  />
+                </FormGroup>
+              </Col>
+            </Row>
           </ModalBody>
           <ModalFooter className="d-flex justify-content-between">
             <div>

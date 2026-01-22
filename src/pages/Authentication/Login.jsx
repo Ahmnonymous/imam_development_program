@@ -26,11 +26,13 @@ import {
 
 // actions
 import { loginUser } from "/src/store/actions";
+import axiosApi from "../../helpers/api_helper";
+import { API_BASE_URL } from "../../helpers/url_helper";
+import { getUserType } from "../../helpers/userStorage";
 
 // import images
 import profile from "../../assets/images/profile-img.png";
-import logo from "../../assets/images/logo.jpeg";
-import lightlogo from "../../assets/images/logo.jpeg";
+import authLogo from "../../assets/images/animated_email_images/Logos/IDP Logo for Favicon login and register.png";
 
 const Login = (props) => {
   //meta title
@@ -65,13 +67,60 @@ const Login = (props) => {
 
   const { error, success } = useSelector(LoginProperties);
 
-  // Redirect after success
+  // Redirect after success - check if Imam User and profile approval status
   useEffect(() => {
     console.log("🔄 Login useEffect triggered - success:", success, "error:", error);
     if (success) {
-      console.log("✅ Login successful, redirecting to dashboard...");
+      const checkImamProfileAndRedirect = async () => {
+        try {
+          // Get user type from localStorage
+          const userType = getUserType();
+          
+          // If Imam User (type 6), check profile approval status
+          if (userType === 6) {
+            try {
+              const response = await axiosApi.get(`${API_BASE_URL}/imamProfiles/my-profile`);
+              if (response.data) {
+                // Check if profile is approved (status_id === 2)
+                if (Number(response.data.status_id) === 2) {
+                  // Approved - redirect to dashboard
+                  console.log("✅ Imam profile approved, redirecting to dashboard...");
+                  props.router.navigate("/dashboard");
+                } else {
+                  // Not approved (pending) - redirect to create profile page
+                  console.log("⏳ Imam profile pending approval, redirecting to create profile...");
+                  props.router.navigate("/imam-profiles/create");
+                }
+              } else {
+                // No profile - redirect to create page
+                console.log("📝 No imam profile found, redirecting to create profile...");
+                props.router.navigate("/imam-profiles/create");
+              }
+            } catch (error) {
+              if (error.response?.status === 404) {
+                // No profile - redirect to create page
+                console.log("📝 No imam profile found (404), redirecting to create profile...");
+                props.router.navigate("/imam-profiles/create");
+              } else {
+                // Other error - redirect to dashboard (will show error there)
+                console.error("❌ Error checking imam profile:", error);
+                props.router.navigate("/dashboard");
+              }
+            }
+          } else {
+            // Not Imam User - redirect to dashboard
+            console.log("✅ Login successful, redirecting to dashboard...");
+            props.router.navigate("/dashboard");
+          }
+        } catch (error) {
+          console.error("❌ Error in redirect logic:", error);
+          // Fallback to dashboard on error
+          props.router.navigate("/dashboard");
+        }
+      };
+
       setTimeout(() => {
-        props.router.navigate("/dashboard");
+        checkImamProfileAndRedirect();
       }, 1000); // 1 second delay for message
     }
   }, [success, error, props.router]);
@@ -102,8 +151,8 @@ const Login = (props) => {
                       <div className="avatar-md profile-user-wid mb-4">
                         <span className="avatar-title rounded-circle bg-light">
                           <img
-                            src={lightlogo}
-                            alt=""
+                            src={authLogo}
+                            alt="IDP"
                             className="rounded-circle"
                             height="34"
                           />
@@ -114,8 +163,8 @@ const Login = (props) => {
                       <div className="avatar-md profile-user-wid mb-4">
                         <span className="avatar-title rounded-circle bg-light">
                           <img
-                            src={logo}
-                            alt=""
+                            src={authLogo}
+                            alt="IDP"
                             className="rounded-circle"
                             height="34"
                           />

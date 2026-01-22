@@ -9,7 +9,7 @@ import axiosApi from "../../../../helpers/api_helper";
 import { API_BASE_URL, API_STREAM_BASE_URL } from "../../../../helpers/url_helper";
 import { getAuditName } from "../../../../helpers/userStorage";
 
-const JumuahAudioKhutbahTab = ({ imamProfileId, jumuahAudioKhutbah, lookupData, onUpdate, showAlert }) => {
+const JumuahAudioKhutbahTab = ({ imamProfileId, imamProfile, jumuahAudioKhutbah, lookupData, onUpdate, showAlert }) => {
   if (!imamProfileId) return null;
   const { isOrgExecutive, isAppAdmin, isGlobalAdmin } = useRole();
   const isAdmin = isAppAdmin || isGlobalAdmin;
@@ -42,9 +42,12 @@ const JumuahAudioKhutbahTab = ({ imamProfileId, jumuahAudioKhutbah, lookupData, 
       reset({
         khutbah_topic: editItem?.khutbah_topic || "",
         khutbah_date: formatDateForInput(editItem?.khutbah_date),
+        masjid_name: editItem?.masjid_name || "",
+        town: editItem?.town || "",
         attendance_count: editItem?.attendance_count || "",
         comment: editItem?.comment || "",
         Audio: null,
+        acknowledgment: editItem ? true : false,
       });
     }
   }, [editItem, modalOpen, reset]);
@@ -71,6 +74,8 @@ const JumuahAudioKhutbahTab = ({ imamProfileId, jumuahAudioKhutbah, lookupData, 
       formData.append("imam_profile_id", imamProfileId);
       formData.append("khutbah_topic", data.khutbah_topic);
       formData.append("khutbah_date", data.khutbah_date);
+      formData.append("masjid_name", data.masjid_name || "");
+      formData.append("town", data.town ? parseInt(data.town) : "");
       formData.append("attendance_count", data.attendance_count || "");
       formData.append("comment", data.comment || "");
       
@@ -173,6 +178,23 @@ const JumuahAudioKhutbahTab = ({ imamProfileId, jumuahAudioKhutbah, lookupData, 
         cell: (cell) => {
           const value = cell.getValue();
           return value ? new Date(value).toLocaleDateString() : "-";
+        },
+      },
+      {
+        header: "Masjid Name",
+        accessorKey: "masjid_name",
+        enableSorting: true,
+        enableColumnFilter: false,
+        cell: (cell) => cell.getValue() || "-",
+      },
+      {
+        header: "Town",
+        accessorKey: "town",
+        enableSorting: true,
+        enableColumnFilter: false,
+        cell: (cell) => {
+          const townId = cell.getValue();
+          return getLookupValue(lookupData?.suburb, townId);
         },
       },
       {
@@ -356,6 +378,39 @@ const JumuahAudioKhutbahTab = ({ imamProfileId, jumuahAudioKhutbah, lookupData, 
               </Col>
               <Col md={6}>
                 <FormGroup>
+                  <Label>Masjid Name</Label>
+                  <Controller 
+                    name="masjid_name" 
+                    control={control} 
+                    render={({ field }) => <Input type="text" disabled={isOrgExecutive} {...field} />} 
+                  />
+                </FormGroup>
+              </Col>
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Town</Label>
+                  <Controller 
+                    name="town" 
+                    control={control} 
+                    render={({ field }) => {
+                      const imamSuburbId = imamProfile?.suburb_id ? Number(imamProfile.suburb_id) : null;
+                      const filteredSuburbs = imamSuburbId 
+                        ? (lookupData.suburb || []).filter((x) => Number(x.id) === imamSuburbId)
+                        : (lookupData.suburb || []);
+                      return (
+                        <Input type="select" disabled={isOrgExecutive} {...field}>
+                          <option value="">Select Town</option>
+                          {filteredSuburbs.map((x) => (
+                            <option key={x.id} value={x.id}>{x.name}</option>
+                          ))}
+                        </Input>
+                      );
+                    }} 
+                  />
+                </FormGroup>
+              </Col>
+              <Col md={6}>
+                <FormGroup>
                   <Label>Attendance Count</Label>
                   <Controller 
                     name="attendance_count" 
@@ -413,6 +468,34 @@ const JumuahAudioKhutbahTab = ({ imamProfileId, jumuahAudioKhutbah, lookupData, 
                     name="comment" 
                     control={control} 
                     render={({ field }) => <Input type="textarea" rows={2} disabled={isOrgExecutive} {...field} />} 
+                  />
+                </FormGroup>
+              </Col>
+            </Row>
+            <Row>
+              <Col md={12}>
+                <FormGroup check>
+                  <Controller
+                    name="acknowledgment"
+                    control={control}
+                    rules={{ required: "You must acknowledge the statement to proceed" }}
+                    render={({ field }) => (
+                      <>
+                        <Input
+                          type="checkbox"
+                          id="acknowledgment-audio"
+                          checked={field.value || false}
+                          onChange={(e) => field.onChange(e.target.checked)}
+                          invalid={!!errors.acknowledgment}
+                        />
+                        <Label check htmlFor="acknowledgment-audio">
+                          I swear by Allah, the All-Hearing and the All-Seeing, that I have completed this form truthfully and honestly, to the best of my knowledge and belief.
+                        </Label>
+                        {errors.acknowledgment && (
+                          <FormFeedback>{errors.acknowledgment.message}</FormFeedback>
+                        )}
+                      </>
+                    )}
                   />
                 </FormGroup>
               </Col>

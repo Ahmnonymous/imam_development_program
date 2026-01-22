@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardBody, Alert, Input, Label, Row, Col } from "reactstrap";
-import { GoogleMap, LoadScript, Marker, Autocomplete } from '@react-google-maps/api';
+import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
 
@@ -12,7 +12,7 @@ const containerStyle = {
 /**
  * MapPicker Component
  * 
- * Allows users to search for locations, click on a Google Map, or manually enter coordinates for the masjid location.
+ * Allows users to click on a Google Map or manually enter coordinates for the location.
  * 
  * @param {Object} props
  * @param {number|string} props.latitude - Current latitude value
@@ -25,7 +25,6 @@ const MapPicker = ({ latitude, longitude, onLocationChange, showMap = true }) =>
   const [lngValue, setLngValue] = useState("");
   const [mapCenter, setMapCenter] = useState({ lat: -25.7479, lng: 28.2293 }); // Default: South Africa
   const [markerPosition, setMarkerPosition] = useState(null);
-  const autocompleteRef = useRef(null);
 
   // Update local state when props change
   useEffect(() => {
@@ -50,32 +49,6 @@ const MapPicker = ({ latitude, longitude, onLocationChange, showMap = true }) =>
       setMarkerPosition({ lat, lng });
     }
   }, [latitude, longitude]);
-
-  // Handle autocomplete place selection
-  const handlePlaceSelect = useCallback(() => {
-    if (autocompleteRef.current) {
-      const place = autocompleteRef.current.getPlace();
-      
-      if (place.geometry && place.geometry.location) {
-        const lat = place.geometry.location.lat();
-        const lng = place.geometry.location.lng();
-        
-        setLatValue(lat.toString());
-        setLngValue(lng.toString());
-        setMarkerPosition({ lat, lng });
-        setMapCenter({ lat, lng });
-        
-        if (onLocationChange) {
-          onLocationChange(lat, lng);
-        }
-      }
-    }
-  }, [onLocationChange]);
-
-  // Handle autocomplete load
-  const onLoad = useCallback((autocomplete) => {
-    autocompleteRef.current = autocomplete;
-  }, []);
 
   // Handle map click to set coordinates
   const handleMapClick = useCallback((event) => {
@@ -170,20 +143,18 @@ const MapPicker = ({ latitude, longitude, onLocationChange, showMap = true }) =>
           
           <Alert color="info" className="mb-3" style={{ fontSize: "0.875rem" }}>
             <i className="bx bx-info-circle me-2"></i>
-            <strong>Instructions:</strong> Search for a masjid location, click on the map, or manually enter coordinates in the fields below.
+            <strong>Instructions:</strong> Click on the map to set the location, or manually enter coordinates in the fields below.
           </Alert>
 
-          {/* Wrap both Autocomplete and Map in a single LoadScript */}
+          {/* Google Map */}
           <LoadScript
             googleMapsApiKey={GOOGLE_MAPS_API_KEY}
-            libraries={["places"]}
             loadingElement={<div style={{ height: `400px` }}>Loading...</div>}
             errorElement={
               <Alert color="warning" className="mb-3">
                 <strong>Google Maps Error:</strong> Please ensure the following APIs are enabled in Google Cloud Console:
                 <ul className="mt-2 mb-0">
                   <li>Maps JavaScript API</li>
-                  <li>Places API (required for search)</li>
                   <li>Geocoding API (optional, but recommended)</li>
                 </ul>
                 <small className="d-block mt-2">
@@ -192,36 +163,6 @@ const MapPicker = ({ latitude, longitude, onLocationChange, showMap = true }) =>
               </Alert>
             }
           >
-            {/* Search Input with Autocomplete */}
-            <div className="mb-3">
-              <Label className="form-label" style={{ fontSize: "0.875rem", fontWeight: 500 }}>
-                <i className="bx bx-search me-1"></i>
-                Search for Masjid Location
-              </Label>
-              <Autocomplete
-                onLoad={onLoad}
-                onPlaceChanged={handlePlaceSelect}
-                options={{
-                  types: ['establishment', 'geocode'],
-                }}
-              >
-                <input
-                  type="text"
-                  placeholder="Search for masjid name or address (e.g., 'Masjid Johannesburg' or 'Cape Town Mosque')"
-                  className="form-control"
-                  style={{
-                    padding: "0.5rem 0.75rem",
-                    fontSize: "0.875rem",
-                    width: "100%",
-                  }}
-                />
-              </Autocomplete>
-              <small className="text-muted" style={{ fontSize: "0.75rem" }}>
-                Start typing to see suggestions. Select a location from the dropdown list.
-              </small>
-            </div>
-
-            {/* Google Map */}
             <div className="mb-3" style={{ border: "1px solid #dee2e6", borderRadius: "0.25rem", overflow: "hidden" }}>
               <GoogleMap
                 mapContainerStyle={containerStyle}

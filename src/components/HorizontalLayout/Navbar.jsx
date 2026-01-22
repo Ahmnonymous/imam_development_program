@@ -38,10 +38,15 @@ const Navbar = (props) => {
       if (userType === 6) {
         try {
           const response = await axiosApi.get(`${API_BASE_URL}/imamProfiles/my-profile`);
-          setImamProfileStatus(response.data?.status_id || null);
+          // Ensure status_id is converted to number for consistent comparison
+          const statusId = response.data?.status_id ? Number(response.data.status_id) : null;
+          setImamProfileStatus(statusId);
         } catch (error) {
           setImamProfileStatus(null);
         }
+      } else {
+        // For non-Imam users, set to null so dashboard shows
+        setImamProfileStatus(null);
       }
     };
     checkImamProfileStatus();
@@ -119,12 +124,15 @@ const Navbar = (props) => {
               id="topnav-menu-content"
             >
               <ul className="navbar-nav">
-                <li className="nav-item">
-                  <Link to="/dashboard" className="nav-link">
-                    <i className="bx bx-bar-chart-alt-2 me-2"></i>
-                    {props.t("Dashboard")}
-                  </Link>
-                </li>
+                {/* ✅ Dashboard - All roles except Imam User without approved profile */}
+                {userType !== 6 || (userType === 6 && imamProfileStatus === 2) ? (
+                  <li className="nav-item">
+                    <Link to="/dashboard" className="nav-link">
+                      <i className="bx bx-bar-chart-alt-2 me-2"></i>
+                      {props.t("Dashboard")}
+                    </Link>
+                  </li>
+                ) : null}
 
                 {/* Management dropdown – render only when at least one item is accessible */}
                 {(() => {
@@ -297,12 +305,12 @@ const Navbar = (props) => {
                   </li>
                 )}
 
-                {/* Lookup setup */}
+                {/* Administration */}
                 {canAccessNav("lookups") && (
                   <li className="nav-item">
                     <Link to="/lookups" className="nav-link">
                       <i className="bx bx-list-ul me-2"></i>
-                      {props.t("Lookup Setup")}
+                      {props.t("Administration")}
                     </Link>
                   </li>
                 )}

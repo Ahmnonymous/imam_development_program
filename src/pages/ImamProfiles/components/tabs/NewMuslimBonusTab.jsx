@@ -32,11 +32,13 @@ const NewMuslimBonusTab = ({ imamProfileId, newMuslimBonus, lookupData, onUpdate
     if (modalOpen) {
       reset({
         revert_name: editItem?.revert_name || "",
+        revert_gender: editItem?.revert_gender || "",
         revert_dob: formatDateForInput(editItem?.revert_dob),
         revert_phone: editItem?.revert_phone || "",
         revert_email: editItem?.revert_email || "",
         revert_reason: editItem?.revert_reason || "",
         comment: editItem?.comment || "",
+        acknowledgment: editItem ? true : false,
       });
     }
   }, [editItem, modalOpen, reset]);
@@ -61,6 +63,7 @@ const NewMuslimBonusTab = ({ imamProfileId, newMuslimBonus, lookupData, onUpdate
       const payload = {
         imam_profile_id: parseInt(imamProfileId),
         revert_name: data.revert_name,
+        revert_gender: data.revert_gender ? parseInt(data.revert_gender) : null,
         revert_dob: data.revert_dob || null,
         revert_phone: data.revert_phone || null,
         revert_email: data.revert_email || null,
@@ -153,6 +156,13 @@ const NewMuslimBonusTab = ({ imamProfileId, newMuslimBonus, lookupData, onUpdate
             {cell.getValue() || "-"}
           </span>
         ),
+      },
+      {
+        header: "Gender",
+        accessorKey: "revert_gender",
+        enableSorting: true,
+        enableColumnFilter: false,
+        cell: (cell) => getLookupValue(lookupData?.gender, cell.getValue()),
       },
       {
         header: "Date",
@@ -299,6 +309,23 @@ const NewMuslimBonusTab = ({ imamProfileId, newMuslimBonus, lookupData, onUpdate
               </Col>
               <Col md={6}>
                 <FormGroup>
+                  <Label>Gender</Label>
+                  <Controller 
+                    name="revert_gender" 
+                    control={control} 
+                    render={({ field }) => (
+                      <Input type="select" disabled={isOrgExecutive} {...field}>
+                        <option value="">Select Gender</option>
+                        {(lookupData.gender || []).map((g) => (
+                          <option key={g.id} value={g.id}>{g.name}</option>
+                        ))}
+                      </Input>
+                    )} 
+                  />
+                </FormGroup>
+              </Col>
+              <Col md={6}>
+                <FormGroup>
                   <Label>Date of Birth</Label>
                   <Controller 
                     name="revert_dob" 
@@ -346,6 +373,34 @@ const NewMuslimBonusTab = ({ imamProfileId, newMuslimBonus, lookupData, onUpdate
                     name="comment" 
                     control={control} 
                     render={({ field }) => <Input type="textarea" rows={2} disabled={isOrgExecutive} {...field} />} 
+                  />
+                </FormGroup>
+              </Col>
+            </Row>
+            <Row>
+              <Col md={12}>
+                <FormGroup check>
+                  <Controller
+                    name="acknowledgment"
+                    control={control}
+                    rules={{ required: "You must acknowledge the statement to proceed" }}
+                    render={({ field }) => (
+                      <>
+                        <Input
+                          type="checkbox"
+                          id="acknowledgment-muslim"
+                          checked={field.value || false}
+                          onChange={(e) => field.onChange(e.target.checked)}
+                          invalid={!!errors.acknowledgment}
+                        />
+                        <Label check htmlFor="acknowledgment-muslim">
+                          I swear by Allah, the All-Hearing and the All-Seeing, that I have completed this form truthfully and honestly, to the best of my knowledge and belief.
+                        </Label>
+                        {errors.acknowledgment && (
+                          <FormFeedback>{errors.acknowledgment.message}</FormFeedback>
+                        )}
+                      </>
+                    )}
                   />
                 </FormGroup>
               </Col>

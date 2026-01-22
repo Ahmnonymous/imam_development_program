@@ -13,7 +13,6 @@ import NewMuslimBonusTab from "./tabs/NewMuslimBonusTab";
 import NewBabyBonusTab from "./tabs/NewBabyBonusTab";
 import ImamRelationshipsTab from "./tabs/ImamRelationshipsTab";
 import BoreholeTab from "./tabs/BoreholeTab";
-import ImamFinancialAssistanceTab from "./tabs/ImamFinancialAssistanceTab";
 import EducationalDevelopmentTab from "./tabs/EducationalDevelopmentTab";
 import TreePlantingTab from "./tabs/TreePlantingTab";
 import WAQFLoanTab from "./tabs/WAQFLoanTab";
@@ -36,7 +35,6 @@ const DetailTabs = ({
   newBabyBonus,
   relationships,
   borehole,
-  imamFinancialAssistance,
   educationalDevelopment,
   treePlanting,
   waqfLoan,
@@ -78,7 +76,6 @@ const DetailTabs = ({
   const newBabyForImam = (newBabyBonus || []).filter((x) => safeNum(x.imam_profile_id) === currentId);
   const relationshipsForImam = (relationships || []).filter((x) => safeNum(x.imam_profile_id) === currentId);
   const boreholeForImam = (borehole || []).filter((x) => safeNum(x.imam_profile_id) === currentId);
-  const financialAssistanceForImam = (imamFinancialAssistance || []).filter((x) => safeNum(x.imam_profile_id) === currentId);
   const educationalDevelopmentForImam = (educationalDevelopment || []).filter((x) => safeNum(x.imam_profile_id) === currentId);
   const treePlantingForImam = (treePlanting || []).filter((x) => safeNum(x.imam_profile_id) === currentId);
   const waqfLoanForImam = (waqfLoan || []).filter((x) => safeNum(x.imam_profile_id) === currentId);
@@ -99,7 +96,6 @@ const DetailTabs = ({
     { id: "newBaby", label: IMAM_TABS[7].label }, // Baby Bonus
     { id: "relationships", label: IMAM_TABS[8].label }, // Relationships
     { id: "borehole", label: IMAM_TABS[9].label }, // Borehole
-    { id: "financialAssistance", label: "Financial Assistance" },
     { id: "educationalDevelopment", label: "Educational Development" },
     { id: "treePlanting", label: "Tree Planting" },
     { id: "waqfLoan", label: "WAQF Loan" },
@@ -128,11 +124,11 @@ const DetailTabs = ({
         <TabContent activeTab={activeTab} className="mt-3">
           <TabPane tabId="all">
             <div className="border rounded p-3 mb-3">
-              <JumuahKhutbahTopicSubmissionTab imamProfileId={imamProfileId} jumuahKhutbahTopicSubmission={khutbahTopicsForImam} lookupData={lookupData} onUpdate={onUpdate} showAlert={showAlert} />
+              <JumuahKhutbahTopicSubmissionTab imamProfileId={imamProfileId} imamProfile={imamProfile} jumuahKhutbahTopicSubmission={khutbahTopicsForImam} lookupData={lookupData} onUpdate={onUpdate} showAlert={showAlert} />
             </div>
             
             <div className="border rounded p-3 mb-3">
-              <JumuahAudioKhutbahTab imamProfileId={imamProfileId} jumuahAudioKhutbah={audioKhutbahForImam} onUpdate={onUpdate} showAlert={showAlert} />
+              <JumuahAudioKhutbahTab imamProfileId={imamProfileId} imamProfile={imamProfile} jumuahAudioKhutbah={audioKhutbahForImam} lookupData={lookupData} onUpdate={onUpdate} showAlert={showAlert} />
             </div>
             
             <div className="border rounded p-3 mb-3">
@@ -140,7 +136,7 @@ const DetailTabs = ({
             </div>
             
             <div className="border rounded p-3 mb-3">
-              <MedicalReimbursementTab imamProfileId={imamProfileId} medicalReimbursement={medicalForImam} lookupData={lookupData} onUpdate={onUpdate} showAlert={showAlert} />
+              <MedicalReimbursementTab imamProfileId={imamProfileId} imamProfile={imamProfile} relationships={relationshipsForImam} medicalReimbursement={medicalForImam} lookupData={lookupData} onUpdate={onUpdate} showAlert={showAlert} />
             </div>
             
             <div className="border rounded p-3 mb-3">
@@ -156,7 +152,7 @@ const DetailTabs = ({
             </div>
             
             <div className="border rounded p-3 mb-3">
-              <NewBabyBonusTab imamProfileId={imamProfileId} newBabyBonus={newBabyForImam} lookupData={lookupData} onUpdate={onUpdate} showAlert={showAlert} />
+              <NewBabyBonusTab imamProfileId={imamProfileId} newBabyBonus={newBabyForImam} relationships={relationshipsForImam} lookupData={lookupData} onUpdate={onUpdate} showAlert={showAlert} />
             </div>
             
             <div className="border rounded p-3 mb-3">
@@ -165,10 +161,6 @@ const DetailTabs = ({
             
             <div className="border rounded p-3 mb-3">
               <BoreholeTab imamProfileId={imamProfileId} borehole={boreholeForImam} lookupData={lookupData} onUpdate={onUpdate} showAlert={showAlert} />
-            </div>
-            
-            <div className="border rounded p-3 mb-3">
-              <ImamFinancialAssistanceTab imamProfileId={imamProfileId} imamFinancialAssistance={financialAssistanceForImam} lookupData={lookupData} onUpdate={onUpdate} showAlert={showAlert} />
             </div>
             
             <div className="border rounded p-3 mb-3">
@@ -208,6 +200,7 @@ const DetailTabs = ({
           <TabPane tabId="khutbahTopics">
             <JumuahKhutbahTopicSubmissionTab
               imamProfileId={imamProfileId}
+              imamProfile={imamProfile}
               jumuahKhutbahTopicSubmission={khutbahTopicsForImam}
               lookupData={lookupData}
               onUpdate={onUpdate}
@@ -218,7 +211,9 @@ const DetailTabs = ({
           <TabPane tabId="audioKhutbah">
             <JumuahAudioKhutbahTab
               imamProfileId={imamProfileId}
+              imamProfile={imamProfile}
               jumuahAudioKhutbah={audioKhutbahForImam}
+              lookupData={lookupData}
               onUpdate={onUpdate}
               showAlert={showAlert}
             />
@@ -227,6 +222,8 @@ const DetailTabs = ({
           <TabPane tabId="medical">
             <MedicalReimbursementTab
               imamProfileId={imamProfileId}
+              imamProfile={imamProfile}
+              relationships={relationshipsForImam}
               medicalReimbursement={medicalForImam}
               lookupData={lookupData}
               onUpdate={onUpdate}
@@ -268,6 +265,7 @@ const DetailTabs = ({
             <NewBabyBonusTab
               imamProfileId={imamProfileId}
               newBabyBonus={newBabyForImam}
+              relationships={relationshipsForImam}
               lookupData={lookupData}
               onUpdate={onUpdate}
               showAlert={showAlert}
@@ -288,16 +286,6 @@ const DetailTabs = ({
             <BoreholeTab
               imamProfileId={imamProfileId}
               borehole={boreholeForImam}
-              lookupData={lookupData}
-              onUpdate={onUpdate}
-              showAlert={showAlert}
-            />
-          </TabPane>
-
-          <TabPane tabId="financialAssistance">
-            <ImamFinancialAssistanceTab
-              imamProfileId={imamProfileId}
-              imamFinancialAssistance={financialAssistanceForImam}
               lookupData={lookupData}
               onUpdate={onUpdate}
               showAlert={showAlert}

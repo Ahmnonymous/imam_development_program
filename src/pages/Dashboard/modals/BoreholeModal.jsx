@@ -5,6 +5,8 @@ import axiosApi from "../../../helpers/api_helper";
 import { API_BASE_URL } from "../../../helpers/url_helper";
 import { getAuditName } from "../../../helpers/userStorage";
 import TopRightAlert from "../../../components/Common/TopRightAlert";
+import MapPicker from "../../../components/Common/MapPicker";
+import exifr from "exifr";
 
 const BoreholeModal = ({ isOpen, toggle, imamProfileId }) => {
   const [alert, setAlert] = useState(null);
@@ -14,16 +16,14 @@ const BoreholeModal = ({ isOpen, toggle, imamProfileId }) => {
     yesNo: [],
     waterUsagePurpose: [],
   });
-  const { control, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm();
+  const { control, handleSubmit, formState: { errors, isSubmitting }, reset, watch, setValue } = useForm();
   const [selectedWaterUsagePurposeIds, setSelectedWaterUsagePurposeIds] = useState([]);
-  const [latitude, setLatitude] = useState("");
-  const [longitude, setLongitude] = useState("");
+  const [showMap, setShowMap] = useState(true);
 
   useEffect(() => {
     if (isOpen) {
       setSelectedWaterUsagePurposeIds([]);
-      setLatitude("");
-      setLongitude("");
+      setShowMap(true);
       reset({
         where_required: "",
         has_electricity: "",
@@ -36,6 +36,8 @@ const BoreholeModal = ({ isOpen, toggle, imamProfileId }) => {
         acknowledge: false,
         Current_Water_Source_Image: null,
         Masjid_Area_Image: null,
+        Latitude: "",
+        Longitude: "",
       });
       fetchLookupData();
     }
@@ -73,26 +75,37 @@ const BoreholeModal = ({ isOpen, toggle, imamProfileId }) => {
     setSelectedWaterUsagePurposeIds(updated);
   };
 
-  const getCurrentLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setLatitude(position.coords.latitude.toString());
-          setLongitude(position.coords.longitude.toString());
-        },
-        (error) => {
-          console.error("Error getting location:", error);
-          showAlert("Unable to get location. Please enter manually.", "warning");
-        }
-      );
-    } else {
-      showAlert("Geolocation is not supported by your browser.", "warning");
-    }
-  };
 
   const showAlert = (message, color = "success") => {
     setAlert({ message, color });
     setTimeout(() => setAlert(null), 4000);
+  };
+
+  const extractGPSFromImage = async (file) => {
+    try {
+      const exifData = await exifr.parse(file, {
+        gps: true,
+        pick: ['GPSLatitude', 'GPSLongitude', 'latitude', 'longitude']
+      });
+
+      if (exifData) {
+        // Try different property names that exifr might return
+        const lat = exifData.latitude || exifData.GPSLatitude || exifData.latitude?.value;
+        const lng = exifData.longitude || exifData.GPSLongitude || exifData.longitude?.value;
+
+        if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
+          setValue("Latitude", lat.toString(), { shouldValidate: true });
+          setValue("Longitude", lng.toString(), { shouldValidate: true });
+          setShowMap(true);
+          showAlert("GPS coordinates extracted from image successfully", "success");
+          return true;
+        }
+      }
+      return false;
+    } catch (error) {
+      console.error("Error extracting GPS from image:", error);
+      return false;
+    }
   };
 
   const onSubmit = async (data) => {
@@ -144,8 +157,8 @@ const BoreholeModal = ({ isOpen, toggle, imamProfileId }) => {
       formData.append("beneficiaries_count", data.beneficiaries_count || "");
       formData.append("challenges_due_to_lack_of_water", data.challenges_due_to_lack_of_water || "");
       formData.append("motivation", data.motivation || "");
-      formData.append("longitude", longitude || "");
-      formData.append("latitude", latitude || "");
+      formData.append("longitude", data.Longitude || "");
+      formData.append("latitude", data.Latitude || "");
       formData.append("acknowledge", data.acknowledge ? "true" : "false");
       formData.append("status_id", "1");
       formData.append("comment", "");
@@ -435,50 +448,83 @@ const BoreholeModal = ({ isOpen, toggle, imamProfileId }) => {
                           accept="image/*"
                           capture="environment"
                           invalid={!!errors.Masjid_Area_Image}
-                          onChange={(e) => {
-                            onChange(e.target.files);
-                            if (e.target.files && e.target.files.length > 0) {
-                              getCurrentLocation();
+                          onChange={async (e) => {
+                            const files = e.target.files;
+                            onChange(files);
+                            if (files && files.length > 0) {
+                              setShowMap(true);
+                              // Try to extract GPS coordinates from image metadata
+                              const hasGPS = await extractGPSFromImage(files[0]);
+                              if (!hasGPS) {
+                                showAlert("No GPS data found in image. Please use the map below to select the location.", "info");
+                              }
                             }
                           }}
                           {...field}
                         />
-                        <small className="text-muted d-block mt-1">Please capture the image with location enabled to capture longitude and latitude values</small>
+                        <small className="text-muted d-block mt-1">GPS coordinates will be automatically extracted from the image if available. Otherwise, use the map below to select the location.</small>
                       </div>
                     )} 
                   />
                   {errors.Masjid_Area_Image && <FormFeedback>{errors.Masjid_Area_Image.message}</FormFeedback>}
                 </FormGroup>
               </Col>
-              <Col md={6}>
-                <FormGroup>
-                  <Label>Latitude</Label>
-                  <Input 
-                    type="text" 
-                    value={latitude}
-                    onChange={(e) => setLatitude(e.target.value)}
-                    placeholder="Auto-captured or enter manually"
-                  />
-                  <Button 
-                    type="button" 
-                    color="secondary" 
-                    size="sm" 
-                    className="mt-1"
-                    onClick={getCurrentLocation}
-                  >
-                    <i className="bx bx-crosshair me-1"></i>Get Current Location
-                  </Button>
-                </FormGroup>
+              
+              {/* Map Picker - Always visible for location selection */}
+              <Col md={12}>
+                <MapPicker
+                  latitude={watch("Latitude") || ""}
+                  longitude={watch("Longitude") || ""}
+                  onLocationChange={(lat, lng) => {
+                    setValue("Latitude", lat.toString(), { shouldValidate: true });
+                    setValue("Longitude", lng.toString(), { shouldValidate: true });
+                  }}
+                  showMap={true}
+                />
               </Col>
+
+              {/* Longitude and Latitude - Visible inputs for display only (read-only) */}
               <Col md={6}>
                 <FormGroup>
                   <Label>Longitude</Label>
-                  <Input 
-                    type="text" 
-                    value={longitude}
-                    onChange={(e) => setLongitude(e.target.value)}
-                    placeholder="Auto-captured or enter manually"
+                  <Controller
+                    name="Longitude"
+                    control={control}
+                    render={({ field }) => (
+                      <Input
+                        type="number"
+                        step="any"
+                        placeholder="Enter longitude (e.g., 28.2293)"
+                        readOnly
+                        {...field}
+                      />
+                    )}
                   />
+                  <small className="text-muted" style={{ fontSize: "0.75rem" }}>
+                    Longitude is set automatically from the map or image GPS data
+                  </small>
+                </FormGroup>
+              </Col>
+
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Latitude</Label>
+                  <Controller
+                    name="Latitude"
+                    control={control}
+                    render={({ field }) => (
+                      <Input
+                        type="number"
+                        step="any"
+                        placeholder="Enter latitude (e.g., -25.7479)"
+                        readOnly
+                        {...field}
+                      />
+                    )}
+                  />
+                  <small className="text-muted" style={{ fontSize: "0.75rem" }}>
+                    Latitude is set automatically from the map or image GPS data
+                  </small>
                 </FormGroup>
               </Col>
               <Col md={12}>

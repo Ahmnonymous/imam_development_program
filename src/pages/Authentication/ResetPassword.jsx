@@ -23,8 +23,7 @@ import { useFormik } from "formik";
 
 // import images
 import profile from "../../assets/images/profile-img.png";
-import logo from "../../assets/images/logo.jpeg";
-import lightlogo from "../../assets/images/logo.jpeg";
+import authLogo from "../../assets/images/animated_email_images/Logos/IDP Logo for Favicon login and register.png";
 
 const ResetPasswordPage = (props) => {
   //meta title
@@ -172,8 +171,8 @@ const ResetPasswordPage = (props) => {
                       <div className="avatar-md profile-user-wid mb-4">
                         <span className="avatar-title rounded-circle bg-light">
                           <img
-                            src={lightlogo}
-                            alt=""
+                            src={authLogo}
+                            alt="IDP"
                             className="rounded-circle"
                             height="34"
                           />
@@ -184,8 +183,8 @@ const ResetPasswordPage = (props) => {
                       <div className="avatar-md profile-user-wid mb-4">
                         <span className="avatar-title rounded-circle bg-light">
                           <img
-                            src={logo}
-                            alt=""
+                            src={authLogo}
+                            alt="IDP"
                             className="rounded-circle"
                             height="34"
                           />

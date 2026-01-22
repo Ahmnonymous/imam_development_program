@@ -18,6 +18,7 @@ const ROLE_LABELS = {
   OrgExecutive: "Org Executive",
   OrgCaseworker: "Caseworker",
   ImamUser: "Imam User",
+  Admin: "Admin",
 };
 
 export const useRole = () => {
@@ -46,11 +47,12 @@ export const useRole = () => {
       isOrgExecutive: safeRoleKey === "OrgExecutive",
       isCaseworker: safeRoleKey === "OrgCaseworker",
       isImamUser: safeRoleKey === "ImamUser",
-      isGlobalAdmin: ["AppAdmin", "HQ"].includes(safeRoleKey),
+      isAdmin: safeRoleKey === "Admin",
+      isGlobalAdmin: ["AppAdmin", "HQ", "Admin"].includes(safeRoleKey),
       centerId: null, // center_id has been removed
       hasRole,
-      isAdmin: () => ["AppAdmin", "HQ", "OrgAdmin"].includes(safeRoleKey),
-      canManageEmployees: () => ["AppAdmin", "HQ", "OrgAdmin"].includes(safeRoleKey),
+      isAdmin: () => ["AppAdmin", "HQ", "OrgAdmin", "Admin"].includes(safeRoleKey),
+      canManageEmployees: () => ["AppAdmin", "HQ", "OrgAdmin", "Admin"].includes(safeRoleKey),
       canWrite: () => !isReadOnlyRole(safeRoleKey),
       canAccessModule: (module) => canViewModule(module, safeRoleKey),
       canEditModule: (module) => canEditModule(module, safeRoleKey),

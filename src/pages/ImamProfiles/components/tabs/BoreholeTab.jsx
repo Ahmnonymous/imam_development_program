@@ -8,6 +8,8 @@ import { useRole } from "../../../../helpers/useRole";
 import axiosApi from "../../../../helpers/api_helper";
 import { API_BASE_URL, API_STREAM_BASE_URL } from "../../../../helpers/url_helper";
 import { getAuditName } from "../../../../helpers/userStorage";
+import MapPicker from "../../../../components/Common/MapPicker";
+import exifr from "exifr";
 
 const BoreholeTab = ({ imamProfileId, borehole, lookupData, onUpdate, showAlert }) => {
   if (!imamProfileId) return null;
@@ -16,11 +18,10 @@ const BoreholeTab = ({ imamProfileId, borehole, lookupData, onUpdate, showAlert 
   const [modalOpen, setModalOpen] = useState(false);
   const [editItem, setEditItem] = useState(null);
   const { deleteModalOpen, deleteItem, deleteLoading, showDeleteConfirmation, hideDeleteConfirmation, confirmDelete } = useDeleteConfirmation();
-  const { control, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm();
+  const { control, handleSubmit, formState: { errors, isSubmitting }, reset, watch, setValue } = useForm();
 
   const [selectedWaterUsagePurposeIds, setSelectedWaterUsagePurposeIds] = useState([]);
-  const [latitude, setLatitude] = useState("");
-  const [longitude, setLongitude] = useState("");
+  const [showMap, setShowMap] = useState(true);
 
   const formatFileSize = (bytes) => {
     if (!bytes) return "0 B";
@@ -39,8 +40,7 @@ const BoreholeTab = ({ imamProfileId, borehole, lookupData, onUpdate, showAlert 
         setSelectedWaterUsagePurposeIds([]);
       }
       
-      setLatitude(editItem?.latitude ? String(editItem.latitude) : "");
-      setLongitude(editItem?.longitude ? String(editItem.longitude) : "");
+      setShowMap(true);
       
       reset({
         where_required: editItem?.where_required || "",
@@ -56,11 +56,12 @@ const BoreholeTab = ({ imamProfileId, borehole, lookupData, onUpdate, showAlert 
         comment: editItem?.comment || "",
         Current_Water_Source_Image: null,
         Masjid_Area_Image: null,
+        Latitude: editItem?.latitude ? String(editItem.latitude) : "",
+        Longitude: editItem?.longitude ? String(editItem.longitude) : "",
       });
     } else {
       setSelectedWaterUsagePurposeIds([]);
-      setLatitude("");
-      setLongitude("");
+      setShowMap(false);
     }
   }, [editItem, modalOpen, reset]);
 
@@ -72,20 +73,30 @@ const BoreholeTab = ({ imamProfileId, borehole, lookupData, onUpdate, showAlert 
     setSelectedWaterUsagePurposeIds(updated);
   };
 
-  const getCurrentLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setLatitude(position.coords.latitude.toString());
-          setLongitude(position.coords.longitude.toString());
-        },
-        (error) => {
-          console.error("Error getting location:", error);
-          showAlert("Unable to get location. Please enter manually.", "warning");
+  const extractGPSFromImage = async (file) => {
+    try {
+      const exifData = await exifr.parse(file, {
+        gps: true,
+        pick: ['GPSLatitude', 'GPSLongitude', 'latitude', 'longitude']
+      });
+
+      if (exifData) {
+        // Try different property names that exifr might return
+        const lat = exifData.latitude || exifData.GPSLatitude || exifData.latitude?.value;
+        const lng = exifData.longitude || exifData.GPSLongitude || exifData.longitude?.value;
+
+        if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
+          setValue("Latitude", lat.toString(), { shouldValidate: true });
+          setValue("Longitude", lng.toString(), { shouldValidate: true });
+          setShowMap(true);
+          showAlert("GPS coordinates extracted from image successfully", "success");
+          return true;
         }
-      );
-    } else {
-      showAlert("Geolocation is not supported by your browser.", "warning");
+      }
+      return false;
+    } catch (error) {
+      console.error("Error extracting GPS from image:", error);
+      return false;
     }
   };
 
@@ -155,8 +166,8 @@ const BoreholeTab = ({ imamProfileId, borehole, lookupData, onUpdate, showAlert 
       formData.append("beneficiaries_count", data.beneficiaries_count || "");
       formData.append("challenges_due_to_lack_of_water", data.challenges_due_to_lack_of_water || "");
       formData.append("motivation", data.motivation || "");
-      formData.append("longitude", longitude || "");
-      formData.append("latitude", latitude || "");
+      formData.append("longitude", data.Longitude || "");
+      formData.append("latitude", data.Latitude || "");
       formData.append("acknowledge", data.acknowledge ? "true" : "false");
       formData.append("status_id", data.status_id || "1");
       formData.append("comment", data.comment || "");
@@ -716,15 +727,21 @@ const BoreholeTab = ({ imamProfileId, borehole, lookupData, onUpdate, showAlert 
                           capture="environment"
                           disabled={isOrgExecutive}
                           invalid={!!errors.Masjid_Area_Image}
-                          onChange={(e) => {
-                            onChange(e.target.files);
-                            if (e.target.files && e.target.files.length > 0) {
-                              getCurrentLocation();
+                          onChange={async (e) => {
+                            const files = e.target.files;
+                            onChange(files);
+                            if (files && files.length > 0) {
+                              setShowMap(true);
+                              // Try to extract GPS coordinates from image metadata
+                              const hasGPS = await extractGPSFromImage(files[0]);
+                              if (!hasGPS) {
+                                showAlert("No GPS data found in image. Please use the map below to select the location.", "info");
+                              }
                             }
                           }}
                           {...field}
                         />
-                        <small className="text-muted d-block mt-1">Please capture the image with location enabled to capture longitude and latitude values</small>
+                        <small className="text-muted d-block mt-1">GPS coordinates will be automatically extracted from the image if available. Otherwise, use the map below to select the location.</small>
                         {editItem && (editItem.masjid_area_image || editItem.masjid_area_image_filename) && (
                           <div className="mt-2 p-2 border rounded bg-light">
                             <div className="d-flex align-items-center">
@@ -755,38 +772,66 @@ const BoreholeTab = ({ imamProfileId, borehole, lookupData, onUpdate, showAlert 
                   {errors.Masjid_Area_Image && <FormFeedback>{errors.Masjid_Area_Image.message}</FormFeedback>}
                 </FormGroup>
               </Col>
-              <Col md={6}>
-                <FormGroup>
-                  <Label>Latitude</Label>
-                  <Input 
-                    type="text" 
-                    value={latitude}
-                    onChange={(e) => setLatitude(e.target.value)}
-                    placeholder="Auto-captured or enter manually"
-                    disabled={isOrgExecutive}
+              
+              {/* Map Picker - Always visible for location selection */}
+              {showMap && (
+                <Col md={12}>
+                  <MapPicker
+                    latitude={watch("Latitude") || ""}
+                    longitude={watch("Longitude") || ""}
+                    onLocationChange={(lat, lng) => {
+                      setValue("Latitude", lat.toString(), { shouldValidate: true });
+                      setValue("Longitude", lng.toString(), { shouldValidate: true });
+                    }}
+                    showMap={showMap}
                   />
-                  <Button 
-                    type="button" 
-                    color="secondary" 
-                    size="sm" 
-                    className="mt-1"
-                    onClick={getCurrentLocation}
-                    disabled={isOrgExecutive}
-                  >
-                    <i className="bx bx-crosshair me-1"></i>Get Current Location
-                  </Button>
-                </FormGroup>
-              </Col>
+                </Col>
+              )}
+
+              {/* Longitude and Latitude - Visible inputs for display only (read-only) */}
               <Col md={6}>
                 <FormGroup>
                   <Label>Longitude</Label>
-                  <Input 
-                    type="text" 
-                    value={longitude}
-                    onChange={(e) => setLongitude(e.target.value)}
-                    placeholder="Auto-captured or enter manually"
-                    disabled={isOrgExecutive}
+                  <Controller
+                    name="Longitude"
+                    control={control}
+                    render={({ field }) => (
+                      <Input
+                        type="number"
+                        step="any"
+                        placeholder="Enter longitude (e.g., 28.2293)"
+                        readOnly
+                        disabled={isOrgExecutive}
+                        {...field}
+                      />
+                    )}
                   />
+                  <small className="text-muted" style={{ fontSize: "0.75rem" }}>
+                    Longitude is set automatically from the map or image GPS data
+                  </small>
+                </FormGroup>
+              </Col>
+
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Latitude</Label>
+                  <Controller
+                    name="Latitude"
+                    control={control}
+                    render={({ field }) => (
+                      <Input
+                        type="number"
+                        step="any"
+                        placeholder="Enter latitude (e.g., -25.7479)"
+                        readOnly
+                        disabled={isOrgExecutive}
+                        {...field}
+                      />
+                    )}
+                  />
+                  <small className="text-muted" style={{ fontSize: "0.75rem" }}>
+                    Latitude is set automatically from the map or image GPS data
+                  </small>
                 </FormGroup>
               </Col>
               {isOrgExecutive && (
@@ -836,21 +881,26 @@ const BoreholeTab = ({ imamProfileId, borehole, lookupData, onUpdate, showAlert 
                   <Controller 
                     name="acknowledge" 
                     control={control} 
-                    rules={{ required: "You must acknowledge this" }} 
+                    rules={{ required: "You must acknowledge the statement to proceed" }} 
                     render={({ field }) => (
-                      <Input 
-                        type="checkbox" 
-                        checked={field.value} 
-                        onChange={field.onChange} 
-                        disabled={isOrgExecutive}
-                        invalid={!!errors.acknowledge}
-                      />
+                      <>
+                        <Input 
+                          type="checkbox" 
+                          id="acknowledgment-borehole"
+                          checked={field.value || false} 
+                          onChange={(e) => field.onChange(e.target.checked)} 
+                          disabled={isOrgExecutive}
+                          invalid={!!errors.acknowledge}
+                        />
+                        <Label check htmlFor="acknowledgment-borehole">
+                          I swear by Allah, the All-Hearing and the All-Seeing, that I have completed this form truthfully and honestly, to the best of my knowledge and belief.
+                        </Label>
+                        {errors.acknowledge && (
+                          <FormFeedback>{errors.acknowledge.message}</FormFeedback>
+                        )}
+                      </>
                     )} 
                   />
-                  <Label check>
-                    I declare that the information submitted is accurate and truthful. I understand that Allah is All-Seeing and All-Aware of what is in our hearts.
-                  </Label>
-                  {errors.acknowledge && <FormFeedback>{errors.acknowledge.message}</FormFeedback>}
                 </FormGroup>
               </Col>
             </Row>

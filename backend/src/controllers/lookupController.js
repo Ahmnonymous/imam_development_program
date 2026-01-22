@@ -51,6 +51,7 @@ const lookupTables = {
   Borehole_Location: { orderByName: true },
   Water_Source: { orderByName: true },
   Water_Usage_Purpose: { orderByName: true },
+  Supplier: { orderByName: true },
   // Additional Imam Management Lookup Tables
   Request_For_Lookup: { orderByName: true },
   Classification_Lookup: { orderByName: true },

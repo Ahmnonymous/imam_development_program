@@ -36,7 +36,6 @@ const ImamProfilesManagement = () => {
   const [newBabyBonus, setNewBabyBonus] = useState([]);
   const [relationships, setRelationships] = useState([]);
   const [borehole, setBorehole] = useState([]);
-  const [imamFinancialAssistance, setImamFinancialAssistance] = useState([]);
   const [educationalDevelopment, setEducationalDevelopment] = useState([]);
   const [treePlanting, setTreePlanting] = useState([]);
   const [waqfLoan, setWaqfLoan] = useState([]);
@@ -186,6 +185,7 @@ const ImamProfilesManagement = () => {
         quranMemorizationRes,
         additionalTasksRes,
         communityEngagementTypeRes,
+        medicalVisitTypeRes,
       ] = await Promise.all([
         axiosApi.get(`${API_BASE_URL}/lookup/Race`),
         axiosApi.get(`${API_BASE_URL}/lookup/Nationality`),
@@ -225,6 +225,7 @@ const ImamProfilesManagement = () => {
         axiosApi.get(`${API_BASE_URL}/lookup/Quran_Memorization`),
         axiosApi.get(`${API_BASE_URL}/lookup/Additional_Weekly_Tasks`),
         axiosApi.get(`${API_BASE_URL}/lookup/Community_Engagement_Type`),
+        axiosApi.get(`${API_BASE_URL}/lookup/Medical_Visit_Type`),
       ]);
 
       setLookupData({
@@ -266,6 +267,7 @@ const ImamProfilesManagement = () => {
         quranMemorization: quranMemorizationRes.data || [],
         additionalTasks: additionalTasksRes.data || [],
         communityEngagementType: communityEngagementTypeRes.data || [],
+        medicalVisitType: medicalVisitTypeRes.data || [],
       });
     } catch (error) {
       console.error("Error fetching lookup data:", error);
@@ -286,7 +288,6 @@ const ImamProfilesManagement = () => {
         newBabyBonusesRes,
         relationshipsRes,
         boreholeRes,
-        imamFinancialAssistanceRes,
         educationalDevelopmentRes,
         treePlantingRes,
         waqfLoanRes,
@@ -306,7 +307,6 @@ const ImamProfilesManagement = () => {
         axiosApi.get(`${API_BASE_URL}/newBabyBonus?imam_profile_id=${imamProfileId}`),
         axiosApi.get(`${API_BASE_URL}/imamRelationships?imam_profile_id=${imamProfileId}`),
         axiosApi.get(`${API_BASE_URL}/borehole?imam_profile_id=${imamProfileId}`),
-        axiosApi.get(`${API_BASE_URL}/imamFinancialAssistance?imam_profile_id=${imamProfileId}`),
         axiosApi.get(`${API_BASE_URL}/educationalDevelopment?imam_profile_id=${imamProfileId}`),
         axiosApi.get(`${API_BASE_URL}/treePlanting?imam_profile_id=${imamProfileId}`),
         axiosApi.get(`${API_BASE_URL}/waqfLoan?imam_profile_id=${imamProfileId}`),
@@ -327,7 +327,6 @@ const ImamProfilesManagement = () => {
       setNewBabyBonus(newBabyBonusesRes.data || []);
       setRelationships(relationshipsRes.data || []);
       setBorehole(boreholeRes.data || []);
-      setImamFinancialAssistance(imamFinancialAssistanceRes?.data || []);
       setEducationalDevelopment(educationalDevelopmentRes?.data || []);
       setTreePlanting(treePlantingRes?.data || []);
       setWaqfLoan(waqfLoanRes?.data || []);
@@ -464,10 +463,12 @@ const ImamProfilesManagement = () => {
   }, [selectedImamProfile]);
 
   const filteredImamProfiles = imamProfiles.filter((imamProfile) => {
-    const searchLower = searchTerm.toLowerCase();
+    const searchLower = searchTerm.toLowerCase().trim();
+    const fullName = `${imamProfile.name || ""} ${imamProfile.surname || ""}`.toLowerCase().trim();
     return (
       (imamProfile.name || "").toLowerCase().includes(searchLower) ||
       (imamProfile.surname || "").toLowerCase().includes(searchLower) ||
+      fullName.includes(searchLower) ||
       (imamProfile.file_number || "").toLowerCase().includes(searchLower) ||
       (imamProfile.id_number || "").toLowerCase().includes(searchLower)
     );
@@ -557,7 +558,6 @@ const ImamProfilesManagement = () => {
                     newBabyBonus={newBabyBonus}
                     relationships={relationships}
                     borehole={borehole}
-                    imamFinancialAssistance={imamFinancialAssistance}
                     educationalDevelopment={educationalDevelopment}
                     treePlanting={treePlanting}
                     waqfLoan={waqfLoan}

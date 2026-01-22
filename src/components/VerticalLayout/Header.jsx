@@ -7,12 +7,12 @@ import { Link } from "react-router-dom";
 // Import menuDropdown
 import ProfileMenu from "../CommonForBoth/TopbarDropdown/ProfileMenu";
 
-// Brand logos (keep favicon as-is; these only affect in-app headers)
-import idpDark from "../../assets/images/IDP-dark.png";
-import idpLight from "../../assets/images/IDP-light.png";
+// Brand logos from logos folder - using horizontal logo for header
+import idpHorizontal from "../../assets/images/animated_email_images/Logos/IDP Logo Horizontal.png";
+import idpHorizontalWhite from "../../assets/images/animated_email_images/Logos/IDP Logo H White.png";
 
-const logo = idpDark;          // small dark logo
-const logoLightSvg = idpLight; // small light logo
+const logo = idpHorizontal;          // small dark logo
+const logoLightSvg = idpHorizontalWhite; // small light logo
 
 //i18n
 import { withTranslation } from "react-i18next";
@@ -44,13 +44,13 @@ const Header = props => {
             <div className="navbar-brand-box d-lg-none d-md-block">
               <Link to="/" className="logo logo-dark">
                 <span className="logo-sm">
-                  <img src={logo} alt="IDP" height="28" />
+                  <img src={logo} alt="IDP" height="70" />
                 </span>
               </Link>
 
               <Link to="/" className="logo logo-light">
                 <span className="logo-sm">
-                  <img src={logoLightSvg} alt="IDP" height="28" />
+                  <img src={logoLightSvg} alt="IDP" height="70" />
                 </span>
               </Link>
             </div>
