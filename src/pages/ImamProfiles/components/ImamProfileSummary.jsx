@@ -73,6 +73,43 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
     }
   };
 
+  // Helper function to parse error messages and return user-friendly messages
+  const parseErrorMessage = (error) => {
+    if (!error) return "An unexpected error occurred";
+    
+    // Check for error in response.data.error or response.data.message
+    const errorMessage = error?.response?.data?.error || error?.response?.data?.message || error?.message || "";
+    
+    // Check for duplicate email constraint
+    if (errorMessage.includes("uq_imam_email") || (errorMessage.includes("duplicate key value violates unique constraint") && errorMessage.includes("email"))) {
+      return "This email address is already registered. Please use a different email address.";
+    }
+    
+    // Check for duplicate employee profile
+    if (errorMessage.includes("employee_id") && errorMessage.includes("duplicate")) {
+      return "You already have an imam profile. Please update your existing profile instead.";
+    }
+    
+    // Check for other unique constraint violations
+    if (errorMessage.includes("duplicate key value violates unique constraint")) {
+      return "This information already exists in the system. Please check your input and try again.";
+    }
+    
+    // Return the original error message if no specific pattern matches
+    // Clean up nested error messages
+    if (errorMessage.includes("Error creating record in Imam_Profiles:")) {
+      const cleaned = errorMessage.replace(/Error creating record in Imam_Profiles:\s*/g, "");
+      return cleaned || "Failed to save imam profile";
+    }
+    
+    if (errorMessage.includes("Error updating record in Imam_Profiles:")) {
+      const cleaned = errorMessage.replace(/Error updating record in Imam_Profiles:\s*/g, "");
+      return cleaned || "Failed to update imam profile";
+    }
+    
+    return errorMessage || "An unexpected error occurred";
+  };
+
   const formatDateForInput = (dateValue) => {
     if (!dateValue) return "";
     const date = new Date(dateValue);
@@ -322,7 +359,8 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
       toggleModal();
     } catch (error) {
       console.error("Error updating imam profile:", error);
-      showAlert(error?.response?.data?.message || "Failed to update imam profile", "danger");
+      const userFriendlyMessage = parseErrorMessage(error);
+      showAlert(userFriendlyMessage, "danger");
     }
   };
 
