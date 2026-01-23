@@ -81,15 +81,16 @@ const Login = (props) => {
             try {
               const response = await axiosApi.get(`${API_BASE_URL}/imamProfiles/my-profile`);
               if (response.data) {
-                // Check if profile is approved (status_id === 2)
-                if (Number(response.data.status_id) === 2) {
+                // Profile exists (pending or approved) - redirect to imam profiles page
+                const statusId = Number(response.data.status_id);
+                if (statusId === 2) {
                   // Approved - redirect to dashboard
                   console.log("✅ Imam profile approved, redirecting to dashboard...");
                   props.router.navigate("/dashboard");
                 } else {
-                  // Not approved (pending) - redirect to create profile page
-                  console.log("⏳ Imam profile pending approval, redirecting to create profile...");
-                  props.router.navigate("/imam-profiles/create");
+                  // Pending - redirect to imam profiles page
+                  console.log("⏳ Imam profile pending approval, redirecting to imam profiles page...");
+                  props.router.navigate("/imam-profiles");
                 }
               } else {
                 // No profile - redirect to create page

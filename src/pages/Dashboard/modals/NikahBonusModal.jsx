@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Modal, ModalHeader, ModalBody, ModalFooter, Form, FormGroup, Label, Input, FormFeedback, Row, Col, Button } from "reactstrap";
 import { useForm, Controller } from "react-hook-form";
 import axiosApi from "../../../helpers/api_helper";
@@ -8,19 +8,58 @@ import TopRightAlert from "../../../components/Common/TopRightAlert";
 
 const NikahBonusModal = ({ isOpen, toggle, imamProfileId }) => {
   const [alert, setAlert] = useState(null);
+  const [relationships, setRelationships] = useState([]);
+  const [lookupData, setLookupData] = useState({
+    relationshipTypes: [],
+  });
   const { control, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm();
 
+  // Filter relationships to only show husband and wife relationships
+  const spouseRelationships = useMemo(() => {
+    if (!relationships || !lookupData?.relationshipTypes) return [];
+    const husbandType = lookupData.relationshipTypes.find(rt => rt.name?.toLowerCase() === "husband");
+    const wifeType = lookupData.relationshipTypes.find(rt => rt.name?.toLowerCase() === "wife");
+    const spouseTypeIds = [];
+    if (husbandType) spouseTypeIds.push(Number(husbandType.id));
+    if (wifeType) spouseTypeIds.push(Number(wifeType.id));
+    if (spouseTypeIds.length === 0) return [];
+    return relationships.filter(rel => spouseTypeIds.includes(Number(rel.relationship_type)));
+  }, [relationships, lookupData]);
+
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && imamProfileId) {
+      fetchRelationships();
+      fetchLookupData();
       reset({
-        spouse_name: "",
+        spouse_relationship_id: "",
         nikah_date: "",
         comment: "",
         Certificate: null,
         Nikah_Image: null,
       });
     }
-  }, [isOpen, reset]);
+  }, [isOpen, imamProfileId, reset]);
+
+  const fetchRelationships = async () => {
+    try {
+      const response = await axiosApi.get(`${API_BASE_URL}/imamRelationships?imam_profile_id=${imamProfileId}`);
+      setRelationships(response.data || []);
+    } catch (error) {
+      console.error("Error fetching relationships:", error);
+      setRelationships([]);
+    }
+  };
+
+  const fetchLookupData = async () => {
+    try {
+      const relationshipTypesRes = await axiosApi.get(`${API_BASE_URL}/lookup/Relationship_Types`);
+      setLookupData({
+        relationshipTypes: relationshipTypesRes.data || [],
+      });
+    } catch (error) {
+      console.error("Error fetching lookup data:", error);
+    }
+  };
 
   const showAlert = (message, color = "success") => {
     setAlert({ message, color });
@@ -33,7 +72,7 @@ const NikahBonusModal = ({ isOpen, toggle, imamProfileId }) => {
       const hasNikahImage = data.Nikah_Image && data.Nikah_Image.length > 0;
       const formData = new FormData();
       formData.append("imam_profile_id", imamProfileId);
-      formData.append("spouse_name", data.spouse_name);
+      formData.append("spouse_relationship_id", data.spouse_relationship_id ? parseInt(data.spouse_relationship_id) : "");
       formData.append("nikah_date", data.nikah_date);
       formData.append("comment", data.comment || "");
       
@@ -68,12 +107,23 @@ const NikahBonusModal = ({ isOpen, toggle, imamProfileId }) => {
             <Row>
               <Col md={6}>
                 <FormGroup>
-                  <Label>Spouse Name</Label>
+                  <Label>Spouse Name <span className="text-danger">*</span></Label>
                   <Controller 
-                    name="spouse_name" 
+                    name="spouse_relationship_id" 
                     control={control} 
-                    render={({ field }) => <Input type="text" {...field} />} 
+                    rules={{ required: "Spouse name is required" }} 
+                    render={({ field }) => (
+                      <Input type="select" invalid={!!errors.spouse_relationship_id} {...field}>
+                        <option value="">Select Spouse</option>
+                        {spouseRelationships.map((rel) => (
+                          <option key={rel.id} value={rel.id}>
+                            {rel.name || ""} {rel.surname || ""}
+                          </option>
+                        ))}
+                      </Input>
+                    )} 
                   />
+                  {errors.spouse_relationship_id && <FormFeedback>{errors.spouse_relationship_id.message}</FormFeedback>}
                 </FormGroup>
               </Col>
               <Col md={6}>

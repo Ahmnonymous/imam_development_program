@@ -381,7 +381,7 @@ const SidebarContent = (props) => {
               </li>
             )}
 
-            {/* ✅ Personal Dropdown - File Management, Chat, Policy & Procedure, Administration - For non-Imam Users */}
+            {/* ✅ Personal Dropdown - File Management, Chat, Policy & Procedure - For non-Imam Users */}
             {userType !== 6 && (
                 <li>
                 <Link to="/#" className="has-arrow">
@@ -407,15 +407,17 @@ const SidebarContent = (props) => {
                     <span>{props.t("Policy & Procedure")}</span>
                   </Link>
                 </li>
-                  {canAccessNav("lookups") && (
-                    <li>
-                      <Link to="/lookups">
-                        <i className="bx bx-list-ul"></i>
-                        <span>{props.t("Administration")}</span>
-                      </Link>
-                    </li>
-                  )}
                 </ul>
+              </li>
+            )}
+
+            {/* ✅ Administration - Separate navigation item */}
+            {canAccessNav("lookups") && (
+              <li>
+                <Link to="/lookups">
+                  <i className="bx bx-list-ul"></i>
+                  <span>{props.t("Administration")}</span>
+                </Link>
               </li>
             )}
 

@@ -44,11 +44,14 @@ const NikahBonusReport = () => {
         let result = [...data];
         if (searchTerm) {
             const searchLower = searchTerm.toLowerCase();
-            result = result.filter(item =>
-                item.imam_name?.toLowerCase().includes(searchLower) ||
-                item.imam_surname?.toLowerCase().includes(searchLower) ||
-                item.spouse_name?.toLowerCase().includes(searchLower)
-            );
+            result = result.filter(item => {
+                const spouseName = item.spouse_name_from_relationship && item.spouse_surname_from_relationship
+                    ? `${item.spouse_name_from_relationship} ${item.spouse_surname_from_relationship}`.trim()
+                    : item.spouse_name || '';
+                return item.imam_name?.toLowerCase().includes(searchLower) ||
+                    item.imam_surname?.toLowerCase().includes(searchLower) ||
+                    spouseName.toLowerCase().includes(searchLower);
+            });
         }
         if (sortConfig.key) {
             result.sort((a, b) => {
@@ -94,11 +97,16 @@ const NikahBonusReport = () => {
 
     const exportToCSV = () => {
         const headers = ['Imam Name', 'Imam Surname', 'Spouse Name', 'Nikah Date', 'Is First Nikah', 'Status', 'Created At'];
-        const csvData = processedData.map(item => [
-            item.imam_name || '', item.imam_surname || '', item.spouse_name || '',
-            formatDate(item.nikah_date), item.is_first_nikah_name || '',
-            item.status_name || '', formatDate(item.created_at)
-        ]);
+        const csvData = processedData.map(item => {
+            const spouseName = item.spouse_name_from_relationship && item.spouse_surname_from_relationship
+                ? `${item.spouse_name_from_relationship} ${item.spouse_surname_from_relationship}`.trim()
+                : item.spouse_name || '';
+            return [
+                item.imam_name || '', item.imam_surname || '', spouseName,
+                formatDate(item.nikah_date), item.is_first_nikah_name || '',
+                item.status_name || '', formatDate(item.created_at)
+            ];
+        });
         const csvContent = [headers.join(','), ...csvData.map(row => row.map(cell => `"${cell}"`).join(','))].join('\n');
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
@@ -274,17 +282,22 @@ const NikahBonusReport = () => {
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
-                                                                {groupItems.map((item) => (
-                                                                    <tr key={item.id}>
-                                                                        <td>{item.imam_name || '-'}</td>
-                                                                        <td>{item.imam_surname || '-'}</td>
-                                                                        <td>{item.spouse_name || '-'}</td>
-                                                                        <td>{formatDate(item.nikah_date)}</td>
-                                                                        <td>{item.is_first_nikah_name || '-'}</td>
-                                                                        <td><Badge color={item.status_name === 'Approved' ? 'success' : item.status_name === 'Pending' ? 'warning' : 'secondary'}>{item.status_name || '-'}</Badge></td>
-                                                                        <td>{formatDate(item.created_at)}</td>
-                                                                    </tr>
-                                                                ))}
+                                                                {groupItems.map((item) => {
+                                                                    const spouseName = item.spouse_name_from_relationship && item.spouse_surname_from_relationship
+                                                                        ? `${item.spouse_name_from_relationship} ${item.spouse_surname_from_relationship}`.trim()
+                                                                        : item.spouse_name || '-';
+                                                                    return (
+                                                                        <tr key={item.id}>
+                                                                            <td>{item.imam_name || '-'}</td>
+                                                                            <td>{item.imam_surname || '-'}</td>
+                                                                            <td>{spouseName}</td>
+                                                                            <td>{formatDate(item.nikah_date)}</td>
+                                                                            <td>{item.is_first_nikah_name || '-'}</td>
+                                                                            <td><Badge color={item.status_name === 'Approved' ? 'success' : item.status_name === 'Pending' ? 'warning' : 'secondary'}>{item.status_name || '-'}</Badge></td>
+                                                                            <td>{formatDate(item.created_at)}</td>
+                                                                        </tr>
+                                                                    );
+                                                                })}
                                                             </tbody>
                                                         </Table>
                                                     </div>
@@ -305,17 +318,22 @@ const NikahBonusReport = () => {
                                                         </tr>
                                                     </thead>
                                                     <tbody>
-                                                        {paginatedData.map((item) => (
-                                                            <tr key={item.id}>
-                                                                <td>{item.imam_name || '-'}</td>
-                                                                <td>{item.imam_surname || '-'}</td>
-                                                                <td>{item.spouse_name || '-'}</td>
-                                                                <td>{formatDate(item.nikah_date)}</td>
-                                                                <td>{item.is_first_nikah_name || '-'}</td>
-                                                                <td><Badge color={item.status_name === 'Approved' ? 'success' : item.status_name === 'Pending' ? 'warning' : 'secondary'}>{item.status_name || '-'}</Badge></td>
-                                                                <td>{formatDate(item.created_at)}</td>
-                                                            </tr>
-                                                        ))}
+                                                        {paginatedData.map((item) => {
+                                                            const spouseName = item.spouse_name_from_relationship && item.spouse_surname_from_relationship
+                                                                ? `${item.spouse_name_from_relationship} ${item.spouse_surname_from_relationship}`.trim()
+                                                                : item.spouse_name || '-';
+                                                            return (
+                                                                <tr key={item.id}>
+                                                                    <td>{item.imam_name || '-'}</td>
+                                                                    <td>{item.imam_surname || '-'}</td>
+                                                                    <td>{spouseName}</td>
+                                                                    <td>{formatDate(item.nikah_date)}</td>
+                                                                    <td>{item.is_first_nikah_name || '-'}</td>
+                                                                    <td><Badge color={item.status_name === 'Approved' ? 'success' : item.status_name === 'Pending' ? 'warning' : 'secondary'}>{item.status_name || '-'}</Badge></td>
+                                                                    <td>{formatDate(item.created_at)}</td>
+                                                                </tr>
+                                                            );
+                                                        })}
                                                     </tbody>
                                                 </Table>
                                             </div>

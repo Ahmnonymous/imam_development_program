@@ -195,7 +195,7 @@ const ROLE_RULES = {
     centerScoped: false,
     reportScope: "own",
     moduleAccess: {
-      allow: [MODULES.DASHBOARD, MODULES.IMAM_PROFILES, MODULES.AUTH, MODULES.EMPLOYEE, MODULES.CHAT],
+      allow: [MODULES.DASHBOARD, MODULES.IMAM_PROFILES, MODULES.AUTH, MODULES.EMPLOYEE, MODULES.CHAT, MODULES.LOOKUP],
       deny: [
         // TASKS, COMMENTS, RELATIONSHIPS, HOME_VISITS, FINANCIAL_ASSISTANCE, FOOD_ASSISTANCE, ATTACHMENTS removed (had File_ID)
         MODULES.PROGRAMS,
@@ -204,7 +204,6 @@ const ROLE_RULES = {
         MODULES.REPORTS,
         MODULES.PERSONAL_FILES,
         MODULES.TRAINING,
-        MODULES.LOOKUP,
       ],
     },
     methodAccess: {
@@ -212,6 +211,7 @@ const ROLE_RULES = {
       overrides: {
         [MODULES.IMAM_PROFILES]: METHODS.FULL,
         [MODULES.EMPLOYEE]: METHODS.READ_ONLY, // ImamUser can only read their own employee data
+        [MODULES.LOOKUP]: METHODS.READ_ONLY, // ImamUser can only read lookup data for profile creation
         // Note: CHAT module allows full access, but conversation creation is restricted in controller
       },
     },

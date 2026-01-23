@@ -39,6 +39,13 @@ const nikahBonusController = {
         fields.is_first_nikah = isNaN(parsed) ? null : parsed;
       }
       
+      if (fields.spouse_relationship_id === '' || fields.spouse_relationship_id === undefined) {
+        fields.spouse_relationship_id = null;
+      } else if (fields.spouse_relationship_id !== null && typeof fields.spouse_relationship_id === 'string') {
+        const parsed = parseInt(fields.spouse_relationship_id, 10);
+        fields.spouse_relationship_id = isNaN(parsed) ? null : parsed;
+      }
+      
       if (req.files && req.files.Certificate && req.files.Certificate.length > 0) {
         const file = req.files.Certificate[0];
         const buffer = await fs.readFile(file.path);
@@ -86,6 +93,13 @@ const nikahBonusController = {
       } else if (fields.is_first_nikah !== null && typeof fields.is_first_nikah === 'string') {
         const parsed = parseInt(fields.is_first_nikah, 10);
         fields.is_first_nikah = isNaN(parsed) ? null : parsed;
+      }
+      
+      if (fields.spouse_relationship_id === '' || fields.spouse_relationship_id === undefined) {
+        fields.spouse_relationship_id = null;
+      } else if (fields.spouse_relationship_id !== null && typeof fields.spouse_relationship_id === 'string') {
+        const parsed = parseInt(fields.spouse_relationship_id, 10);
+        fields.spouse_relationship_id = isNaN(parsed) ? null : parsed;
       }
       
       if (req.files && req.files.Certificate && req.files.Certificate.length > 0) {

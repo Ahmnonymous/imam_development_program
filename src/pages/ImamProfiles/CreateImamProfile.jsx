@@ -114,7 +114,6 @@ const CreateImamProfile = () => {
       ID_Number: "",
       File_Number: "",
       Cell_Number: "",
-      Contact_Number: "",
       Title: "",
       DOB: "",
       Race: "",
@@ -177,19 +176,17 @@ const CreateImamProfile = () => {
       if (response.data) {
         const profile = response.data;
         console.log("Found existing profile:", profile);
-        setExistingProfile(profile);
         
-        // If status is Approved, redirect to main page
-        if (profile.status_id === 2) {
-          console.log("Profile is approved, redirecting to main page");
+        // If profile exists (pending or approved), redirect to main page
+        // This prevents Imam users from accessing create page when they already have a profile
+        const statusId = Number(profile.status_id);
+        if (statusId === 1 || statusId === 2) {
+          console.log("Profile exists (status:", statusId, "), redirecting to main page");
           navigate("/imam-profiles");
           return;
         }
         
-        // If status is Pending, the form will be populated by the useEffect that watches existingProfile and lookupData
-        if (profile.status_id === 1) {
-          console.log("Profile is pending, will populate form when lookup data is ready");
-        }
+        setExistingProfile(profile);
       }
     } catch (error) {
       // Profile doesn't exist yet, that's fine - allow creation
@@ -274,7 +271,6 @@ const CreateImamProfile = () => {
         ID_Number: existingProfile.id_number || "",
         File_Number: existingProfile.file_number || "",
         Cell_Number: existingProfile.cell_number || "",
-        Contact_Number: existingProfile.contact_number || "",
         Title: existingProfile.title ? String(existingProfile.title) : "",
         DOB: formatDateForInput(existingProfile.dob),
         Race: existingProfile.race ? String(existingProfile.race) : "",
@@ -330,35 +326,6 @@ const CreateImamProfile = () => {
   }, [existingProfile, lookupData, reset]);
 
   const fetchLookupData = async () => {
-    // Skip lookup data fetch for Imam Users - they don't have permission to access lookup endpoints
-    if (userType === 6) {
-      // Initialize with empty arrays for Imam Users
-      setLookupData({
-        nationality: [],
-        title: [],
-        race: [],
-        gender: [],
-        maritalStatus: [],
-        madhab: [],
-        suburb: [],
-        province: [],
-        country: [],
-        status: [],
-        employmentType: [],
-        yesNo: [],
-        teachingFrequency: [],
-        teachAdults: [],
-        averageStudents: [],
-        prayersLead: [],
-        jumuahPrayers: [],
-        averageAttendees: [],
-        proficiency: [],
-        quranMemorization: [],
-        additionalTasks: [],
-      });
-      return;
-    }
-
     try {
       const [
         nationalityRes,
@@ -431,10 +398,7 @@ const CreateImamProfile = () => {
       });
     } catch (error) {
       console.error("Error fetching lookup data:", error);
-      // Only show alert for non-Imam users
-      if (userType !== 6) {
-        showAlert("Failed to fetch lookup data", "warning");
-      }
+      showAlert("Failed to fetch lookup data", "warning");
     }
   };
 
@@ -768,7 +732,6 @@ const CreateImamProfile = () => {
         formData.append("id_number", data.ID_Number || "");
         formData.append("file_number", data.File_Number || "");
         formData.append("cell_number", data.Cell_Number || "");
-        formData.append("contact_number", data.Contact_Number || "");
         formData.append("title", data.Title && data.Title !== "" ? data.Title : "");
         formData.append("dob", data.DOB || "");
         formData.append("race", data.Race && data.Race !== "" ? data.Race : "");
@@ -813,7 +776,6 @@ const CreateImamProfile = () => {
         id_number: data.ID_Number || null,
         file_number: data.File_Number || null,
         cell_number: data.Cell_Number || null,
-        contact_number: data.Contact_Number || null,
         title: data.Title && data.Title !== "" ? parseInt(data.Title) : null,
         dob: data.DOB || null,
         race: data.Race && data.Race !== "" ? parseInt(data.Race) : null,
@@ -878,7 +840,6 @@ const CreateImamProfile = () => {
                 ID_Number: refreshedProfile.data.id_number || "",
                 File_Number: refreshedProfile.data.file_number || "",
                 Cell_Number: refreshedProfile.data.cell_number || "",
-                Contact_Number: refreshedProfile.data.contact_number || "",
                 Title: refreshedProfile.data.title || "",
                 DOB: formatDateForInput(refreshedProfile.data.dob),
                 Race: refreshedProfile.data.race || "",
@@ -1069,31 +1030,6 @@ const CreateImamProfile = () => {
 
                     <Col md={6}>
                       <FormGroup>
-                        <Label for="Contact_Number">Contact Number</Label>
-                        <Controller
-                          name="Contact_Number"
-                          control={control}
-                          render={({ field }) => (
-                            <Input
-                              id="Contact_Number"
-                              type="text"
-                              maxLength={10}
-                              onInput={(e) => {
-                                e.target.value = (e.target.value || "").replace(/\D/g, "").slice(0, 10);
-                                field.onChange(e);
-                              }}
-                              value={field.value}
-                              onBlur={field.onBlur}
-                              placeholder="Enter contact number"
-                              {...field}
-                            />
-                          )}
-                        />
-                      </FormGroup>
-                    </Col>
-
-                    <Col md={6}>
-                      <FormGroup>
                         <Label for="DOB">Date of Birth</Label>
                         <Controller
                           name="DOB"
@@ -1215,7 +1151,7 @@ const CreateImamProfile = () => {
 
                     <Col md={6}>
                       <FormGroup>
-                        <Label for="country_id">Country</Label>
+                        <Label for="country_id">Current residing Country</Label>
                         <InputGroup>
                           <Controller
                             name="country_id"

@@ -169,7 +169,6 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
         ID_Number: imamProfile.id_number || "",
         File_Number: imamProfile.file_number || "",
         Cell_Number: imamProfile.cell_number || "",
-        Contact_Number: imamProfile.contact_number || "",
         Title: imamProfile.title ? String(imamProfile.title) : "",
         DOB: formatDateForInput(imamProfile.dob),
         Race: imamProfile.race ? String(imamProfile.race) : "",
@@ -234,7 +233,6 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
         formData.append("id_number", data.ID_Number || "");
         formData.append("file_number", data.File_Number || "");
         formData.append("cell_number", data.Cell_Number || "");
-        formData.append("contact_number", data.Contact_Number || "");
         formData.append("title", data.Title && data.Title !== "" ? data.Title : "");
         formData.append("dob", data.DOB || "");
         formData.append("race", data.Race && data.Race !== "" ? data.Race : "");
@@ -279,7 +277,6 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
           id_number: data.ID_Number || null,
           file_number: data.File_Number || null,
           cell_number: data.Cell_Number || null,
-          contact_number: data.Contact_Number || null,
           title: data.Title && data.Title !== "" ? parseInt(data.Title) : null,
           dob: data.DOB || null,
           race: data.Race && data.Race !== "" ? parseInt(data.Race) : null,
@@ -674,10 +671,6 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
               <p className="mb-2 fw-medium font-size-12">{imamProfile.cell_number || "-"}</p>
             </Col>
             <Col md={3}>
-              <p className="text-muted mb-1 font-size-11 text-uppercase">Contact Number</p>
-              <p className="mb-2 fw-medium font-size-12">{imamProfile.contact_number || "-"}</p>
-            </Col>
-            <Col md={3}>
               <p className="text-muted mb-1 font-size-11 text-uppercase">Date of Birth</p>
               <p className="mb-2 fw-medium font-size-12">{formatDate(imamProfile.dob)}</p>
             </Col>
@@ -852,29 +845,6 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
               </Col>
               <Col md={6}>
                 <FormGroup>
-                  <Label>Contact Number</Label>
-                  <Controller
-                    name="Contact_Number"
-                    control={control}
-                    render={({ field }) => (
-                      <Input
-                        type="text"
-                        maxLength={10}
-                        onInput={(e) => {
-                          e.target.value = (e.target.value || "").replace(/\D/g, "").slice(0, 10);
-                          field.onChange(e);
-                        }}
-                        value={field.value}
-                        onBlur={field.onBlur}
-                        placeholder="Enter contact number"
-                        {...field}
-                      />
-                    )}
-                  />
-                </FormGroup>
-              </Col>
-              <Col md={6}>
-                <FormGroup>
                   <Label>Date of Birth</Label>
                   <Controller
                     name="DOB"
@@ -999,7 +969,7 @@ const ImamProfileSummary = ({ imamProfile, lookupData, onUpdate, showAlert }) =>
               </Col>
               <Col md={6}>
                 <FormGroup>
-                  <Label>Country</Label>
+                  <Label>Current residing Country</Label>
                   <InputGroup>
                     <Controller
                       name="country_id"

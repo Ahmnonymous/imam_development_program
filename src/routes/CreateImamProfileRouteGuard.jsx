@@ -6,8 +6,8 @@ import { API_BASE_URL } from "../helpers/url_helper";
 
 /**
  * Route Guard for Create Imam Profile page
- * - For Imam User (type 6): Only allows access if profile status is NOT Approved (2)
- * - If approved, redirects to main imam profiles page
+ * - For Imam User (type 6): Only allows access if no profile exists
+ * - If profile exists (pending or approved), redirects to main imam profiles page
  * - For other users: Allows access normally
  */
 const CreateImamProfileRouteGuard = ({ children }) => {
@@ -20,13 +20,18 @@ const CreateImamProfileRouteGuard = ({ children }) => {
       if (userType === 6) {
         try {
           const response = await axiosApi.get(`${API_BASE_URL}/imamProfiles/my-profile`);
-          if (response.data?.status_id === 2) {
-            // Approved - redirect to main page
+          if (response.data) {
+            // Profile exists (pending or approved) - redirect to main page
             setShouldRedirect(true);
           }
         } catch (error) {
-          // No profile or error - allow access to create page
-          setShouldRedirect(false);
+          if (error.response?.status === 404) {
+            // No profile - allow access to create page
+            setShouldRedirect(false);
+          } else {
+            // Other error - allow access (will show error on page)
+            setShouldRedirect(false);
+          }
         }
       }
       setIsLoading(false);

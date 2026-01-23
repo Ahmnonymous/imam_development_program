@@ -144,7 +144,7 @@ const DetailTabs = ({
             </div>
             
             <div className="border rounded p-3 mb-3">
-              <NikahBonusTab imamProfileId={imamProfileId} nikahBonus={nikahForImam} lookupData={lookupData} onUpdate={onUpdate} showAlert={showAlert} />
+              <NikahBonusTab imamProfileId={imamProfileId} nikahBonus={nikahForImam} relationships={relationshipsForImam} lookupData={lookupData} onUpdate={onUpdate} showAlert={showAlert} />
             </div>
             
             <div className="border rounded p-3 mb-3">
@@ -245,6 +245,7 @@ const DetailTabs = ({
             <NikahBonusTab
               imamProfileId={imamProfileId}
               nikahBonus={nikahForImam}
+              relationships={relationshipsForImam}
               lookupData={lookupData}
               onUpdate={onUpdate}
               showAlert={showAlert}

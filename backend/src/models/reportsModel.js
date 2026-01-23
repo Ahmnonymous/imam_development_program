@@ -665,6 +665,9 @@ class ReportsModel {
                     ip.cell_number AS imam_cell_number,
                     nb.id,
                     nb.spouse_name,
+                    nb.spouse_relationship_id,
+                    ir.name AS spouse_name_from_relationship,
+                    ir.surname AS spouse_surname_from_relationship,
                     nb.nikah_date,
                     nb.is_first_nikah,
                     nb.acknowledge,
@@ -680,6 +683,7 @@ class ReportsModel {
                     st.name AS status_name
                 FROM Nikah_Bonus nb
                 INNER JOIN Imam_Profiles ip ON nb.imam_profile_id = ip.id
+                LEFT JOIN Imam_Relationships ir ON nb.spouse_relationship_id = ir.id
                 LEFT JOIN Yes_No yn ON nb.is_first_nikah = yn.id
                 LEFT JOIN Status st ON nb.status_id = st.id
             `;

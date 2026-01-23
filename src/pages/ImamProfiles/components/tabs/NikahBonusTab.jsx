@@ -9,7 +9,7 @@ import axiosApi from "../../../../helpers/api_helper";
 import { API_BASE_URL, API_STREAM_BASE_URL } from "../../../../helpers/url_helper";
 import { getAuditName } from "../../../../helpers/userStorage";
 
-const NikahBonusTab = ({ imamProfileId, nikahBonus, lookupData, onUpdate, showAlert }) => {
+const NikahBonusTab = ({ imamProfileId, nikahBonus, relationships, lookupData, onUpdate, showAlert }) => {
   if (!imamProfileId) return null;
   const { isOrgExecutive, isAppAdmin, isGlobalAdmin } = useRole();
   const isAdmin = isAppAdmin || isGlobalAdmin;
@@ -17,6 +17,18 @@ const NikahBonusTab = ({ imamProfileId, nikahBonus, lookupData, onUpdate, showAl
   const [editItem, setEditItem] = useState(null);
   const { deleteModalOpen, deleteItem, deleteLoading, showDeleteConfirmation, hideDeleteConfirmation, confirmDelete } = useDeleteConfirmation();
   const { control, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm();
+
+  // Filter relationships to only show husband and wife relationships
+  const spouseRelationships = useMemo(() => {
+    if (!relationships || !lookupData?.relationshipTypes) return [];
+    const husbandType = lookupData.relationshipTypes.find(rt => rt.name?.toLowerCase() === "husband");
+    const wifeType = lookupData.relationshipTypes.find(rt => rt.name?.toLowerCase() === "wife");
+    const spouseTypeIds = [];
+    if (husbandType) spouseTypeIds.push(Number(husbandType.id));
+    if (wifeType) spouseTypeIds.push(Number(wifeType.id));
+    if (spouseTypeIds.length === 0) return [];
+    return relationships.filter(rel => spouseTypeIds.includes(Number(rel.relationship_type)));
+  }, [relationships, lookupData]);
 
   const formatDateForInput = (dateValue) => {
     if (!dateValue) return "";
@@ -40,7 +52,7 @@ const NikahBonusTab = ({ imamProfileId, nikahBonus, lookupData, onUpdate, showAl
   useEffect(() => {
     if (modalOpen) {
       reset({
-        spouse_name: editItem?.spouse_name || "",
+        spouse_relationship_id: editItem?.spouse_relationship_id ? String(editItem.spouse_relationship_id) : "",
         nikah_date: formatDateForInput(editItem?.nikah_date),
         comment: editItem?.comment || "",
         Certificate: null,
@@ -71,7 +83,7 @@ const NikahBonusTab = ({ imamProfileId, nikahBonus, lookupData, onUpdate, showAl
       const hasNikahImage = data.Nikah_Image && data.Nikah_Image.length > 0;
       const formData = new FormData();
       formData.append("imam_profile_id", imamProfileId);
-      formData.append("spouse_name", data.spouse_name);
+      formData.append("spouse_relationship_id", data.spouse_relationship_id ? parseInt(data.spouse_relationship_id) : "");
       formData.append("nikah_date", data.nikah_date);
       formData.append("comment", data.comment || "");
       
@@ -100,9 +112,10 @@ const NikahBonusTab = ({ imamProfileId, nikahBonus, lookupData, onUpdate, showAl
 
   const handleDelete = () => {
     if (!editItem) return;
+    const spouseName = editItem?.spouse_name || editItem?.spouse_relationship_name || "Nikah Bonus";
     showDeleteConfirmation({ 
       id: editItem.id, 
-      name: editItem.spouse_name || "Nikah Bonus", 
+      name: spouseName, 
       type: "nikah bonus", 
       message: "This nikah bonus will be permanently removed from the system." 
     }, async () => {
@@ -154,20 +167,29 @@ const NikahBonusTab = ({ imamProfileId, nikahBonus, lookupData, onUpdate, showAl
         accessorKey: "spouse_name",
         enableSorting: true,
         enableColumnFilter: false,
-        cell: (cell) => (
-          <span
-            style={{ cursor: "pointer", color: "inherit" }}
-            onClick={() => handleEdit(cell.row.original)}
-            onMouseOver={(e) => {
-              e.currentTarget.classList.add('text-primary', 'text-decoration-underline');
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.classList.remove('text-primary', 'text-decoration-underline');
-            }}
-          >
-            {cell.getValue() || "-"}
-          </span>
-        ),
+        cell: (cell) => {
+          const row = cell.row.original;
+          const spouseName = row.spouse_name || row.spouse_relationship_name || 
+            (row.spouse_relationship_id && relationships ? 
+              (() => {
+                const rel = relationships.find(r => Number(r.id) === Number(row.spouse_relationship_id));
+                return rel ? `${rel.name || ""} ${rel.surname || ""}`.trim() : "-";
+              })() : "-");
+          return (
+            <span
+              style={{ cursor: "pointer", color: "inherit" }}
+              onClick={() => handleEdit(cell.row.original)}
+              onMouseOver={(e) => {
+                e.currentTarget.classList.add('text-primary', 'text-decoration-underline');
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.classList.remove('text-primary', 'text-decoration-underline');
+              }}
+            >
+              {spouseName || "-"}
+            </span>
+          );
+        },
       },
       {
         header: "Nikah Date",
@@ -314,7 +336,7 @@ const NikahBonusTab = ({ imamProfileId, nikahBonus, lookupData, onUpdate, showAl
         },
       },
     ],
-    [lookupData, isAdmin]
+    [lookupData, isAdmin, relationships]
   );
 
   return (
@@ -358,12 +380,21 @@ const NikahBonusTab = ({ imamProfileId, nikahBonus, lookupData, onUpdate, showAl
                 <FormGroup>
                   <Label>Spouse Name <span className="text-danger">*</span></Label>
                   <Controller 
-                    name="spouse_name" 
+                    name="spouse_relationship_id" 
                     control={control} 
                     rules={{ required: "Spouse name is required" }} 
-                    render={({ field }) => <Input type="text" invalid={!!errors.spouse_name} disabled={isOrgExecutive} {...field} />} 
+                    render={({ field }) => (
+                      <Input type="select" invalid={!!errors.spouse_relationship_id} disabled={isOrgExecutive} {...field}>
+                        <option value="">Select Spouse</option>
+                        {spouseRelationships.map((rel) => (
+                          <option key={rel.id} value={rel.id}>
+                            {rel.name || ""} {rel.surname || ""}
+                          </option>
+                        ))}
+                      </Input>
+                    )} 
                   />
-                  {errors.spouse_name && <FormFeedback>{errors.spouse_name.message}</FormFeedback>}
+                  {errors.spouse_relationship_id && <FormFeedback>{errors.spouse_relationship_id.message}</FormFeedback>}
                 </FormGroup>
               </Col>
               <Col md={6}>
