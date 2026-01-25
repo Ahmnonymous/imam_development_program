@@ -29,6 +29,7 @@ const MedicalModal = ({ isOpen, toggle, imamProfileId }) => {
         amount: "",
         Receipt: null,
         Supporting_Docs: null,
+        acknowledgment: false,
       });
     }
   }, [isOpen, imamProfileId, reset]);
@@ -238,6 +239,34 @@ const MedicalModal = ({ isOpen, toggle, imamProfileId }) => {
                         {...field}
                       />
                     )} 
+                  />
+                </FormGroup>
+              </Col>
+            </Row>
+            <Row>
+              <Col md={12}>
+                <FormGroup check>
+                  <Controller
+                    name="acknowledgment"
+                    control={control}
+                    rules={{ required: "You must acknowledge the statement to proceed" }}
+                    render={({ field }) => (
+                      <>
+                        <Input
+                          type="checkbox"
+                          id="acknowledgment-medical"
+                          checked={field.value || false}
+                          onChange={(e) => field.onChange(e.target.checked)}
+                          invalid={!!errors.acknowledgment}
+                        />
+                        <Label check htmlFor="acknowledgment-medical">
+                          I swear by Allah, the All-Hearing and the All-Seeing, that I have completed this form truthfully and honestly, to the best of my knowledge and belief.
+                        </Label>
+                        {errors.acknowledgment && (
+                          <FormFeedback>{errors.acknowledgment.message}</FormFeedback>
+                        )}
+                      </>
+                    )}
                   />
                 </FormGroup>
               </Col>

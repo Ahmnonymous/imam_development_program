@@ -36,6 +36,7 @@ const NikahBonusModal = ({ isOpen, toggle, imamProfileId }) => {
         comment: "",
         Certificate: null,
         Nikah_Image: null,
+        acknowledgment: false,
       });
     }
   }, [isOpen, imamProfileId, reset]);
@@ -177,6 +178,34 @@ const NikahBonusModal = ({ isOpen, toggle, imamProfileId }) => {
                     name="comment" 
                     control={control} 
                     render={({ field }) => <Input type="textarea" rows={2} {...field} />} 
+                  />
+                </FormGroup>
+              </Col>
+            </Row>
+            <Row>
+              <Col md={12}>
+                <FormGroup check>
+                  <Controller
+                    name="acknowledgment"
+                    control={control}
+                    rules={{ required: "You must acknowledge the statement to proceed" }}
+                    render={({ field }) => (
+                      <>
+                        <Input
+                          type="checkbox"
+                          id="acknowledgment-nikah"
+                          checked={field.value || false}
+                          onChange={(e) => field.onChange(e.target.checked)}
+                          invalid={!!errors.acknowledgment}
+                        />
+                        <Label check htmlFor="acknowledgment-nikah">
+                          I swear by Allah, the All-Hearing and the All-Seeing, that I have completed this form truthfully and honestly, to the best of my knowledge and belief.
+                        </Label>
+                        {errors.acknowledgment && (
+                          <FormFeedback>{errors.acknowledgment.message}</FormFeedback>
+                        )}
+                      </>
+                    )}
                   />
                 </FormGroup>
               </Col>

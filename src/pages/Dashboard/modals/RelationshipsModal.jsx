@@ -29,6 +29,7 @@ const RelationshipsModal = ({ isOpen, toggle, imamProfileId }) => {
         Gender: "",
         Highest_Education: "",
         Health_Condition: "",
+        acknowledgment: false,
       });
       fetchLookupData();
     }
@@ -256,6 +257,34 @@ const RelationshipsModal = ({ isOpen, toggle, imamProfileId }) => {
                           <option key={x.id} value={x.id}>{x.name}</option>
                         ))}
                       </Input>
+                    )}
+                  />
+                </FormGroup>
+              </Col>
+            </Row>
+            <Row>
+              <Col md={12}>
+                <FormGroup check>
+                  <Controller
+                    name="acknowledgment"
+                    control={control}
+                    rules={{ required: "You must acknowledge the statement to proceed" }}
+                    render={({ field }) => (
+                      <>
+                        <Input
+                          type="checkbox"
+                          id="acknowledgment-relationships"
+                          checked={field.value || false}
+                          onChange={(e) => field.onChange(e.target.checked)}
+                          invalid={!!errors.acknowledgment}
+                        />
+                        <Label check htmlFor="acknowledgment-relationships">
+                          I swear by Allah, the All-Hearing and the All-Seeing, that I have completed this form truthfully and honestly, to the best of my knowledge and belief.
+                        </Label>
+                        {errors.acknowledgment && (
+                          <FormFeedback>{errors.acknowledgment.message}</FormFeedback>
+                        )}
+                      </>
                     )}
                   />
                 </FormGroup>
