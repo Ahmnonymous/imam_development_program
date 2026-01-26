@@ -13,7 +13,18 @@ const HardshipReliefModal = ({ isOpen, toggle, imamProfileId }) => {
     yesNo: [],
     areas: [],
   });
-  const { control, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm();
+  const { control, handleSubmit, formState: { errors, isSubmitting }, reset, watch } = useForm();
+  
+  const requestFor = watch("request_for");
+  const hasDisabilities = watch("has_disabilities");
+  
+  // Check if "Request For" is "myself" - find the lookup item with name containing "myself" (case insensitive)
+  const isRequestForMyself = requestFor && lookupData.requestFor.find(item => 
+    Number(item.id) === Number(requestFor) && item.name?.toLowerCase().includes("myself")
+  );
+  
+  // Check if "Has Disabilities" is "Yes" (ID 1 in Yes_No lookup)
+  const showDisabilityDetails = hasDisabilities && parseInt(hasDisabilities) === 1;
 
   useEffect(() => {
     const fetchLookupData = async () => {
@@ -116,64 +127,68 @@ const HardshipReliefModal = ({ isOpen, toggle, imamProfileId }) => {
                   />
                 </FormGroup>
               </Col>
-              <Col md={6}>
-                <FormGroup>
-                  <Label>Is Muslim</Label>
-                  <Controller 
-                    name="is_muslim" 
-                    control={control} 
-                    render={({ field }) => (
-                      <Input type="select" {...field}>
-                        <option value="">Select</option>
-                        {lookupData.yesNo.map((item) => (
-                          <option key={item.id} value={item.id}>
-                            {item.name}
-                          </option>
-                        ))}
-                      </Input>
-                    )} 
-                  />
-                </FormGroup>
-              </Col>
-              <Col md={6}>
-                <FormGroup>
-                  <Label>Name of Person/Community</Label>
-                  <Controller 
-                    name="name_of_person_community" 
-                    control={control} 
-                    render={({ field }) => <Input type="text" {...field} placeholder="Enter name" />} 
-                  />
-                </FormGroup>
-              </Col>
-              <Col md={6}>
-                <FormGroup>
-                  <Label>Area of Residence</Label>
-                  <Controller 
-                    name="area_of_residence" 
-                    control={control} 
-                    render={({ field }) => (
-                      <Input type="select" {...field}>
-                        <option value="">Select</option>
-                        {lookupData.areas.map((item) => (
-                          <option key={item.id} value={item.id}>
-                            {item.name}
-                          </option>
-                        ))}
-                      </Input>
-                    )} 
-                  />
-                </FormGroup>
-              </Col>
-              <Col md={6}>
-                <FormGroup>
-                  <Label>Age Group</Label>
-                  <Controller 
-                    name="age_group" 
-                    control={control} 
-                    render={({ field }) => <Input type="text" {...field} placeholder="Enter age group" />} 
-                  />
-                </FormGroup>
-              </Col>
+              {!isRequestForMyself && (
+                <>
+                  <Col md={6}>
+                    <FormGroup>
+                      <Label>Is Muslim</Label>
+                      <Controller 
+                        name="is_muslim" 
+                        control={control} 
+                        render={({ field }) => (
+                          <Input type="select" {...field}>
+                            <option value="">Select</option>
+                            {lookupData.yesNo.map((item) => (
+                              <option key={item.id} value={item.id}>
+                                {item.name}
+                              </option>
+                            ))}
+                          </Input>
+                        )} 
+                      />
+                    </FormGroup>
+                  </Col>
+                  <Col md={6}>
+                    <FormGroup>
+                      <Label>Name of Person/Community</Label>
+                      <Controller 
+                        name="name_of_person_community" 
+                        control={control} 
+                        render={({ field }) => <Input type="text" {...field} placeholder="Enter name" />} 
+                      />
+                    </FormGroup>
+                  </Col>
+                  <Col md={6}>
+                    <FormGroup>
+                      <Label>Area of Residence</Label>
+                      <Controller 
+                        name="area_of_residence" 
+                        control={control} 
+                        render={({ field }) => (
+                          <Input type="select" {...field}>
+                            <option value="">Select</option>
+                            {lookupData.areas.map((item) => (
+                              <option key={item.id} value={item.id}>
+                                {item.name}
+                              </option>
+                            ))}
+                          </Input>
+                        )} 
+                      />
+                    </FormGroup>
+                  </Col>
+                  <Col md={6}>
+                    <FormGroup>
+                      <Label>Age Group</Label>
+                      <Controller 
+                        name="age_group" 
+                        control={control} 
+                        render={({ field }) => <Input type="text" {...field} placeholder="Enter age group" />} 
+                      />
+                    </FormGroup>
+                  </Col>
+                </>
+              )}
               <Col md={6}>
                 <FormGroup>
                   <Label>Has Disabilities</Label>
@@ -223,16 +238,18 @@ const HardshipReliefModal = ({ isOpen, toggle, imamProfileId }) => {
                   />
                 </FormGroup>
               </Col>
-              <Col md={12}>
-                <FormGroup>
-                  <Label>Disability Details</Label>
-                  <Controller 
-                    name="disability_details" 
-                    control={control} 
-                    render={({ field }) => <Input type="textarea" rows={2} {...field} placeholder="Enter disability details" />} 
-                  />
-                </FormGroup>
-              </Col>
+              {showDisabilityDetails && (
+                <Col md={12}>
+                  <FormGroup>
+                    <Label>Disability Details</Label>
+                    <Controller 
+                      name="disability_details" 
+                      control={control} 
+                      render={({ field }) => <Input type="textarea" rows={2} {...field} placeholder="Enter disability details" />} 
+                    />
+                  </FormGroup>
+                </Col>
+              )}
               <Col md={12}>
                 <FormGroup check>
                   <Controller

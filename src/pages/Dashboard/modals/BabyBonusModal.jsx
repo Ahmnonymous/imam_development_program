@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Modal, ModalHeader, ModalBody, ModalFooter, Form, FormGroup, Label, Input, FormFeedback, Row, Col, Button } from "reactstrap";
 import { useForm, Controller } from "react-hook-form";
 import axiosApi from "../../../helpers/api_helper";
@@ -8,21 +8,61 @@ import TopRightAlert from "../../../components/Common/TopRightAlert";
 
 const BabyBonusModal = ({ isOpen, toggle, imamProfileId }) => {
   const [alert, setAlert] = useState(null);
+  const [relationships, setRelationships] = useState([]);
+  const [lookupData, setLookupData] = useState({
+    relationshipTypes: [],
+    gender: [],
+  });
   const { control, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm();
 
+  // Filter relationships to only show spouse (husband/wife) relationships
+  const spouseRelationships = useMemo(() => {
+    if (!relationships || !lookupData?.relationshipTypes) return [];
+    const spouseType = lookupData.relationshipTypes.find(rt => rt.name?.toLowerCase() === "spouse");
+    if (!spouseType) return [];
+    return relationships.filter(rel => Number(rel.relationship_type) === Number(spouseType.id));
+  }, [relationships, lookupData]);
+
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && imamProfileId) {
+      fetchRelationships();
+      fetchLookupData();
       reset({
-        spouse_name: "",
+        spouse_relationship_id: "",
         baby_name: "",
         baby_dob: "",
+        gender: "",
+        identification_number: "",
         comment: "",
         Baby_Image: null,
         Birth_Certificate: null,
         acknowledgment: false,
       });
     }
-  }, [isOpen, reset]);
+  }, [isOpen, imamProfileId, reset]);
+
+  const fetchRelationships = async () => {
+    try {
+      const response = await axiosApi.get(`${API_BASE_URL}/imamRelationships?imam_profile_id=${imamProfileId}`);
+      setRelationships(response.data || []);
+    } catch (error) {
+      console.error("Error fetching relationships:", error);
+      setRelationships([]);
+    }
+  };
+
+  const fetchLookupData = async () => {
+    try {
+      const relationshipTypesRes = await axiosApi.get(`${API_BASE_URL}/lookup/Relationship_Types`);
+      const genderRes = await axiosApi.get(`${API_BASE_URL}/lookup/Gender`);
+      setLookupData({
+        relationshipTypes: relationshipTypesRes.data || [],
+        gender: genderRes.data || [],
+      });
+    } catch (error) {
+      console.error("Error fetching lookup data:", error);
+    }
+  };
 
   const showAlert = (message, color = "success") => {
     setAlert({ message, color });
@@ -35,9 +75,11 @@ const BabyBonusModal = ({ isOpen, toggle, imamProfileId }) => {
       const hasBirthCertificate = data.Birth_Certificate && data.Birth_Certificate.length > 0;
       const formData = new FormData();
       formData.append("imam_profile_id", imamProfileId);
-      formData.append("spouse_name", data.spouse_name);
+      formData.append("spouse_relationship_id", data.spouse_relationship_id || "");
       formData.append("baby_name", data.baby_name);
       formData.append("baby_dob", data.baby_dob);
+      formData.append("gender", data.gender || "");
+      formData.append("identification_number", data.identification_number || "");
       formData.append("comment", data.comment || "");
       
       if (hasBabyImage) {
@@ -71,65 +113,111 @@ const BabyBonusModal = ({ isOpen, toggle, imamProfileId }) => {
             <Row>
               <Col md={6}>
                 <FormGroup>
-                  <Label>Spouse Name</Label>
+                  <Label>Spouse Name <span className="text-danger">*</span></Label>
                   <Controller 
-                    name="spouse_name" 
+                    name="spouse_relationship_id" 
                     control={control} 
-                    render={({ field }) => <Input type="text" {...field} />} 
+                    rules={{ required: "Spouse name is required" }} 
+                    render={({ field }) => (
+                      <Input type="select" invalid={!!errors.spouse_relationship_id} {...field}>
+                        <option value="">Select Spouse</option>
+                        {spouseRelationships.map((rel) => (
+                          <option key={rel.id} value={rel.id}>
+                            {rel.name || ""} {rel.surname || ""}
+                          </option>
+                        ))}
+                      </Input>
+                    )} 
                   />
+                  {errors.spouse_relationship_id && <FormFeedback>{errors.spouse_relationship_id.message}</FormFeedback>}
                 </FormGroup>
               </Col>
               <Col md={6}>
                 <FormGroup>
-                  <Label>Baby Name</Label>
+                  <Label>Baby Name <span className="text-danger">*</span></Label>
                   <Controller 
                     name="baby_name" 
                     control={control} 
-                    render={({ field }) => <Input type="text" {...field} />} 
+                    rules={{ required: "Baby name is required" }} 
+                    render={({ field }) => <Input type="text" invalid={!!errors.baby_name} {...field} />} 
                   />
+                  {errors.baby_name && <FormFeedback>{errors.baby_name.message}</FormFeedback>}
                 </FormGroup>
               </Col>
               <Col md={6}>
                 <FormGroup>
-                  <Label>Baby Date of Birth</Label>
+                  <Label>Baby Date of Birth <span className="text-danger">*</span></Label>
                   <Controller 
                     name="baby_dob" 
                     control={control} 
-                    render={({ field }) => <Input type="date" {...field} />} 
+                    rules={{ required: "Baby date of birth is required" }} 
+                    render={({ field }) => <Input type="date" invalid={!!errors.baby_dob} {...field} />} 
                   />
+                  {errors.baby_dob && <FormFeedback>{errors.baby_dob.message}</FormFeedback>}
+                </FormGroup>
+              </Col>
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Gender</Label>
+                  <Controller 
+                    name="gender" 
+                    control={control} 
+                    render={({ field }) => (
+                      <Input type="select" invalid={!!errors.gender} {...field}>
+                        <option value="">Select Gender</option>
+                        {lookupData?.gender?.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </Input>
+                    )} 
+                  />
+                  {errors.gender && <FormFeedback>{errors.gender.message}</FormFeedback>}
+                </FormGroup>
+              </Col>
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Identification Number</Label>
+                  <Controller 
+                    name="identification_number" 
+                    control={control} 
+                    render={({ field }) => <Input type="text" invalid={!!errors.identification_number} {...field} />} 
+                  />
+                  {errors.identification_number && <FormFeedback>{errors.identification_number.message}</FormFeedback>}
                 </FormGroup>
               </Col>
               <Col md={6}>
                 <FormGroup>
                   <Label>Baby Image</Label>
-                  <Controller 
-                    name="Baby_Image" 
-                    control={control} 
+                  <Controller
+                    name="Baby_Image"
+                    control={control}
                     render={({ field: { onChange, value, ...field } }) => (
-                      <Input 
-                        type="file" 
+                      <Input
+                        type="file"
                         accept="image/*"
                         onChange={(e) => onChange(e.target.files)}
                         {...field}
                       />
-                    )} 
+                    )}
                   />
                 </FormGroup>
               </Col>
               <Col md={6}>
                 <FormGroup>
                   <Label>Birth Certificate</Label>
-                  <Controller 
-                    name="Birth_Certificate" 
-                    control={control} 
+                  <Controller
+                    name="Birth_Certificate"
+                    control={control}
                     render={({ field: { onChange, value, ...field } }) => (
-                      <Input 
-                        type="file" 
+                      <Input
+                        type="file"
                         accept="image/*,.pdf"
                         onChange={(e) => onChange(e.target.files)}
                         {...field}
                       />
-                    )} 
+                    )}
                   />
                 </FormGroup>
               </Col>

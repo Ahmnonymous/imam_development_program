@@ -1757,12 +1757,14 @@ CREATE TABLE IF NOT EXISTS waqf_loan (
     recent_bonuses_details TEXT,
     active_dawah BIGINT,
     dawah_activities_details TEXT,
-    contributed_to_waqf_loan_fund BIGINT,
+    contributed_to_waqf_loan_fund TEXT,
     loan_type VARCHAR(255),
+    loan_type_other TEXT,
     loan_reason TEXT,
     tried_employer_request VARCHAR(255),
     promise_to_repay BIGINT,
     understand_waqf_fund BIGINT,
+    agree_to_pay_bank_service_costs BIGINT,
     amount_required DECIMAL(12,2),
     monthly_income DECIMAL(12,2),
     monthly_expenses DECIMAL(12,2),
@@ -1783,9 +1785,9 @@ CREATE TABLE IF NOT EXISTS waqf_loan (
     CONSTRAINT fk_waqf_loan_imam FOREIGN KEY (imam_profile_id) REFERENCES Imam_Profiles(ID) ON DELETE CASCADE,
     CONSTRAINT fk_waqf_loan_bonuses FOREIGN KEY (participated_recent_bonuses_90_days) REFERENCES Yes_No(ID),
     CONSTRAINT fk_waqf_loan_dawah FOREIGN KEY (active_dawah) REFERENCES Yes_No(ID),
-    CONSTRAINT fk_waqf_loan_contributed FOREIGN KEY (contributed_to_waqf_loan_fund) REFERENCES Yes_No(ID),
     CONSTRAINT fk_waqf_loan_repay FOREIGN KEY (promise_to_repay) REFERENCES Yes_No(ID),
     CONSTRAINT fk_waqf_loan_understand FOREIGN KEY (understand_waqf_fund) REFERENCES Yes_No(ID),
+    CONSTRAINT fk_waqf_loan_bank_costs FOREIGN KEY (agree_to_pay_bank_service_costs) REFERENCES Yes_No(ID),
     CONSTRAINT fk_waqf_loan_status FOREIGN KEY (status_id) REFERENCES Status(ID)
 );
 
