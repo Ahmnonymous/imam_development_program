@@ -31,14 +31,15 @@ const EducationalDevelopmentModal = ({ isOpen, toggle, imamProfileId }) => {
         course_type: "",
         start_date: "",
         end_date: "",
+        duration_course: "",
         cost: "",
         cost_currency: "",
+        cost_south_african_rand: "",
         funding_source: "",
-        completion_status: "",
-        certificate_obtained: false,
         acknowledge: false,
         comment: "",
-        Certificate: null,
+        Brochure: null,
+        Invoice: null,
       });
     }
   }, [isOpen, reset]);
@@ -50,7 +51,8 @@ const EducationalDevelopmentModal = ({ isOpen, toggle, imamProfileId }) => {
 
   const onSubmit = async (data) => {
     try {
-      const hasCertificate = data.Certificate && data.Certificate.length > 0;
+      const hasBrochure = data.Brochure && data.Brochure.length > 0;
+      const hasInvoice = data.Invoice && data.Invoice.length > 0;
       const formData = new FormData();
       formData.append("imam_profile_id", imamProfileId);
       formData.append("course_name", data.course_name);
@@ -58,18 +60,16 @@ const EducationalDevelopmentModal = ({ isOpen, toggle, imamProfileId }) => {
       formData.append("course_type", data.course_type || "");
       formData.append("start_date", data.start_date || "");
       formData.append("end_date", data.end_date || "");
+      formData.append("duration_course", data.duration_course || "");
       formData.append("cost", data.cost ? parseFloat(data.cost) : "");
       formData.append("cost_currency", data.cost_currency ? parseInt(data.cost_currency) : "");
+      formData.append("cost_south_african_rand", data.cost_south_african_rand ? parseFloat(data.cost_south_african_rand) : "");
       formData.append("funding_source", data.funding_source || "");
-      formData.append("completion_status", data.completion_status || "");
-      formData.append("certificate_obtained", data.certificate_obtained || false);
       formData.append("acknowledge", data.acknowledge || false);
       formData.append("status_id", 1);
       formData.append("comment", data.comment || "");
-      
-      if (hasCertificate) {
-        formData.append("Certificate", data.Certificate[0]);
-      }
+      if (hasBrochure) formData.append("Brochure", data.Brochure[0]);
+      if (hasInvoice) formData.append("Invoice", data.Invoice[0]);
 
       formData.append("created_by", getAuditName());
       await axiosApi.post(`${API_BASE_URL}/educationalDevelopment`, formData, { headers: { "Content-Type": "multipart/form-data" } });
@@ -155,7 +155,17 @@ const EducationalDevelopmentModal = ({ isOpen, toggle, imamProfileId }) => {
               </Col>
               <Col md={6}>
                 <FormGroup>
-                  <Label>Cost</Label>
+                  <Label>Duration of the course?</Label>
+                  <Controller 
+                    name="duration_course" 
+                    control={control} 
+                    render={({ field }) => <Input type="text" {...field} placeholder="e.g 2 months, 3 months, or 6 months" />} 
+                  />
+                </FormGroup>
+              </Col>
+              <Col md={6}>
+                <FormGroup>
+                  <Label>How much are the fees for the course in local currency?</Label>
                   <Controller 
                     name="cost" 
                     control={control} 
@@ -184,19 +194,36 @@ const EducationalDevelopmentModal = ({ isOpen, toggle, imamProfileId }) => {
               </Col>
               <Col md={6}>
                 <FormGroup>
-                  <Label>Completion Status</Label>
+                  <Label>How much are the fees for the course in South African Rand?</Label>
                   <Controller 
-                    name="completion_status" 
+                    name="cost_south_african_rand" 
                     control={control} 
-                    render={({ field }) => <Input type="text" {...field} placeholder="Enter completion status" />} 
+                    render={({ field }) => <Input type="number" step="0.01" {...field} placeholder="0.00" />} 
                   />
                 </FormGroup>
               </Col>
               <Col md={6}>
                 <FormGroup>
-                  <Label>Certificate</Label>
+                  <Label>Upload a brochure/prospectus/course outline</Label>
                   <Controller 
-                    name="Certificate" 
+                    name="Brochure" 
+                    control={control} 
+                    render={({ field: { onChange, value, ...field } }) => (
+                      <Input 
+                        type="file" 
+                        accept="image/*,.pdf"
+                        onChange={(e) => onChange(e.target.files)}
+                        {...field}
+                      />
+                    )} 
+                  />
+                </FormGroup>
+              </Col>
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Upload authentic invoice</Label>
+                  <Controller 
+                    name="Invoice" 
                     control={control} 
                     render={({ field: { onChange, value, ...field } }) => (
                       <Input 
@@ -216,20 +243,6 @@ const EducationalDevelopmentModal = ({ isOpen, toggle, imamProfileId }) => {
                     name="comment" 
                     control={control} 
                     render={({ field }) => <Input type="textarea" rows={2} {...field} placeholder="Enter comment" />} 
-                  />
-                </FormGroup>
-              </Col>
-              <Col md={6}>
-                <FormGroup check>
-                  <Controller 
-                    name="certificate_obtained" 
-                    control={control} 
-                    render={({ field }) => (
-                      <>
-                        <Input type="checkbox" {...field} checked={field.value || false} />
-                        <Label check>Certificate Obtained</Label>
-                      </>
-                    )} 
                   />
                 </FormGroup>
               </Col>

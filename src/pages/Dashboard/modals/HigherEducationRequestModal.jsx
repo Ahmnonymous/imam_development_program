@@ -199,11 +199,11 @@ const HigherEducationRequestModal = ({ isOpen, toggle, imamProfileId }) => {
               </Col>
               <Col md={6}>
                 <FormGroup>
-                  <Label>Cost (Local Currency)</Label>
+                  <Label>What is the cost of your annual fees in your local currency?</Label>
                   <Controller 
                     name="cost_local_currency" 
                     control={control} 
-                    render={({ field }) => <Input type="number" step="0.01" {...field} placeholder="0.00" />} 
+                    render={({ field }) => <Input type="number" step="0.01" {...field} placeholder="e.g. 15000" />} 
                   />
                 </FormGroup>
               </Col>
@@ -236,39 +236,66 @@ const HigherEducationRequestModal = ({ isOpen, toggle, imamProfileId }) => {
                   />
                 </FormGroup>
               </Col>
-              <Col md={6}>
+              <Col md={12}>
                 <FormGroup>
-                  <Label>Days/Times Attending</Label>
+                  <Label>What are the days and times you will be attending lessons? <span className="text-danger">*</span></Label>
                   <Controller 
                     name="days_times_attending" 
                     control={control} 
-                    render={({ field }) => <Input type="text" {...field} placeholder="Enter days/times" />} 
+                    rules={{ required: "Days and times are required" }}
+                    render={({ field }) => (
+                      <Input 
+                        type="textarea" 
+                        rows={3} 
+                        {...field} 
+                        placeholder="e.g. Every Saturday 09:00am - 12:00pm; Mondays and Thursdays 12:00pm - 4:00pm" 
+                      />
+                    )} 
                   />
+                  <small className="text-muted d-block mt-1">Example: Every Saturday 09:00am - 12:00pm; Mondays and Thursdays 12:00pm - 4:00pm</small>
+                  {errors.days_times_attending && <FormFeedback>{errors.days_times_attending.message}</FormFeedback>}
                 </FormGroup>
               </Col>
               <Col md={6}>
                 <FormGroup>
-                  <Label>Times Per Month</Label>
+                  <Label>How many times a week</Label>
                   <Controller 
                     name="times_per_month" 
                     control={control} 
-                    render={({ field }) => <Input type="number" {...field} placeholder="Enter times per month" />} 
+                    render={({ field }) => (
+                      <Input type="select" {...field}>
+                        <option value="">Select</option>
+                        <option value="1">1 time per week</option>
+                        <option value="2">2 times per week</option>
+                        <option value="3">3 times per week</option>
+                        <option value="4">4 times per week</option>
+                        <option value="5">5 times per week</option>
+                      </Input>
+                    )} 
                   />
                 </FormGroup>
               </Col>
               <Col md={6}>
                 <FormGroup>
-                  <Label>Semesters Per Year</Label>
+                  <Label>How many semesters per year</Label>
                   <Controller 
                     name="semesters_per_year" 
                     control={control} 
-                    render={({ field }) => <Input type="number" {...field} placeholder="Enter semesters" />} 
+                    render={({ field }) => (
+                      <Input type="select" {...field}>
+                        <option value="">Select</option>
+                        <option value="1">1 Semester</option>
+                        <option value="2">2 Semesters</option>
+                        <option value="3">3 Semesters</option>
+                        <option value="4">4 Semesters</option>
+                      </Input>
+                    )} 
                   />
                 </FormGroup>
               </Col>
               <Col md={6}>
                 <FormGroup>
-                  <Label>Will Stop Imam Duties</Label>
+                  <Label>Will these studies stop you from doing your Imam duties?</Label>
                   <Controller 
                     name="will_stop_imam_duties" 
                     control={control} 
@@ -285,7 +312,7 @@ const HigherEducationRequestModal = ({ isOpen, toggle, imamProfileId }) => {
                   />
                 </FormGroup>
               </Col>
-              <Col md={4}>
+              <Col md={12}>
                 <FormGroup>
                   <Label>Course Brochure</Label>
                   <Controller 
@@ -302,7 +329,7 @@ const HigherEducationRequestModal = ({ isOpen, toggle, imamProfileId }) => {
                   />
                 </FormGroup>
               </Col>
-              <Col md={4}>
+              <Col md={12}>
                 <FormGroup>
                   <Label>Quotation</Label>
                   <Controller 
@@ -319,7 +346,7 @@ const HigherEducationRequestModal = ({ isOpen, toggle, imamProfileId }) => {
                   />
                 </FormGroup>
               </Col>
-              <Col md={4}>
+              <Col md={12}>
                 <FormGroup>
                   <Label>Motivation Letter</Label>
                   <Controller 

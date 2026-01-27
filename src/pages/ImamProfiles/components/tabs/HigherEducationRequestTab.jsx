@@ -398,12 +398,12 @@ const HigherEducationRequestTab = ({ imamProfileId, higherEducationRequest, look
             <Row>
               <Col md={6}>
                 <FormGroup>
-                  <Label>Cost (Local Currency)</Label>
+                  <Label>What is the cost of your annual fees in your local currency?</Label>
                   <Controller
                     name="cost_local_currency"
                     control={control}
                     render={({ field }) => (
-                      <Input {...field} type="number" step="0.01" placeholder="0.00" />
+                      <Input {...field} type="number" step="0.01" placeholder="e.g. 15000" />
                     )}
                   />
                 </FormGroup>
@@ -502,12 +502,12 @@ const HigherEducationRequestTab = ({ imamProfileId, higherEducationRequest, look
               </Col>
               <Col md={6}>
                 <FormGroup>
-                  <Label>Will Stop Imam Duties</Label>
+                  <Label>Will these studies stop you from doing your Imam duties?</Label>
                   <Controller
                     name="will_stop_imam_duties"
                     control={control}
                     render={({ field }) => (
-                      <Input {...field} type="select">
+                      <Input {...field} type="select" disabled={isOrgExecutive}>
                         <option value="">Select</option>
                         {(lookupData?.yesNo || []).map((item) => (
                           <option key={item.id} value={item.id}>
@@ -521,32 +521,33 @@ const HigherEducationRequestTab = ({ imamProfileId, higherEducationRequest, look
               </Col>
             </Row>
             <FormGroup>
-              <Label>Days and Times Attending <span className="text-danger">*</span></Label>
+              <Label>What are the days and times you will be attending lessons? <span className="text-danger">*</span></Label>
               <Controller
                 name="days_times_attending"
                 control={control}
                 rules={{ required: "Days and times are required" }}
                 render={({ field }) => (
-                  <Input {...field} type="textarea" rows="2" placeholder="e.g. Every Saturday 09:00am - 12:00pm" invalid={!!errors.days_times_attending} />
+                  <Input {...field} type="textarea" rows="3" placeholder="e.g. Every Saturday 09:00am - 12:00pm; Mondays and Thursdays 12:00pm - 4:00pm" invalid={!!errors.days_times_attending} disabled={isOrgExecutive} />
                 )}
               />
+              <small className="text-muted d-block mt-1">Example: Every Saturday 09:00am - 12:00pm; Mondays and Thursdays 12:00pm - 4:00pm</small>
               {errors.days_times_attending && <FormFeedback>{errors.days_times_attending.message}</FormFeedback>}
             </FormGroup>
             <Row>
               <Col md={6}>
                 <FormGroup>
-                  <Label>Times Per Month</Label>
+                  <Label>How many times a week</Label>
                   <Controller
                     name="times_per_month"
                     control={control}
                     render={({ field }) => (
-                      <Input {...field} type="select">
+                      <Input {...field} type="select" disabled={isOrgExecutive}>
                         <option value="">Select</option>
-                        {(lookupData?.timesPerMonth || []).map((item) => (
-                          <option key={item.id} value={item.id}>
-                            {item.name}
-                          </option>
-                        ))}
+                        <option value="1">1 time per week</option>
+                        <option value="2">2 times per week</option>
+                        <option value="3">3 times per week</option>
+                        <option value="4">4 times per week</option>
+                        <option value="5">5 times per week</option>
                       </Input>
                     )}
                   />
@@ -554,18 +555,17 @@ const HigherEducationRequestTab = ({ imamProfileId, higherEducationRequest, look
               </Col>
               <Col md={6}>
                 <FormGroup>
-                  <Label>Semesters Per Year</Label>
+                  <Label>How many semesters per year</Label>
                   <Controller
                     name="semesters_per_year"
                     control={control}
                     render={({ field }) => (
-                      <Input {...field} type="select">
+                      <Input {...field} type="select" disabled={isOrgExecutive}>
                         <option value="">Select</option>
-                        {(lookupData?.semestersPerYear || []).map((item) => (
-                          <option key={item.id} value={item.id}>
-                            {item.name}
-                          </option>
-                        ))}
+                        <option value="1">1 Semester</option>
+                        <option value="2">2 Semesters</option>
+                        <option value="3">3 Semesters</option>
+                        <option value="4">4 Semesters</option>
                       </Input>
                     )}
                   />
@@ -573,132 +573,132 @@ const HigherEducationRequestTab = ({ imamProfileId, higherEducationRequest, look
               </Col>
             </Row>
             <Row>
-              <Col md={4}>
+              <Col md={12}>
                 <FormGroup>
                   <Label>Course Brochure</Label>
                   <Controller
-                    name="Course_Brochure"
-                    control={control}
-                    render={({ field: { onChange, value, ...field } }) => (
-                      <Input
-                        {...field}
-                        type="file"
-                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                        onChange={(e) => {
-                          onChange(e.target.files);
-                        }}
-                      />
-                    )}
+                  name="Course_Brochure"
+                  control={control}
+                  render={({ field: { onChange, value, ...field } }) => (
+                    <Input
+                      {...field}
+                      type="file"
+                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                      onChange={(e) => {
+                        onChange(e.target.files);
+                      }}
+                    />
+                  )}
                   />
                   {editItem && (editItem.course_brochure === "exists" || editItem.course_brochure_filename) && (
-                    <div className="mt-2 p-2 border rounded bg-light">
-                      <div className="d-flex align-items-center">
-                        <i className="bx bx-file font-size-24 text-primary me-2"></i>
-                        <div className="flex-grow-1">
-                          <div className="fw-medium">{editItem.course_brochure_filename || "file"}</div>
-                          <small className="text-muted">
-                            {formatFileSize(editItem.course_brochure_size)} • Current file
-                          </small>
-                        </div>
-                        <a
-                          href={`${API_STREAM_BASE_URL}/higherEducationRequest/${editItem.id}/view-course-brochure`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          title="View"
-                        >
-                          <i 
-                            className="bx bx-show text-success" 
-                            style={{ cursor: "pointer", fontSize: "16px" }}
-                          ></i>
-                        </a>
+                  <div className="mt-2 p-2 border rounded bg-light">
+                    <div className="d-flex align-items-center">
+                      <i className="bx bx-file font-size-24 text-primary me-2"></i>
+                      <div className="flex-grow-1">
+                        <div className="fw-medium">{editItem.course_brochure_filename || "file"}</div>
+                        <small className="text-muted">
+                          {formatFileSize(editItem.course_brochure_size)} • Current file
+                        </small>
                       </div>
+                      <a
+                        href={`${API_STREAM_BASE_URL}/higherEducationRequest/${editItem.id}/view-course-brochure`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="View"
+                      >
+                        <i 
+                          className="bx bx-show text-success" 
+                          style={{ cursor: "pointer", fontSize: "16px" }}
+                        ></i>
+                      </a>
                     </div>
+                  </div>
                   )}
                 </FormGroup>
               </Col>
-              <Col md={4}>
+              <Col md={12}>
                 <FormGroup>
                   <Label>Quotation</Label>
                   <Controller
                     name="Quotation"
-                    control={control}
-                    render={({ field: { onChange, value, ...field } }) => (
-                      <Input
-                        {...field}
-                        type="file"
-                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                        onChange={(e) => {
-                          onChange(e.target.files);
-                        }}
-                      />
-                    )}
-                  />
-                  {editItem && (editItem.quotation === "exists" || editItem.quotation_filename) && (
-                    <div className="mt-2 p-2 border rounded bg-light">
-                      <div className="d-flex align-items-center">
-                        <i className="bx bx-file font-size-24 text-success me-2"></i>
-                        <div className="flex-grow-1">
-                          <div className="fw-medium">{editItem.quotation_filename || "file"}</div>
-                          <small className="text-muted">
-                            {formatFileSize(editItem.quotation_size)} • Current file
-                          </small>
-                        </div>
-                        <a
-                          href={`${API_STREAM_BASE_URL}/higherEducationRequest/${editItem.id}/view-quotation`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          title="View"
-                        >
-                          <i 
-                            className="bx bx-show text-success" 
-                            style={{ cursor: "pointer", fontSize: "16px" }}
-                          ></i>
-                        </a>
+                  control={control}
+                  render={({ field: { onChange, value, ...field } }) => (
+                    <Input
+                      {...field}
+                      type="file"
+                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                      onChange={(e) => {
+                        onChange(e.target.files);
+                      }}
+                    />
+                  )}
+                />
+                {editItem && (editItem.quotation === "exists" || editItem.quotation_filename) && (
+                  <div className="mt-2 p-2 border rounded bg-light">
+                    <div className="d-flex align-items-center">
+                      <i className="bx bx-file font-size-24 text-success me-2"></i>
+                      <div className="flex-grow-1">
+                        <div className="fw-medium">{editItem.quotation_filename || "file"}</div>
+                        <small className="text-muted">
+                          {formatFileSize(editItem.quotation_size)} • Current file
+                        </small>
                       </div>
+                      <a
+                        href={`${API_STREAM_BASE_URL}/higherEducationRequest/${editItem.id}/view-quotation`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="View"
+                      >
+                        <i 
+                          className="bx bx-show text-success" 
+                          style={{ cursor: "pointer", fontSize: "16px" }}
+                        ></i>
+                      </a>
                     </div>
+                  </div>
                   )}
                 </FormGroup>
               </Col>
-              <Col md={4}>
+              <Col md={12}>
                 <FormGroup>
                   <Label>Motivation Letter</Label>
                   <Controller
                     name="Motivation_Letter"
-                    control={control}
-                    render={({ field: { onChange, value, ...field } }) => (
-                      <Input
-                        {...field}
-                        type="file"
-                        accept=".pdf,.doc,.docx"
-                        onChange={(e) => {
-                          onChange(e.target.files);
-                        }}
-                      />
-                    )}
-                  />
-                  {editItem && (editItem.motivation_letter === "exists" || editItem.motivation_letter_filename) && (
-                    <div className="mt-2 p-2 border rounded bg-light">
-                      <div className="d-flex align-items-center">
-                        <i className="bx bx-file font-size-24 text-info me-2"></i>
-                        <div className="flex-grow-1">
-                          <div className="fw-medium">{editItem.motivation_letter_filename || "file"}</div>
-                          <small className="text-muted">
-                            {formatFileSize(editItem.motivation_letter_size)} • Current file
-                          </small>
-                        </div>
-                        <a
-                          href={`${API_STREAM_BASE_URL}/higherEducationRequest/${editItem.id}/view-motivation-letter`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          title="View"
-                        >
-                          <i 
-                            className="bx bx-show text-success" 
-                            style={{ cursor: "pointer", fontSize: "16px" }}
-                          ></i>
-                        </a>
+                  control={control}
+                  render={({ field: { onChange, value, ...field } }) => (
+                    <Input
+                      {...field}
+                      type="file"
+                      accept=".pdf,.doc,.docx"
+                      onChange={(e) => {
+                        onChange(e.target.files);
+                      }}
+                    />
+                  )}
+                />
+                {editItem && (editItem.motivation_letter === "exists" || editItem.motivation_letter_filename) && (
+                  <div className="mt-2 p-2 border rounded bg-light">
+                    <div className="d-flex align-items-center">
+                      <i className="bx bx-file font-size-24 text-info me-2"></i>
+                      <div className="flex-grow-1">
+                        <div className="fw-medium">{editItem.motivation_letter_filename || "file"}</div>
+                        <small className="text-muted">
+                          {formatFileSize(editItem.motivation_letter_size)} • Current file
+                        </small>
                       </div>
+                      <a
+                        href={`${API_STREAM_BASE_URL}/higherEducationRequest/${editItem.id}/view-motivation-letter`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="View"
+                      >
+                        <i 
+                          className="bx bx-show text-success" 
+                          style={{ cursor: "pointer", fontSize: "16px" }}
+                        ></i>
+                      </a>
                     </div>
+                  </div>
                   )}
                 </FormGroup>
               </Col>

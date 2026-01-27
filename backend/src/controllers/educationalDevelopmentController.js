@@ -30,14 +30,22 @@ const educationalDevelopmentController = {
       fields.created_by = username;
       fields.updated_by = username;
       
-      if (req.files && req.files.Certificate && req.files.Certificate.length > 0) {
-        const file = req.files.Certificate[0];
+      if (req.files && req.files.Brochure && req.files.Brochure.length > 0) {
+        const file = req.files.Brochure[0];
         const buffer = await fs.readFile(file.path);
-        fields.certificate = buffer;
-        fields.certificate_filename = file.originalname;
-        fields.certificate_mime = file.mimetype;
-        fields.certificate_size = file.size;
-        fields.certificate_updated_at = new Date().toISOString();
+        fields.brochure = buffer;
+        fields.brochure_filename = file.originalname;
+        fields.brochure_mime = file.mimetype;
+        fields.brochure_size = file.size;
+        await fs.unlink(file.path);
+      }
+      if (req.files && req.files.Invoice && req.files.Invoice.length > 0) {
+        const file = req.files.Invoice[0];
+        const buffer = await fs.readFile(file.path);
+        fields.invoice = buffer;
+        fields.invoice_filename = file.originalname;
+        fields.invoice_mime = file.mimetype;
+        fields.invoice_size = file.size;
         await fs.unlink(file.path);
       }
       
@@ -56,25 +64,35 @@ const educationalDevelopmentController = {
       fields.updated_by = username;
       delete fields.created_by;
       
-      // Remove file-related fields if no file is provided
-      if (!req.files || !req.files.Certificate || req.files.Certificate.length === 0) {
-        delete fields.certificate;
-        delete fields.certificate_filename;
-        delete fields.certificate_mime;
-        delete fields.certificate_size;
-        delete fields.certificate_updated_at;
+      if (!req.files || !req.files.Brochure || req.files.Brochure.length === 0) {
+        delete fields.brochure;
+        delete fields.brochure_filename;
+        delete fields.brochure_mime;
+        delete fields.brochure_size;
       } else {
-        const file = req.files.Certificate[0];
+        const file = req.files.Brochure[0];
         const buffer = await fs.readFile(file.path);
-        fields.certificate = buffer;
-        fields.certificate_filename = file.originalname;
-        fields.certificate_mime = file.mimetype;
-        fields.certificate_size = file.size;
-        fields.certificate_updated_at = new Date().toISOString();
+        fields.brochure = buffer;
+        fields.brochure_filename = file.originalname;
+        fields.brochure_mime = file.mimetype;
+        fields.brochure_size = file.size;
+        await fs.unlink(file.path);
+      }
+      if (!req.files || !req.files.Invoice || req.files.Invoice.length === 0) {
+        delete fields.invoice;
+        delete fields.invoice_filename;
+        delete fields.invoice_mime;
+        delete fields.invoice_size;
+      } else {
+        const file = req.files.Invoice[0];
+        const buffer = await fs.readFile(file.path);
+        fields.invoice = buffer;
+        fields.invoice_filename = file.originalname;
+        fields.invoice_mime = file.mimetype;
+        fields.invoice_size = file.size;
         await fs.unlink(file.path);
       }
       
-      // Clean up undefined values
       Object.keys(fields).forEach(key => {
         if (fields[key] === undefined) {
           delete fields[key];
@@ -181,6 +199,62 @@ const educationalDevelopmentController = {
       res.end(buffer);
     } catch (err) {
       res.status(500).json({ error: "Error downloading certificate: " + err.message });
+    }
+  },
+
+  viewBrochure: async (req, res) => {
+    try {
+      const pool = require('../config/db');
+      const query = `SELECT brochure, brochure_filename, brochure_mime, brochure_size FROM educational_development WHERE id = $1`;
+      const res_db = await pool.query(query, [req.params.id]);
+      const record = res_db.rows[0];
+      if (!record) return res.status(404).send("Record not found");
+      if (!record.brochure && !record.brochure_filename) return res.status(404).send("No brochure found");
+      const mimeType = record.brochure_mime || "application/pdf";
+      const filename = record.brochure_filename || "brochure";
+      if (record.brochure_filename && !record.brochure) return res.status(404).send("Brochure file data not found");
+      let buffer = record.brochure;
+      if (!buffer) return res.status(404).send("No brochure found");
+      if (!Buffer.isBuffer(buffer)) {
+        if (typeof buffer === "string") {
+          buffer = buffer.startsWith("\\x") ? Buffer.from(buffer.slice(2), "hex") : Buffer.from(buffer, "base64");
+        } else throw new Error("Invalid brochure data type");
+      }
+      res.setHeader("Content-Type", mimeType);
+      res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
+      res.setHeader("Content-Length", buffer.length);
+      res.end(buffer, "binary");
+    } catch (err) {
+      console.error("Error viewing brochure:", err);
+      res.status(500).json({ error: "Error viewing brochure: " + err.message });
+    }
+  },
+
+  viewInvoice: async (req, res) => {
+    try {
+      const pool = require('../config/db');
+      const query = `SELECT invoice, invoice_filename, invoice_mime, invoice_size FROM educational_development WHERE id = $1`;
+      const res_db = await pool.query(query, [req.params.id]);
+      const record = res_db.rows[0];
+      if (!record) return res.status(404).send("Record not found");
+      if (!record.invoice && !record.invoice_filename) return res.status(404).send("No invoice found");
+      const mimeType = record.invoice_mime || "application/pdf";
+      const filename = record.invoice_filename || "invoice";
+      if (record.invoice_filename && !record.invoice) return res.status(404).send("Invoice file data not found");
+      let buffer = record.invoice;
+      if (!buffer) return res.status(404).send("No invoice found");
+      if (!Buffer.isBuffer(buffer)) {
+        if (typeof buffer === "string") {
+          buffer = buffer.startsWith("\\x") ? Buffer.from(buffer.slice(2), "hex") : Buffer.from(buffer, "base64");
+        } else throw new Error("Invalid invoice data type");
+      }
+      res.setHeader("Content-Type", mimeType);
+      res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
+      res.setHeader("Content-Length", buffer.length);
+      res.end(buffer, "binary");
+    } catch (err) {
+      console.error("Error viewing invoice:", err);
+      res.status(500).json({ error: "Error viewing invoice: " + err.message });
     }
   },
 };

@@ -22,11 +22,12 @@ const educationalDevelopmentModel = {
 
       const res = await pool.query(query, params);
       res.rows = res.rows.map((row) => {
-        if (row.certificate && row.certificate_filename) {
-          row.certificate = "exists";
-        } else if (row.certificate) {
-          row.certificate = row.certificate.toString("base64");
-        }
+        if (row.certificate && row.certificate_filename) row.certificate = "exists";
+        else if (row.certificate) row.certificate = row.certificate.toString("base64");
+        if (row.brochure && row.brochure_filename) row.brochure = "exists";
+        else if (row.brochure) row.brochure = row.brochure.toString("base64");
+        if (row.invoice && row.invoice_filename) row.invoice = "exists";
+        else if (row.invoice) row.invoice = row.invoice.toString("base64");
         return row;
       });
       return res.rows;
@@ -43,11 +44,12 @@ const educationalDevelopmentModel = {
       const res = await pool.query(query, [id]);
       if (!res.rows[0]) return null;
       const row = res.rows[0];
-      if (row.certificate && row.certificate_filename) {
-        row.certificate = "exists";
-      } else if (row.certificate) {
-        row.certificate = row.certificate.toString("base64");
-      }
+      if (row.certificate && row.certificate_filename) row.certificate = "exists";
+      else if (row.certificate) row.certificate = row.certificate.toString("base64");
+      if (row.brochure && row.brochure_filename) row.brochure = "exists";
+      else if (row.brochure) row.brochure = row.brochure.toString("base64");
+      if (row.invoice && row.invoice_filename) row.invoice = "exists";
+      else if (row.invoice) row.invoice = row.invoice.toString("base64");
       return row;
     } catch (err) {
       throw new Error(

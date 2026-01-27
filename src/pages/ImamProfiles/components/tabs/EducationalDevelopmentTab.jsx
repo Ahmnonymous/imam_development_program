@@ -44,15 +44,16 @@ const EducationalDevelopmentTab = ({ imamProfileId, educationalDevelopment, look
         course_type: editItem?.course_type || "",
         start_date: formatDateForInput(editItem?.start_date),
         end_date: formatDateForInput(editItem?.end_date),
+        duration_course: editItem?.duration_course || "",
         cost: editItem?.cost || "",
         cost_currency: editItem?.cost_currency || "",
+        cost_south_african_rand: editItem?.cost_south_african_rand || "",
         funding_source: editItem?.funding_source || "",
-        completion_status: editItem?.completion_status || "",
-        certificate_obtained: editItem?.certificate_obtained || false,
         acknowledge: editItem?.acknowledge || false,
         status_id: editItem?.status_id || "1",
         comment: editItem?.comment || "",
-        Certificate: null,
+        Brochure: null,
+        Invoice: null,
       });
     }
   }, [editItem, modalOpen, reset]);
@@ -74,7 +75,8 @@ const EducationalDevelopmentTab = ({ imamProfileId, educationalDevelopment, look
 
   const onSubmit = async (data) => {
     try {
-      const hasCertificate = data.Certificate && data.Certificate.length > 0;
+      const hasBrochure = data.Brochure && data.Brochure.length > 0;
+      const hasInvoice = data.Invoice && data.Invoice.length > 0;
       const formData = new FormData();
       formData.append("imam_profile_id", imamProfileId);
       formData.append("course_name", data.course_name);
@@ -82,18 +84,16 @@ const EducationalDevelopmentTab = ({ imamProfileId, educationalDevelopment, look
       formData.append("course_type", data.course_type || "");
       formData.append("start_date", data.start_date || "");
       formData.append("end_date", data.end_date || "");
+      formData.append("duration_course", data.duration_course || "");
       formData.append("cost", data.cost ? parseFloat(data.cost) : "");
       formData.append("cost_currency", data.cost_currency ? parseInt(data.cost_currency) : "");
+      formData.append("cost_south_african_rand", data.cost_south_african_rand ? parseFloat(data.cost_south_african_rand) : "");
       formData.append("funding_source", data.funding_source || "");
-      formData.append("completion_status", data.completion_status || "");
-      formData.append("certificate_obtained", data.certificate_obtained || false);
       formData.append("acknowledge", data.acknowledge || false);
       formData.append("status_id", parseInt(data.status_id));
       formData.append("comment", data.comment || "");
-      
-      if (hasCertificate) {
-        formData.append("Certificate", data.Certificate[0]);
-      }
+      if (hasBrochure) formData.append("Brochure", data.Brochure[0]);
+      if (hasInvoice) formData.append("Invoice", data.Invoice[0]);
 
       if (editItem) {
         formData.append("updated_by", getAuditName());
@@ -220,25 +220,38 @@ const EducationalDevelopmentTab = ({ imamProfileId, educationalDevelopment, look
         },
       },
       {
-        header: "Certificate",
-        accessorKey: "certificate",
+        header: "Brochure",
+        accessorKey: "brochure",
         enableSorting: false,
         enableColumnFilter: false,
         cell: (cell) => {
-          const cert = cell.getValue();
+          const val = cell.getValue();
           const rowId = cell.row.original.id;
-          return cert && (cert === "exists" || cell.row.original.certificate_filename) ? (
+          const hasFile = val && (val === "exists" || cell.row.original.brochure_filename);
+          return hasFile ? (
             <div className="d-flex justify-content-center">
-              <a
-                href={`${API_STREAM_BASE_URL}/educationalDevelopment/${rowId}/view-certificate`}
-                target="_blank"
-                rel="noopener noreferrer"
-                title="View Certificate"
-              >
-                <i
-                  className="bx bx-show text-success"
-                  style={{ cursor: "pointer", fontSize: "16px" }}
-                ></i>
+              <a href={`${API_STREAM_BASE_URL}/educationalDevelopment/${rowId}/view-brochure`} target="_blank" rel="noopener noreferrer" title="View Brochure">
+                <i className="bx bx-show text-success" style={{ cursor: "pointer", fontSize: "16px" }}></i>
+              </a>
+            </div>
+          ) : (
+            <span className="d-block text-center">-</span>
+          );
+        },
+      },
+      {
+        header: "Invoice",
+        accessorKey: "invoice",
+        enableSorting: false,
+        enableColumnFilter: false,
+        cell: (cell) => {
+          const val = cell.getValue();
+          const rowId = cell.row.original.id;
+          const hasFile = val && (val === "exists" || cell.row.original.invoice_filename);
+          return hasFile ? (
+            <div className="d-flex justify-content-center">
+              <a href={`${API_STREAM_BASE_URL}/educationalDevelopment/${rowId}/view-invoice`} target="_blank" rel="noopener noreferrer" title="View Invoice">
+                <i className="bx bx-show text-success" style={{ cursor: "pointer", fontSize: "16px" }}></i>
               </a>
             </div>
           ) : (
@@ -415,39 +428,31 @@ const EducationalDevelopmentTab = ({ imamProfileId, educationalDevelopment, look
               <Col md={6}>
                 <FormGroup>
                   <Label>Start Date</Label>
-                  <Controller
-                    name="start_date"
-                    control={control}
-                    render={({ field }) => (
-                      <Input {...field} type="date" />
-                    )}
-                  />
+                  <Controller name="start_date" control={control} render={({ field }) => <Input {...field} type="date" />} />
                 </FormGroup>
               </Col>
               <Col md={6}>
                 <FormGroup>
                   <Label>End Date</Label>
-                  <Controller
-                    name="end_date"
-                    control={control}
-                    render={({ field }) => (
-                      <Input {...field} type="date" />
-                    )}
-                  />
+                  <Controller name="end_date" control={control} render={({ field }) => <Input {...field} type="date" />} />
                 </FormGroup>
               </Col>
             </Row>
             <Row>
               <Col md={6}>
                 <FormGroup>
-                  <Label>Cost</Label>
+                  <Label>Duration of the course?</Label>
                   <Controller
-                    name="cost"
+                    name="duration_course"
                     control={control}
-                    render={({ field }) => (
-                      <Input {...field} type="number" step="0.01" placeholder="0.00" />
-                    )}
+                    render={({ field }) => <Input {...field} type="text" placeholder="e.g 2 months, 3 months, or 6 months" />}
                   />
+                </FormGroup>
+              </Col>
+              <Col md={6}>
+                <FormGroup>
+                  <Label>How much are the fees for the course in local currency?</Label>
+                  <Controller name="cost" control={control} render={({ field }) => <Input {...field} type="number" step="0.01" placeholder="0.00" />} />
                 </FormGroup>
               </Col>
               <Col md={6}>
@@ -460,13 +465,17 @@ const EducationalDevelopmentTab = ({ imamProfileId, educationalDevelopment, look
                       <Input {...field} type="select">
                         <option value="">Select Currency</option>
                         {(lookupData?.currency || []).map((item) => (
-                          <option key={item.id} value={item.id}>
-                            {item.name}
-                          </option>
+                          <option key={item.id} value={item.id}>{item.name}</option>
                         ))}
                       </Input>
                     )}
                   />
+                </FormGroup>
+              </Col>
+              <Col md={6}>
+                <FormGroup>
+                  <Label>How much are the fees for the course in South African Rand?</Label>
+                  <Controller name="cost_south_african_rand" control={control} render={({ field }) => <Input {...field} type="number" step="0.01" placeholder="0.00" />} />
                 </FormGroup>
               </Col>
             </Row>
@@ -474,73 +483,47 @@ const EducationalDevelopmentTab = ({ imamProfileId, educationalDevelopment, look
               <Col md={6}>
                 <FormGroup>
                   <Label>Funding Source</Label>
+                  <Controller name="funding_source" control={control} render={({ field }) => <Input {...field} type="text" placeholder="Enter funding source" />} />
+                </FormGroup>
+              </Col>
+            </Row>
+            <Row>
+              <Col md={6}>
+                <FormGroup>
+                  <Label>Upload a brochure/prospectus/course outline</Label>
                   <Controller
-                    name="funding_source"
+                    name="Brochure"
                     control={control}
-                    render={({ field }) => (
-                      <Input {...field} type="text" placeholder="Enter funding source" />
+                    render={({ field: { onChange, value, ...field } }) => (
+                      <Input {...field} type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => onChange(e.target.files)} />
                     )}
                   />
+                  {editItem?.brochure_filename && (
+                    <small className="text-muted d-block mt-1">Current: {editItem.brochure_filename} ({formatFileSize(editItem.brochure_size)})</small>
+                  )}
                 </FormGroup>
               </Col>
               <Col md={6}>
                 <FormGroup>
-                  <Label>Completion Status</Label>
+                  <Label>Upload authentic invoice</Label>
                   <Controller
-                    name="completion_status"
+                    name="Invoice"
                     control={control}
-                    render={({ field }) => (
-                      <Input {...field} type="text" placeholder="Enter completion status" />
+                    render={({ field: { onChange, value, ...field } }) => (
+                      <Input {...field} type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => onChange(e.target.files)} />
                     )}
                   />
+                  {editItem?.invoice_filename && (
+                    <small className="text-muted d-block mt-1">Current: {editItem.invoice_filename} ({formatFileSize(editItem.invoice_size)})</small>
+                  )}
                 </FormGroup>
               </Col>
             </Row>
             <FormGroup>
-              <Label>Certificate</Label>
-              <Controller
-                name="Certificate"
-                control={control}
-                render={({ field: { onChange, value, ...field } }) => (
-                  <Input
-                    {...field}
-                    type="file"
-                    accept=".pdf,.jpg,.jpeg,.png"
-                    onChange={(e) => {
-                      onChange(e.target.files);
-                    }}
-                  />
-                )}
-              />
-              {editItem?.certificate_filename && (
-                <small className="text-muted d-block mt-1">
-                  Current: {editItem.certificate_filename} ({formatFileSize(editItem.certificate_size)})
-                </small>
-              )}
-            </FormGroup>
-            <FormGroup>
               <Label>Comment</Label>
-              <Controller
-                name="comment"
-                control={control}
-                render={({ field }) => (
-                  <Input {...field} type="textarea" rows="2" placeholder="Enter comment" />
-                )}
-              />
+              <Controller name="comment" control={control} render={({ field }) => <Input {...field} type="textarea" rows="2" placeholder="Enter comment" />} />
             </FormGroup>
             <Row>
-              <Col md={6}>
-                <FormGroup check>
-                  <Controller
-                    name="certificate_obtained"
-                    control={control}
-                    render={({ field }) => (
-                      <Input {...field} type="checkbox" checked={field.value} />
-                    )}
-                  />
-                  <Label check>Certificate Obtained</Label>
-                </FormGroup>
-              </Col>
               <Col md={6}>
                 <FormGroup check>
                   <Controller

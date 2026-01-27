@@ -21,6 +21,8 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 router.get('/:id/view-certificate', optionalAuthMiddleware, educationalDevelopmentController.viewCertificate);
+router.get('/:id/view-brochure', optionalAuthMiddleware, educationalDevelopmentController.viewBrochure);
+router.get('/:id/view-invoice', optionalAuthMiddleware, educationalDevelopmentController.viewInvoice);
 
 router.use(authMiddleware);
 router.use(roleMiddleware());
@@ -29,8 +31,8 @@ router.use(filterMiddleware);
 router.get('/', educationalDevelopmentController.getAll);
 router.get('/:id', educationalDevelopmentController.getById);
 router.get('/:id/download-certificate', educationalDevelopmentController.downloadCertificate);
-router.post('/', upload.fields([{ name: 'Certificate' }]), educationalDevelopmentController.create);
-router.put('/:id', upload.fields([{ name: 'Certificate' }]), educationalDevelopmentController.update);
+router.post('/', upload.fields([{ name: 'Brochure' }, { name: 'Invoice' }]), educationalDevelopmentController.create);
+router.put('/:id', upload.fields([{ name: 'Brochure' }, { name: 'Invoice' }]), educationalDevelopmentController.update);
 router.delete('/:id', educationalDevelopmentController.delete);
 
 module.exports = router;
